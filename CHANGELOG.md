@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.2.3 — 20.10.2026
+
+- Behebt den Offline-Start des lokalen Dienstes bei erweiterten Windows-Pfaden. Der Dienst startet aus seinem eigenen Verzeichnis mit relativem Einstiegspunkt.
+- Verwendet die geprüfte Node-Laufzeit 22.15.0 für Windows-Pakete. Veröffentlichte Versionen werden vor nachträglichem Überschreiben durch den Release-Workflow geschützt.
+- Signiertes Update für vorhandene Installationen über „Nach Updates suchen“.
+
 ## 0.2.2 — 20.10.2026
 
 - Der NSIS-Installer übernimmt den geprüften alten Companion-Dienst bereits vor dem Dateiaustausch. Dadurch bleiben laufende alte Node-Dateien beim Upgrade von v0.1 nicht gesperrt.

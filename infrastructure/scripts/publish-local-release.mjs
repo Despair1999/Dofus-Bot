@@ -16,7 +16,7 @@ const assets = [
   `game-catalog-v${version}.sqlite`,
 ];
 const notes =
-  "Neues Branding, vollständiger lokaler Itemkatalog, Suchvorschau, Questkategorien, bebildertes Crafting, Klassenauswahl, Almanax und separates konfigurierbares Overlay. Persönliche Daten bleiben erhalten. Bekannte Datenlücken und Testgrenzen: TEST_REPORT.md und DATA_IMPORT.md im Repository.";
+  "Behebt den Offline-Start des lokalen Dienstes unter Windows. Korrigierte Startpfade und geprüfte Node-Laufzeit 22.15.0. Persönliche Daten bleiben erhalten. Dieses Update kann über Einstellungen → Nach Updates suchen installiert werden.";
 const signature = (
   await readFile(resolve("artifacts", installer + ".sig"), "utf8")
 ).trim();
@@ -31,6 +31,18 @@ const nativeReport = JSON.parse(
 );
 if (nativeReport.passed.length < 7)
   throw new Error("Native release validation is incomplete");
+if (version === "0.2.3") {
+  const regression = JSON.parse(
+    await readFile("docs/update-v0.2.3-test.json", "utf8"),
+  );
+  if (
+    regression.version !== version ||
+    !regression.nativeRegression.passed ||
+    !regression.releaseSignatureVerified ||
+    !regression.tamperedInstallerRejected
+  )
+    throw new Error("Offline-start regression or signature validation is incomplete");
+}
 const source = execFileSync("git", ["rev-parse", "HEAD"], {
   encoding: "utf8",
   windowsHide: true,

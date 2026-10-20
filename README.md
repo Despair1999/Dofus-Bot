@@ -1,6 +1,6 @@
 # DOFUS Companion
 
-Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend und optionaler Discord-Bot. **v0.2.2** integriert das neue Branding, einen vollständigen verfügbaren Itemkatalog mit Suchvorschlägen, Questkategorien, bebilderte Rezepte, Klassenauswahl, Almanax-Zeitstrahl und ein separates konfigurierbares Overlay.
+Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend und optionaler Discord-Bot. **v0.2.3** behebt den Offline-Start des lokalen Dienstes unter Windows. Enthalten sind das neue Branding, ein vollständiger verfügbarer Itemkatalog mit Suchvorschlägen, Questkategorien, bebilderte Rezepte, Klassenauswahl, Almanax-Zeitstrahl und ein separates konfigurierbares Overlay.
 
 Windows-Pakete: [Releases](https://github.com/Despair1999/Dofus-Bot/releases). Für bestehende Installationen: **Einstellungen → Nach Updates suchen**. Details: [UPDATE_GUIDE.md](UPDATE_GUIDE.md). Umsetzungsgrenzen und ausgeführte Prüfungen: [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), [TEST_REPORT.md](TEST_REPORT.md).
 
@@ -49,7 +49,7 @@ Für den Bot sind Discord-Zugangsdaten in `.env` erforderlich. Persönliche Befe
 
 ## Updates und Veröffentlichung
 
-„Nach Updates suchen“ ist in den Einstellungen eingebaut. Windows-Updates werden über GitHub Releases bezogen und mit Tauri-Signaturen geprüft. Ein veröffentlichter Release und passende Signierschlüssel sind erforderlich; die Implementierung behauptet keinen bereits vorhandenen Update-Release. [Release-Einrichtung](infrastructure/RELEASES.md).
+„Nach Updates suchen“ ist in den Einstellungen eingebaut. Windows-Updates werden über GitHub Releases bezogen und mit dem ursprünglichen Tauri-Signierschlüssel geprüft. Veröffentlichte Versionen und ihre Download-Dateien dürfen durch weitere Builds nicht ersetzt werden. [Release-Einrichtung](infrastructure/RELEASES.md).
 
 Die GitHub-Workflows enthalten Checks, Windows-Build und eine signierte Release-Pipeline. GitHub Actions müssen tatsächlich laufen, bevor deren Erfolg behauptet werden kann. [Testbericht](docs/TEST_REPORT.md), [Architektur](ARCHITECTURE.md), [Datenquellen](docs/SOURCES.md), [Docker](infrastructure/docker/README.md).
 

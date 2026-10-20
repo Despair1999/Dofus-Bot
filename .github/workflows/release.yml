@@ -20,6 +20,7 @@ jobs:
               throw 'This release is already published. Build a new version instead of replacing its assets.'
             }
           }
+          $global:LASTEXITCODE = 0
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
@@ -47,6 +48,7 @@ jobs:
           if ($LASTEXITCODE -eq 0 -and -not ($existing | ConvertFrom-Json).draft) {
             throw 'This version is already published. Existing assets must remain immutable.'
           }
+          $global:LASTEXITCODE = 0
           $config.plugins.updater.pubkey = $env:UPDATER_PUBLIC_KEY
           $config.bundle.createUpdaterArtifacts = $true
           $config | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $configPath -Encoding utf8

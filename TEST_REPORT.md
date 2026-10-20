@@ -45,6 +45,10 @@ Die eigene Testaufgabe wurde entfernt und die isolierte Testinstallation deinsta
 
 ## Bekannte Grenzen
 
+### Hotfix v0.2.3
+
+Windows-Installer und Portable-Paket wurden mit Node 22.15.0 neu gebaut. Typprüfung, Lint, alle 41 Workspace-Tests und sechs native Rust-Tests bestehen. Die echte native v0.2.3 startet mit der zuvor betroffenen Node-Version 22.23.3 erfolgreich; Backend und App melden 0.2.3, die Oberfläche zeigt „Backend erreichbar“. Die Signatur des neuen Installers wird mit dem ursprünglichen öffentlichen Schlüssel akzeptiert; manipulierte Installerbytes werden abgelehnt. [Hotfix-Prüfnachweis](docs/update-v0.2.3-test.json). Die neue Veröffentlichung verwendet den bestehenden GitHub-Updatekanal.
+
 ### Nachprüfung: Offline-Start der späteren CI-Dateien
 
 Ein nach der Veröffentlichung abgeschlossener Tag-Workflow ersetzte am 20.10.2026 um 18:36 UTC die ZIP-Dateien und `latest.json`. Diese CI-Variante enthielt Node 22.23.3 statt der geprüften Version 22.15.0. In der betroffenen Portable-Kopie brach dessen Einstiegspunktauflösung bei einem erweiterten Windows-Pfad mit `EISDIR: lstat 'C:'` ab. Mit demselben Runtime-Binary wurde der Fehler isoliert reproduziert; ein relativer Einstiegspunkt aus dem Service-Verzeichnis besteht die Syntaxprüfung. Der native Start verwendet deshalb künftig dieses Verzeichnis und `backend.mjs` als relativen Einstiegspunkt. Die CI verwendet ausdrücklich Node 22.15.0 und verweigert die Veröffentlichung über eine bereits veröffentlichte Versionsnummer.

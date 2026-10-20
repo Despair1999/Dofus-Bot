@@ -1,0 +1,16 @@
+{
+  "testedAt": "2026-10-20T18:53:47.871Z",
+  "version": "0.2.3",
+  "workspaceTests": 41,
+  "nativeRustTests": 6,
+  "nativeRegression": {
+    "runtime": "Node 22.23.3",
+    "backendVersion": "0.2.3",
+    "ui": "Backend erreichbar",
+    "passed": true
+  },
+  "publishedRuntime": "Node 22.15.0",
+  "releaseSignatureVerified": true,
+  "updaterOffered": false,
+  "tamperedInstallerRejected": true
+}
