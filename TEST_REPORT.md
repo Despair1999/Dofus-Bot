@@ -45,4 +45,10 @@ Die eigene Testaufgabe wurde entfernt und die isolierte Testinstallation deinsta
 
 ## Bekannte Grenzen
 
+### Nachprüfung: Offline-Start der späteren CI-Dateien
+
+Ein nach der Veröffentlichung abgeschlossener Tag-Workflow ersetzte am 20.10.2026 um 18:36 UTC die ZIP-Dateien und `latest.json`. Diese CI-Variante enthielt Node 22.23.3 statt der geprüften Version 22.15.0. In der betroffenen Portable-Kopie brach dessen Einstiegspunktauflösung bei einem erweiterten Windows-Pfad mit `EISDIR: lstat 'C:'` ab. Mit demselben Runtime-Binary wurde der Fehler isoliert reproduziert; ein relativer Einstiegspunkt aus dem Service-Verzeichnis besteht die Syntaxprüfung. Der native Start verwendet deshalb künftig dieses Verzeichnis und `backend.mjs` als relativen Einstiegspunkt. Die CI verwendet ausdrücklich Node 22.15.0 und verweigert die Veröffentlichung über eine bereits veröffentlichte Versionsnummer.
+
+Die betroffene lokale Kopie wurde mit der ursprünglich geprüften Node-Laufzeit repariert: `/health` liefert Version 0.2.2, die echte Oberfläche zeigt „Backend erreichbar“. Sechs native Rust-Tests bestehen weiterhin. Die ursprünglichen geprüften ZIP-Dateien und das ursprüngliche Update-Manifest wurden wiederhergestellt und ihre GitHub-Prüfsummen erneut abgeglichen; die Soll-Prüfsummen stehen in `docs/BUILD_V2_SHA256.json`. Die zusätzlichen fehlerhaften CI-Installerdateien wurden entfernt. Die Startcodeänderung ist Quellstand für das nächste Release und kein Bestandteil der ursprünglichen v0.2.2-Binärdateien.
+
 Keine echten Discord-Zugangsdaten verwendet, kein physischer Mehrmonitor-/DPI-Test und keine vollständige Prüfung realer DOFUS-Journal-Screenshots. 3.086 Einträge ohne Bildreferenz, nur 17.377 mit zusätzlichen formatierten API-Effekten; Originaltyp 264 ohne Typ-Metadaten. Einzelne Questzieltexte enthalten Quellplatzhalter. Keine erfundenen Marktpreise, Gottheitsnamen oder Schatzsuchenziele. Keine übernommenen Volltextguides und keine pauschale Rechtefreigabe für offizielle Klassenporträts. Kein Windows-Authenticode-Zertifikat.

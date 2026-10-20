@@ -78,7 +78,10 @@ fn main() {
                     .open(directory.join("backend.log"))?;
                 let mut command = Command::new(resources.join("node.exe"));
                 command
-                    .arg(resources.join("backend.mjs"))
+                    // Node's entry-point resolver rejects extended Windows paths
+                    // on some runtimes. Resolve the entry point from its directory.
+                    .current_dir(&resources)
+                    .arg("backend.mjs")
                     .env("DATA_DIR", &directory)
                     .env("HOST", "127.0.0.1")
                     .env("PORT", "4310")

@@ -9,11 +9,22 @@ jobs:
   release:
     runs-on: windows-latest
     steps:
+      - name: Refuse changes to an already published release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $existing = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$env:GITHUB_REF_NAME" 2>$null
+            if ($LASTEXITCODE -eq 0 -and -not ($existing | ConvertFrom-Json).draft) {
+              throw 'This release is already published. Build a new version instead of replacing its assets.'
+            }
+          }
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '22.15.0'
           cache: pnpm
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
@@ -23,6 +34,7 @@ jobs:
       - name: Verify update signing configuration
         shell: pwsh
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UPDATER_PUBLIC_KEY: ${{ vars.TAURI_UPDATER_PUBLIC_KEY }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
@@ -31,6 +43,10 @@ jobs:
           }
           $configPath = 'apps/desktop/src-tauri/tauri.conf.json'
           $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json -AsHashtable
+          $existing = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/v$($config.version)" 2>$null
+          if ($LASTEXITCODE -eq 0 -and -not ($existing | ConvertFrom-Json).draft) {
+            throw 'This version is already published. Existing assets must remain immutable.'
+          }
           $config.plugins.updater.pubkey = $env:UPDATER_PUBLIC_KEY
           $config.bundle.createUpdaterArtifacts = $true
           $config | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $configPath -Encoding utf8
