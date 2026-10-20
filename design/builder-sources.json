@@ -1,0 +1,30 @@
+[
+  {
+    "tag": "v6.0_3.6.12.16",
+    "assets": [
+      {
+        "name": "dofus.sqlite",
+        "url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.6.12.16/dofus.sqlite",
+        "size": 381091840,
+        "sha256": "af4a2deb3026aaa65584215f5b2f899d9a29493676832cfb5e01ebca7674961d"
+      }
+    ]
+  },
+  {
+    "tag": "v6.0_3.7.12.12",
+    "assets": [
+      {
+        "name": "dofus.sqlite",
+        "url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.7.12.12/dofus.sqlite",
+        "size": 384843776,
+        "sha256": "556567d880ca3bd3e33cad956cacefef99dcb36cb789f53827159d50e3763553"
+      },
+      {
+        "name": "images-spell.zip",
+        "url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.7.12.12/images-spell.zip",
+        "size": 49728771,
+        "sha256": "385f79e8e30d431631dd78820d3da0ea885d9edd013d153bffc3b57ac342711b"
+      }
+    ]
+  }
+]

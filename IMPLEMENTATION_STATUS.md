@@ -1,4 +1,8 @@
-# Umsetzungsstand v0.2.2
+# Umsetzungsstand v0.3.0
+
+Builder und Charakter-Update: [BUILDER_IMPLEMENTATION_STATUS.md](BUILDER_IMPLEMENTATION_STATUS.md), Prüfungen und Grenzen: [BUILDER_TEST_REPORT.md](BUILDER_TEST_REPORT.md). Enthalten sind der gemeinsame Filter-/Berechnungskern, zwei getrennte Spielversionen, historische Item-/Seteffekte, alle 19 Klassenbilder, Charakter-Sets, direkte Schadensstrategien und der deterministische Hintergrund-Optimierer. Komplexe Kampfzustände bleiben ausdrücklich begrenzt.
+
+## Bestehende Module aus v0.2.x
 
 Die Änderungen sind im vorhandenen Monorepo umgesetzt. Prüfungen und Release-Ergebnisse stehen in [TEST_REPORT.md](TEST_REPORT.md).
 

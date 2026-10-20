@@ -1,4 +1,7 @@
+import { configure } from "./environment";
 import { test, expect } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => configure(page));
 
 test("a delayed old search never replaces newer suggestions", async ({
   page,

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 export type View =
   | "dashboard"
   | "items"
+  | "builder"
   | "quests"
   | "scanner"
   | "craft"
@@ -15,6 +16,7 @@ export function parseRoute(hash = location.hash) {
   const view = (!segments.length ? "dashboard" : segments[0]) as View;
   return {
     view,
+    entityId: segments[1],
     id:
       segments[1] && /^\d+$/.test(segments[1])
         ? Number(segments[1])

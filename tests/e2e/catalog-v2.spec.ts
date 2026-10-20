@@ -1,10 +1,13 @@
+import { configure, backend } from "./environment";
 import { test, expect } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => configure(page));
 
 test("live catalog count, strict categories, pagination, exact IDs, and class source", async ({
   request,
 }) => {
   const status = (
-    await (await request.get("http://127.0.0.1:4310/api/catalog/status")).json()
+    await (await request.get(`${backend}/api/catalog/status`)).json()
   ).data;
   expect(status.itemCount).toBe(status.uniqueSourceItemCount);
   expect(status.itemCount).toBeGreaterThan(20000);
@@ -12,7 +15,7 @@ test("live catalog count, strict categories, pagination, exact IDs, and class so
   expect(status.missingRecipeTargets).toBe(0);
   for (const group of ["equipment", "resources"]) {
     const result = await (
-      await request.get(`http://127.0.0.1:4310/api/items?mainGroup=${group}`)
+      await request.get(`${backend}/api/items?mainGroup=${group}`)
     ).json();
     expect(result.total).toBeGreaterThan(3000);
     expect(
@@ -27,9 +30,7 @@ test("live catalog count, strict categories, pagination, exact IDs, and class so
     "cosmetics",
   ]) {
     const body = await (
-      await request.get(
-        `http://127.0.0.1:4310/api/items?category=${category}&pageSize=30`,
-      )
+      await request.get(`${backend}/api/items?category=${category}&pageSize=30`)
     ).json();
     expect(body.data).toHaveLength(30);
     expect(
@@ -37,9 +38,8 @@ test("live catalog count, strict categories, pagination, exact IDs, and class so
     ).toBe(true);
     expect(body.total).toBe(status.categoryCounts[category]);
   }
-  const item = (
-    await (await request.get("http://127.0.0.1:4310/api/items/2469")).json()
-  ).data;
+  const item = (await (await request.get(`${backend}/api/items/2469`)).json())
+    .data;
   expect(item.name).toBe("Gelano");
   expect(item.recipe).toHaveLength(8);
   expect(
@@ -47,9 +47,8 @@ test("live catalog count, strict categories, pagination, exact IDs, and class so
       (m: { name: string }) => m.name && m.name !== "Materialdaten fehlen",
     ),
   ).toBe(true);
-  const classes = (
-    await (await request.get("http://127.0.0.1:4310/api/classes")).json()
-  ).data;
+  const classes = (await (await request.get(`${backend}/api/classes`)).json())
+    .data;
   expect(classes).toHaveLength(19);
   expect(classes.find((c: { id: number }) => c.id === 11).name).toBe(
     "Sacrieur",

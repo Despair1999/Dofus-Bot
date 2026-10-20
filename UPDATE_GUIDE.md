@@ -1,6 +1,6 @@
 # Windows-Updates
 
-v0.2.3 verwendet dieselbe Anwendungs-ID `fr.dofus.companion`, denselben öffentlichen Minisign-Schlüssel und denselben GitHub-Endpunkt wie v0.1.0. Der private Schlüssel bleibt außerhalb der Versionsverwaltung. Das Update behebt den Offline-Start des lokalen Dienstes unter Windows.
+v0.3.0 verwendet dieselbe Anwendungs-ID `fr.dofus.companion`, denselben öffentlichen Minisign-Schlüssel und denselben GitHub-Endpunkt wie v0.1.0. Der private Schlüssel bleibt außerhalb der Versionsverwaltung. Das Builder-Update übernimmt die korrigierten Windows-Startpfade und die geprüfte Node-Laufzeit 22.15.0.
 
 ## Für Anwender
 
@@ -17,7 +17,7 @@ Persönliche Daten liegen in den vorhandenen Windows-AppData-Verzeichnissen, get
 ```powershell
 $env:COMPANION_CATALOG_PATH = (Resolve-Path '.data/game-data.sqlite').Path
 pnpm --filter @dofus/desktop tauri build --bundles nsis
-pnpm --filter @dofus/desktop exec tauri signer sign --private-key-path .data/updater.key --password= src-tauri/target/release/bundle/nsis/'DOFUS Companion_0.2.3_x64-setup.exe'
+pnpm --filter @dofus/desktop exec tauri signer sign --private-key-path .data/updater.key --password= src-tauri/target/release/bundle/nsis/'DOFUS Companion_0.3.0_x64-setup.exe'
 ```
 
 Der private Schlüssel darf niemals im Repository, ZIP, Log oder Release erscheinen. Windows-Authenticode und Tauri-Updatesignaturen sind unterschiedliche Verfahren: Eine gültige Updatesignatur unterdrückt keine Windows-SmartScreen-Warnung.

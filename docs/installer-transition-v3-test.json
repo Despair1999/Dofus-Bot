@@ -1,0 +1,10 @@
+{
+  "version": "0.3.0",
+  "testedAt": "2026-10-20T22:35:34.162Z",
+  "installerExitCode": 0,
+  "registryVersion": "0.3.0",
+  "previousInstalledVersion": "0.2.3",
+  "installedServiceReleased": true,
+  "installLocationPreserved": true,
+  "scope": "Actual existing installation upgraded with signed NSIS while its old bundled service held node.exe open. Test service used separate SQLite data; installer retains user AppData."
+}

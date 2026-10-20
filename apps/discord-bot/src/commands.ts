@@ -1,6 +1,69 @@
 import { SlashCommandBuilder } from "discord.js";
 export const commands = [
   new SlashCommandBuilder()
+    .setName("builder")
+    .setDescription("Persönliche Builds und Charakter-Sets")
+    .addSubcommand((s) =>
+      s
+        .setName("profil")
+        .setDescription("Charaktere und gespeicherte Sets anzeigen"),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("sets")
+        .setDescription("Sets eines Charakters anzeigen")
+        .addStringOption((o) =>
+          o
+            .setName("charakter")
+            .setDescription("Charakter")
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("anzeigen")
+        .setDescription("Build und Ausrüstung anzeigen")
+        .addStringOption((o) =>
+          o
+            .setName("build")
+            .setDescription("Gespeicherter Build")
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("vergleichen")
+        .setDescription("Gespeicherte Builds vergleichen")
+        .addStringOption((o) =>
+          o
+            .setName("build")
+            .setDescription("Erster Build")
+            .setRequired(true)
+            .setAutocomplete(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("anderer")
+            .setDescription("Zweiter Build")
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName("teilen")
+        .setDescription("Build mit vollständiger JSON-Datei ausgeben")
+        .addStringOption((o) =>
+          o
+            .setName("build")
+            .setDescription("Gespeicherter Build")
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
+    ),
+  new SlashCommandBuilder()
     .setName("hilfe")
     .setDescription("Verfügbare Companion-Funktionen anzeigen"),
   new SlashCommandBuilder()

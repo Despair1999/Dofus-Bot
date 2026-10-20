@@ -1,4 +1,7 @@
+import { configure, backend } from "./environment";
 import { test, expect } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => configure(page));
 test("screenshot is analyzed locally by the real browser OCR worker", async ({
   page,
 }) => {
@@ -7,7 +10,7 @@ test("screenshot is analyzed locally by the real browser OCR worker", async ({
   page.on("request", (r) => {
     if (
       ["POST", "PUT"].includes(r.method()) &&
-      !r.url().startsWith("http://127.0.0.1:4310/api/recognize")
+      !r.url().startsWith(`${backend}/api/recognize`)
     )
       uploads.push(r.url());
     if (r.url().endsWith("/api/recognize")) {

@@ -1,0 +1,16 @@
+[
+  {
+    "file": "catalog-supplement.json",
+    "url": "https://api.dofusdu.de/dofus3/v1/de/items/{category}/all",
+    "version": "3.7.12.12",
+    "size": 17639556,
+    "sha256": "f2ff989d6ec2f4aae7fd2af25aebc08c504c53df7e78d6b7ff6c703a21c80c14"
+  },
+  {
+    "file": "builder-sets.json",
+    "url": "https://api.dofusdu.de/dofus3/v1/de/sets/all",
+    "version": "3.7.12.12",
+    "size": 1618453,
+    "sha256": "33a521b33aa4317d71f00bf8b335d53782ff115dc8285784e09ab1c3c201b531"
+  }
+]

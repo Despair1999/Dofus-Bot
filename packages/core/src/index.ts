@@ -38,7 +38,7 @@ export interface Item {
   nameFr?: string;
   nameEn?: string;
   typeId?: number;
-  mainGroup?: 'equipment'|'resources';
+  mainGroup?: "equipment" | "resources";
   iconId?: number;
 }
 export interface Ingredient {
@@ -57,7 +57,7 @@ export interface ItemDetail extends Item {
   source: string;
   requirements?: string;
   weight?: number;
-  setId?: number|null;
+  setId?: number | null;
   setName?: string;
   rawEffects?: unknown[];
   effectsAvailable?: boolean;
@@ -72,9 +72,21 @@ export interface Envelope<T> {
   total?: number;
   page?: number;
   pageSize?: number;
-  version?: string|null;
+  version?: string | null;
 }
-export interface GameClass {id:number;classId:number;name:string;nameDe:string;nameFr:string;nameEn:string;aliases:string[];icon:string;portrait:string;source:string;placeholder:boolean}
+export interface GameClass {
+  id: number;
+  classId: number;
+  name: string;
+  nameDe: string;
+  nameFr: string;
+  nameEn: string;
+  aliases: string[];
+  icon: string;
+  portrait: string;
+  source: string;
+  placeholder: boolean;
+}
 
 export function normalize(text: string): string {
   return text
@@ -216,3 +228,5 @@ export function route(
   }
   return null;
 }
+export * from "./builder.js";
+export * from "./optimizer.js";

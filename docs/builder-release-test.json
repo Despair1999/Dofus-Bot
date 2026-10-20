@@ -1,0 +1,20 @@
+{
+  "version": "0.3.0",
+  "testedAt": "2026-10-20T22:37:23.946Z",
+  "workspaceTests": 72,
+  "browserTests": 27,
+  "nativeRustTests": 6,
+  "nativeSmokePassed": 8,
+  "serviceUpgradePassed": true,
+  "releaseSignatureVerified": true,
+  "tamperedInstallerRejected": true,
+  "installerTransitionPassed": true,
+  "installedBuilderPassed": true,
+  "updaterOffered": false,
+  "evidence": [
+    "builder-service-upgrade-test.json",
+    "native-v2-test.json",
+    "installer-transition-v3-test.json",
+    "builder-native-test.json"
+  ]
+}

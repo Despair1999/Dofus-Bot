@@ -1,10 +1,12 @@
 # DOFUS Companion
 
-Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend und optionaler Discord-Bot. **v0.2.3** behebt den Offline-Start des lokalen Dienstes unter Windows. Enthalten sind das neue Branding, ein vollständiger verfügbarer Itemkatalog mit Suchvorschlägen, Questkategorien, bebilderte Rezepte, Klassenauswahl, Almanax-Zeitstrahl und ein separates konfigurierbares Overlay.
+Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend und optionaler Discord-Bot. **v0.3.0** ergänzt einen Ausrüstungs-Builder mit Charakter-Sets, gemeinsamen Effektfiltern, versionierten Zaubern, Schadensvorschau, Vergleichen und einem Optimierer im Hintergrund. Gelieferte Bilder aller 19 Klassen sind integriert. Die bisherigen Such-, Quest-, OCR-, Crafting-, Almanax- und Overlay-Module bleiben erhalten.
 
 Windows-Pakete: [Releases](https://github.com/Despair1999/Dofus-Bot/releases). Für bestehende Installationen: **Einstellungen → Nach Updates suchen**. Details: [UPDATE_GUIDE.md](UPDATE_GUIDE.md). Umsetzungsgrenzen und ausgeführte Prüfungen: [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), [TEST_REPORT.md](TEST_REPORT.md).
 
 Der geprüfte öffentliche Katalog enthält 21.554 Items, 4.743 Rezepte, 1.976 Quests und 19 Klassen. [Datenqualität und Import](DATA_IMPORT.md) dokumentieren auch fehlende Bildreferenzen und Effekttexte. Der Windows-Release liefert diesen Katalog mit; persönliche Profile und Fortschritte bleiben davon getrennt.
+
+Der Builder liefert getrennte Ausrüstungs-/Set-/Zauberdaten für DOFUS 3.6.12.16 und 3.7.12.12 mit. Je Datenstand sind 836 Klassensprüche mit 1.729 Rängen enthalten. Komplexe Zustandsmechaniken werden nicht mit erfundenen exakten Schäden ersetzt. [Builder-Prüfbericht](BUILDER_TEST_REPORT.md), [Berechnungsumfang](DAMAGE_ENGINE_SPEC.md), [Datenquellen](SPELL_DATA_SOURCES.md).
 
 ## Schnellstart unter Windows
 

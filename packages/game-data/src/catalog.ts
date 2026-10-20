@@ -1,5 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
+import { effectSQL, classAssets, type EffectFilter } from "@dofus/core";
 
 type Row = Record<string, any>;
 export type RawCategory =
@@ -37,6 +38,8 @@ export interface CatalogItem {
   version: string;
 }
 export interface CatalogFilters {
+  effectFilters?: EffectFilter[];
+  effectMode?: string;
   q?: string;
   category?: string;
   mainGroup?: string;
@@ -392,6 +395,11 @@ export function searchCatalog(db: DatabaseSync, f: CatalogFilters = {}) {
   const q = normalized(f.q ?? "");
   const where: string[] = [],
     params: (string | number)[] = [];
+  if (f.effectFilters?.length) {
+    const predicate = effectSQL(f.effectFilters, f.effectMode ?? "and");
+    where.push(predicate.clause);
+    params.push(...predicate.params);
+  }
   if (f.category) {
     where.push("category=?");
     params.push(f.category);
@@ -519,7 +527,14 @@ export function catalogTypes(db: DatabaseSync) {
 export function classCatalog(db: DatabaseSync) {
   return (
     db.prepare("SELECT content FROM classes ORDER BY id").all() as Row[]
-  ).map((r) => JSON.parse(r.content));
+  ).map((r) => {
+    const entry = JSON.parse(r.content);
+    return {
+      ...entry,
+      ...classAssets[entry.id],
+      ...(classAssets[entry.id] ? { placeholder: false } : {}),
+    };
+  });
 }
 export function enrichQuestRelations(src: DatabaseSync, db: DatabaseSync) {
   const tr = translator(src);

@@ -123,7 +123,7 @@ function safeIdentifier(name: string): string {
   return '"' + name + '"';
 }
 export class GameDataStore {
-  private db: DatabaseSync;
+  readonly db: DatabaseSync;
   private updating = false;
   progress: { phase: string; percent: number; message: string } = {
     phase: "idle",

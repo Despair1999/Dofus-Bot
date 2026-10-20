@@ -40,6 +40,10 @@ const result = await build({
   },
 });
 await copyFile(process.execPath, resolve(resources, "node.exe"));
+await copyFile(
+  resolve(root, "packages/game-data/assets/builder-data.json"),
+  resolve(resources, "builder-data.json"),
+);
 // Optional public catalog snapshot. It contains no account tables or credentials.
 const catalogPath = process.env.COMPANION_CATALOG_PATH;
 if (catalogPath) {

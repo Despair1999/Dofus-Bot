@@ -21,6 +21,8 @@ import {
   type ItemType,
 } from "./types";
 import "./items.css";
+import EffectFilters from "../../v3/EffectFilters";
+import { decodeEffectFilters } from "@dofus/core";
 export interface ItemsPageProps {
   config: Config;
   query?: string;
@@ -171,6 +173,14 @@ export default function ItemsPage({
         onSelect={(i) => navigateItem(i.id, i.category)}
         filters={filters}
       />
+      {!itemId && (
+        <EffectFilters
+          value={decodeEffectFilters(filters.effects)}
+          mode={filters.effectMode ?? "and"}
+          onMode={(effectMode) => update({ effectMode })}
+          onChange={(value) => update({ effects: JSON.stringify(value) })}
+        />
+      )}
       {error && (
         <div className="notice" role="alert">
           {error}

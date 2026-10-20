@@ -1,0 +1,14 @@
+[
+  {
+    "name": "itemsdata.json",
+    "url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.6.12.16/itemsdata.json",
+    "sha256": "1db1e3626f2a256bdeecc4f2bc9196b0efd1ad456d0d3c0e19e5a49850639fbb",
+    "size": 98611441
+  },
+  {
+    "name": "itemsetsdata.json",
+    "url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.6.12.16/itemsetsdata.json",
+    "sha256": "9fd3c9e0163699b4655fb666a2389ee7b4e6ca3c33f3aea496ec003251c46b2c",
+    "size": 11876322
+  }
+]

@@ -1,0 +1,196 @@
+{
+  "classes": [
+    {
+      "classId": 9,
+      "file": "Cra.jpg",
+      "sha256": "81b4a45d2f182f2fb7aba533f5f537bbb8704086058f1c2aaf01112e71f538bd",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/9.webp"
+    },
+    {
+      "classId": 6,
+      "file": "Ecaflip.jpg",
+      "sha256": "bc380638b162babffea00d05ea3cf388b5a3593ac1e34956fecfd87ce991b31e",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/6.webp"
+    },
+    {
+      "classId": 16,
+      "file": "Eliotrope.jpg",
+      "sha256": "54d52869e8246146f71bfd5692042adb1ac3d1e06c14153a3aa352a8046aca8a",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/16.webp"
+    },
+    {
+      "classId": 7,
+      "file": "Eniripsa.jpg",
+      "sha256": "5a251d3435c373d3d35c0ab7072f3f5b5f56d9505852233f8eb3884d21037a0d",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/7.webp"
+    },
+    {
+      "classId": 3,
+      "file": "Enutrof.jpg",
+      "sha256": "9d57ddffe38c119b01d952382c68665d2fe5c5bc1fd959f388750b58a69b877b",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/3.webp"
+    },
+    {
+      "classId": 1,
+      "file": "Feca.jpg",
+      "sha256": "15f53d64df87f91ee79b4e028eb4ce0bf036944315dd71fe568647036fb9c290",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/1.webp"
+    },
+    {
+      "classId": 20,
+      "file": "Forgelance.jpg",
+      "sha256": "4be97a5a6b83c8fb833b153e0782d899eebae4e4bad46f631eecee4dd94c5724",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/20.webp"
+    },
+    {
+      "classId": 13,
+      "file": "Halsabschneider.jpg",
+      "sha256": "ff9892ed1b7998a161e4b693ac6a5c26a58fb9b08fcec96d05b4d10a1670768a",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/13.webp"
+    },
+    {
+      "classId": 8,
+      "file": "Iop.jpg",
+      "sha256": "33cbbf4b2cfb451e66541ad498b7f4e82f193fe9e49e89843887301f301c3cf1",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/8.webp"
+    },
+    {
+      "classId": 14,
+      "file": "Maskarador.jpg",
+      "sha256": "93deb04ccd03bbd93539bbf42eac723d721b874fa2339ff7d95ff2bcea367989",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/14.webp"
+    },
+    {
+      "classId": 2,
+      "file": "Osamodas.jpg",
+      "sha256": "09d9c04cabd38828eaefe7cb84cd785912ac1c874d6d761e3cad3aaf701ce8ee",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/2.webp"
+    },
+    {
+      "classId": 18,
+      "file": "Ouginak.jpg",
+      "sha256": "c47c61eb24e238f2741f5a1baae18c3dd40624a3210ce8d83f6814440f5b9f68",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/18.webp"
+    },
+    {
+      "classId": 12,
+      "file": "Pandawa.jpg",
+      "sha256": "d31216ecde5d8ac9ff00b390690e5aac24f0148dafa022b2e611dc9d1f18ab7d",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/12.webp"
+    },
+    {
+      "classId": 11,
+      "file": "Sacrier.jpg",
+      "sha256": "a557b281fb806ceb9643965bbef4173ffd4395f3a13a4a9eed85d914f41a875f",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/11.webp"
+    },
+    {
+      "classId": 10,
+      "file": "Sadida.jpg",
+      "sha256": "e3b039164a28ababd53c42a6bd40113c2155476d7f007640bf4b343de22b7ef4",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/10.webp"
+    },
+    {
+      "classId": 4,
+      "file": "Sram.jpg",
+      "sha256": "db6841f3ffaeb5e5c0e3d6a2bb5830e599b324a6d2ae80de551c1809e143fbf3",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/4.webp"
+    },
+    {
+      "classId": 15,
+      "file": "Steamer.jpg",
+      "sha256": "a53741383a39bcf8608b2d99c2f6ec6cb538744a301d5e273c1bebd864532a05",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/15.webp"
+    },
+    {
+      "classId": 5,
+      "file": "Xelor.jpg",
+      "sha256": "462f4d98880cb069720ecb0d9e7629a6cd53364d0bd35b8fbee9999c5346223c",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/5.webp"
+    },
+    {
+      "classId": 17,
+      "file": "Übermagier.jpg",
+      "sha256": "8101837a5d9a6c5a50f7d698759b26d074b5823a58ba2e7c9e4ab13317fe3cd1",
+      "size": [
+        468,
+        417
+      ],
+      "asset": "/classes/17.webp"
+    }
+  ],
+  "missing": [],
+  "duplicates": []
+}

@@ -1,7 +1,7 @@
 {
-  "testedAt": "2026-10-20T18:21:32.542Z",
+  "testedAt": "2026-10-20T22:34:25.759Z",
   "runtime": "Windows x64 / Tauri / WebView2",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "passed": [
     "native startup and global hotkey registration",
     "bundled catalog activated automatically",

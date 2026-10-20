@@ -1,0 +1,11 @@
+{
+  "version": "0.3.0",
+  "testedAt": "2026-10-20T22:31:24.903Z",
+  "fromVersion": "0.2.3",
+  "scope": "Actual old and new bundled Node/backend services; separate SQLite fixture, no user databases modified",
+  "serviceUpgradePassed": true,
+  "existingCharacterPreserved": true,
+  "existingProgressPreserved": true,
+  "buildAndExoPreservedAfterRestart": true,
+  "allClassesAndVersionsEnumerated": true
+}

@@ -16,7 +16,7 @@ const assets = [
   `game-catalog-v${version}.sqlite`,
 ];
 const notes =
-  "Behebt den Offline-Start des lokalen Dienstes unter Windows. Korrigierte Startpfade und geprüfte Node-Laufzeit 22.15.0. Persönliche Daten bleiben erhalten. Dieses Update kann über Einstellungen → Nach Updates suchen installiert werden.";
+  "Neuer Ausrüstungs-Builder mit echten Items, gemeinsamen Attributfiltern, Setboni, individuellen Rolls und Exomagie, Charakter-Sets, Vergleichen und Hintergrund-Optimierer. Klassenbilder aus der bereitgestellten ZIP. Getrennte Zauberkataloge für DOFUS 3.6.12.16 und 3.7.12.12 mit lokalen Icons. Schadensvorschau für unterstützte direkte Effekte; komplexe Mechaniken werden ausdrücklich markiert. Offline-Entwürfe und Synchronisierung, JSON-Austausch und private Discord-Builder-Funktionen. Bestehende Daten und der signierte Updatekanal bleiben erhalten. Details und Grenzen: BUILDER_TEST_REPORT.md und DAMAGE_ENGINE_SPEC.md.";
 const signature = (
   await readFile(resolve("artifacts", installer + ".sig"), "utf8")
 ).trim();
@@ -41,7 +41,22 @@ if (version === "0.2.3") {
     !regression.releaseSignatureVerified ||
     !regression.tamperedInstallerRejected
   )
-    throw new Error("Offline-start regression or signature validation is incomplete");
+    throw new Error(
+      "Offline-start regression or signature validation is incomplete",
+    );
+}
+if (version === "0.3.0") {
+  const report = JSON.parse(
+    await readFile("docs/builder-release-test.json", "utf8"),
+  );
+  if (
+    report.version !== version ||
+    !report.serviceUpgradePassed ||
+    !report.releaseSignatureVerified ||
+    !report.tamperedInstallerRejected ||
+    nativeReport.version !== version
+  )
+    throw Error("Builder release acceptance is incomplete");
 }
 const source = execFileSync("git", ["rev-parse", "HEAD"], {
   encoding: "utf8",
@@ -117,7 +132,7 @@ if (process.argv.includes("--publish")) {
     hashes.map((a) => `${a.sha256}  ${a.name}`).join("\n") + "\n",
   );
   await writeFile(
-    "docs/BUILD_V2_SHA256.json",
+    `docs/BUILD_v${version}_SHA256.json`,
     JSON.stringify({ version, builtFrom: source, files: hashes }, null, 2),
   );
   if (!release)

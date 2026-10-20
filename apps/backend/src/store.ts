@@ -108,6 +108,20 @@ export class PersonalStore {
   deleteCharacter(id: string) {
     this.db.exec("BEGIN IMMEDIATE");
     try {
+      if (
+        this.db
+          .prepare(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='builder_projects'",
+          )
+          .get()
+      ) {
+        const now = new Date().toISOString();
+        this.db
+          .prepare(
+            "UPDATE builder_projects SET active=0,revision=revision+1,updated_at=?,content=json_set(content,'$.characterId',NULL,'$.active',0,'$.updatedAt',?) WHERE character_id=?",
+          )
+          .run(now, now, id);
+      }
       this.db.prepare("DELETE FROM characters WHERE id=?").run(id);
       this.db
         .prepare(
@@ -222,6 +236,21 @@ export class PersonalStore {
     return {
       characters: this.characters(),
       progress: this.db.prepare("SELECT * FROM character_quests").all(),
+      builds: this.db
+        .prepare(
+          "SELECT content,character_id,active,revision FROM builder_projects",
+        )
+        .all()
+        .map((row) => ({
+          ...JSON.parse(String(row.content)),
+          characterId: row.character_id,
+          active: !!row.active,
+          revision: row.revision,
+        })),
+      builderTargets: this.db
+        .prepare("SELECT content FROM builder_target_profiles")
+        .all()
+        .map((row) => JSON.parse(String(row.content))),
       exportedAt: new Date().toISOString(),
     };
   }

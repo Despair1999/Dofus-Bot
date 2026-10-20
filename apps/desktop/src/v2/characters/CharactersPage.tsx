@@ -8,10 +8,11 @@ import {
   Edit3,
   Trash2,
 } from "lucide-react";
-import type { Character, CharacterInput, GameClass } from "@dofus/core";
+import type { Character, CharacterInput, GameClass, Build } from "@dofus/core";
 import { cached, type Config } from "../../client";
 import ClassSelector from "./ClassSelector";
 import "./characters.css";
+import { navigatePath } from "../routing";
 interface Props {
   config: Config;
   characters: Character[];
@@ -33,6 +34,7 @@ export default function CharactersPage({
   onDelete,
 }: Props) {
   const [classes, setClasses] = useState<GameClass[]>([]),
+    [builds, setBuilds] = useState<Build[]>([]),
     [error, setError] = useState(""),
     [sort, setSort] = useState("name"),
     [editing, setEditing] = useState<Character | null>(null),
@@ -52,6 +54,17 @@ export default function CharactersPage({
       cancelled = true;
     };
   }, [config.url, config.token]);
+  useEffect(() => {
+    let cancelled = false;
+    void cached<Build[]>("/api/builder/builds", config)
+      .then((r) => {
+        if (!cancelled) setBuilds(r.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [config]);
   const sorted = useMemo(
     () =>
       [...characters].sort((a, b) =>
@@ -143,6 +156,25 @@ export default function CharactersPage({
                     <h3>{character.name}</h3>
                     <p>{gameClass?.nameDe || character.className}</p>
                     <small>{character.server}</small>
+                    <small>
+                      {
+                        builds.filter((b) => b.characterId === character.id)
+                          .length
+                      }{" "}
+                      gespeicherte Sets
+                    </small>
+                    {builds.find(
+                      (b) => b.characterId === character.id && b.active,
+                    ) && (
+                      <small>
+                        Aktiv im Companion:{" "}
+                        {
+                          builds.find(
+                            (b) => b.characterId === character.id && b.active,
+                          )?.name
+                        }
+                      </small>
+                    )}
                     {activeId === character.id && (
                       <span className="pill">
                         <Check size={11} /> Aktives Profil
@@ -155,6 +187,14 @@ export default function CharactersPage({
                     )}
                   </button>
                   <div className="v2-character-actions">
+                    <button
+                      className="secondary"
+                      onClick={() =>
+                        navigatePath("/builder?characterId=" + character.id)
+                      }
+                    >
+                      Sets
+                    </button>
                     <button
                       className="secondary"
                       onClick={() => startEdit(character)}

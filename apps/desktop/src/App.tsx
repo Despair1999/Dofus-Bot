@@ -69,6 +69,7 @@ import OverlayView from "./v2/overlay/OverlayView";
 import OverlaySettings from "./v2/overlay/OverlaySettings";
 import UpdatePanel from "./v2/updates/UpdatePanel";
 import CatalogPanel from "./v2/settings/CatalogPanel";
+import BuilderPage from "./v3/BuilderPage";
 import { useRoute, navigatePath, type View } from "./v2/routing";
 import appPackage from "../package.json";
 import "./v2/v2.css";
@@ -84,6 +85,7 @@ type SavedProgress = Pick<Progress, "questId" | "step" | "status" | "version">;
 const tabs: { id: View; label: string; icon: typeof Search }[] = [
   { id: "dashboard", label: "Übersicht", icon: LayoutDashboard },
   { id: "items", label: "Gegenstände", icon: Package },
+  { id: "builder", label: "Builder", icon: ShieldCheck },
   { id: "quests", label: "Quest-Assistent", icon: BookOpen },
   { id: "scanner", label: "Bildschirm erkennen", icon: ScanLine },
   { id: "craft", label: "Crafting & Kamas", icon: Hammer },
@@ -190,6 +192,21 @@ function MainApp() {
       stopped = true;
     };
   }, [ready]);
+  useEffect(() => {
+    if (!ready || isTauri() || config.token.length < 32) return;
+    let cancelled = false;
+    void api<Character[]>("/api/characters", config)
+      .then((r) => {
+        if (!cancelled) {
+          setCharacters(r.data);
+          void write("characters", r.data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, config.url, config.token]);
   useEffect(() => {
     if (!ready) return;
     let stopped = false;
@@ -438,7 +455,24 @@ function MainApp() {
     )
       return false;
     return run(async () => {
-      await api(`/api/characters/${target.id}`, config, undefined, "DELETE");
+      const builds = await api<{ id: string }[]>(
+        `/api/builder/builds?characterId=${target.id}`,
+        config,
+      );
+      const choice = builds.data.length
+        ? prompt(
+            `${builds.data.length} gespeicherte Builds: „behalten“ löst die Zuordnung, „löschen“ entfernt sie ebenfalls. Abbrechen beendet den Vorgang.`,
+            "behalten",
+          )
+        : "behalten";
+      if (choice !== "behalten" && choice !== "löschen") return;
+      const handling = choice === "behalten" ? "keep" : "delete";
+      await api(
+        `/api/characters/${target.id}?builds=${handling}`,
+        config,
+        undefined,
+        "DELETE",
+      );
       const next = characters.filter((c) => c.id !== target.id);
       setCharacters(next);
       await write("characters", next);
@@ -562,7 +596,7 @@ function MainApp() {
     for (const c of characters)
       progressByCharacter[c.id] = await read(`progress:${c.id}`, []);
     const contents = {
-      version: 2,
+      version: 3,
       characters,
       progressByCharacter,
       favorites,
@@ -571,6 +605,19 @@ function MainApp() {
       overlayLayouts: await read("overlay-layouts-v2", null),
       craftingProjects: await read("craft:projects", []),
       shoppingLists: await read("shopping-lists", []),
+      builderProjects: (
+        await cached<import("@dofus/core").Build[]>(
+          "/api/builder/builds",
+          config,
+        ).catch(async () => ({ data: await read("builder:saved", []) }))
+      ).data,
+      builderOutbox: await read("builder:outbox", []),
+      builderBuffProfiles: await read("builder:buffProfiles", []),
+      builderTargetProfiles: await read("builder:targets", []),
+      builderLastDraft: await read(
+        "builder:draft:" + (await read("builder:lastDraft", "")),
+        null,
+      ),
     };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(contents, null, 2)], {
@@ -625,6 +672,8 @@ function MainApp() {
       ? new URL(lastSearch.current, location.origin).searchParams
       : route.params;
   const parsedFilters: ItemFilters = {
+    effects: filterParams.get("effects") || undefined,
+    effectMode: filterParams.get("effectMode") === "or" ? "or" : "and",
     mainGroup:
       filterParams.get("mainGroup") === "resources" ? "resources" : "equipment",
     sort: (filterParams.get("sort") as ItemFilters["sort"]) || "name",
@@ -757,51 +806,54 @@ function MainApp() {
               ))}
             </div>
           )}
-          <div className="page-heading">
-            <div>
-              <span className="eyebrow">
-                DOFUS COMPANION / DIE WELT DER ZWÖLF AN DEINER SEITE
-              </span>
-              <h1>
-                {tab === "dashboard" ? (
-                  <>
-                    Dein nächstes <em>Abenteuer wartet.</em>
-                  </>
-                ) : (
-                  tabs.find((entry) => entry.id === tab)?.label
-                )}
-              </h1>
-              <p>
-                {
-                  (
-                    {
-                      dashboard:
-                        "Mehr Überblick. Weniger Umwege. Dein persönlicher Begleiter für DOFUS.",
-                      items:
-                        "Die Enzyklopädie für Ausrüstung, Ressourcen und deine nächsten Ideen.",
-                      quests:
-                        "Geschichten entdecken und jeden bestätigten Schritt im Blick behalten.",
-                      craft:
-                        "Von der Idee zum fertigen Gegenstand. Mit deinem persönlichen Materialplan.",
-                      characters:
-                        "Deine Charaktere, Klassen und Fortschritte – übersichtlich verbunden.",
-                      almanax:
-                        "Plane deine Opfergaben und entdecke die nächsten Tagesboni.",
-                      scanner:
-                        "Deine Aufnahme. Lokale Erkennung. Du bestätigst das Ergebnis.",
-                      favorites:
-                        "Deine wichtigsten Gegenstände und Quests direkt griffbereit.",
-                      settings: "Dein Companion, so wie du ihn brauchst.",
-                    } as Record<View, string>
-                  )[tab]
-                }
-              </p>
+          {tab !== "builder" && (
+            <div className="page-heading">
+              <div>
+                <span className="eyebrow">
+                  DOFUS COMPANION / DIE WELT DER ZWÖLF AN DEINER SEITE
+                </span>
+                <h1>
+                  {tab === "dashboard" ? (
+                    <>
+                      Dein nächstes <em>Abenteuer wartet.</em>
+                    </>
+                  ) : (
+                    tabs.find((entry) => entry.id === tab)?.label
+                  )}
+                </h1>
+                <p>
+                  {
+                    (
+                      {
+                        dashboard:
+                          "Mehr Überblick. Weniger Umwege. Dein persönlicher Begleiter für DOFUS.",
+                        items:
+                          "Die Enzyklopädie für Ausrüstung, Ressourcen und deine nächsten Ideen.",
+                        quests:
+                          "Geschichten entdecken und jeden bestätigten Schritt im Blick behalten.",
+                        craft:
+                          "Von der Idee zum fertigen Gegenstand. Mit deinem persönlichen Materialplan.",
+                        characters:
+                          "Deine Charaktere, Klassen und Fortschritte – übersichtlich verbunden.",
+                        almanax:
+                          "Plane deine Opfergaben und entdecke die nächsten Tagesboni.",
+                        scanner:
+                          "Deine Aufnahme. Lokale Erkennung. Du bestätigst das Ergebnis.",
+                        favorites:
+                          "Deine wichtigsten Gegenstände und Quests direkt griffbereit.",
+                        settings: "Dein Companion, so wie du ihn brauchst.",
+                        builder: "Deine Ausrüstung. Dein Plan.",
+                      } as Record<View, string>
+                    )[tab]
+                  }
+                </p>
+              </div>
+              <div className="version">
+                v{appPackage.version}
+                <span>COMMUNITY</span>
+              </div>
             </div>
-            <div className="version">
-              v{appPackage.version}
-              <span>COMMUNITY</span>
-            </div>
-          </div>
+          )}
           {onboarding && tab === "dashboard" && (
             <section className="onboarding">
               <Compass size={24} />
@@ -1164,6 +1216,15 @@ function MainApp() {
               onRefresh={() => void synchronize()}
               onSave={saveCharacter}
               onDelete={deleteCharacter}
+            />
+          )}
+          {tab === "builder" && (
+            <BuilderPage
+              config={config}
+              classes={classes}
+              characters={characters}
+              buildId={route.entityId}
+              characterId={route.params.get("characterId") ?? undefined}
             />
           )}
           {tab === "almanax" && (

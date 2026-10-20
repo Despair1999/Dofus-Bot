@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { Package } from "lucide-react";
 export default function ItemImage({
-  url,
-  name = "",
+  url: explicitUrl,
+  name: explicitName,
+  item,
   size = 44,
 }: {
   url?: string;
   name?: string;
   size?: number;
+  item?: { imageUrl?: string; name: string };
 }) {
+  const url = explicitUrl ?? item?.imageUrl;
+  const name = explicitName ?? item?.name ?? "";
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [url]);
   return url && !failed ? (

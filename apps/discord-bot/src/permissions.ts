@@ -5,7 +5,8 @@ export function canAccess(
   userId: string,
   ownerId: string,
 ): boolean {
-  if (command === "charakter") return userId === ownerId;
+  if (command === "charakter" || command === "builder")
+    return userId === ownerId;
   if (command === "quest" && subcommand !== "suchen" && subcommand !== "info")
     return userId === ownerId;
   return true;

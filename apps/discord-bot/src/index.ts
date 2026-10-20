@@ -24,6 +24,14 @@ import {
 import { materials, profit } from "@dofus/core";
 import type { Quest } from "@dofus/game-data";
 import { canAccess } from "./permissions.js";
+import {
+  buildEmbed,
+  buildAttachment,
+  classAttachment,
+  dispatchBuildShare,
+  type BuildSummary,
+} from "./builder.js";
+import type { Build } from "@dofus/core";
 const token = process.env.DISCORD_TOKEN,
   ownerId = process.env.DISCORD_OWNER_ID,
   apiToken = process.env.COMPANION_TOKEN;
@@ -44,6 +52,22 @@ const characters = async () =>
 client.once(Events.ClientReady, (c) =>
   console.log(`Companion angemeldet: ${c.user.tag}`),
 );
+let sharing = false;
+const shareTimer = setInterval(() => {
+  if (!client.isReady() || sharing) return;
+  sharing = true;
+  void dispatchBuildShare(client, api, ownerId)
+    .catch((e) =>
+      console.error(
+        "Build-Zustellung fehlgeschlagen:",
+        e instanceof Error ? e.message : "Unbekannter Fehler",
+      ),
+    )
+    .finally(() => {
+      sharing = false;
+    });
+}, 15000);
+shareTimer.unref();
 client.on(Events.InteractionCreate, async (i) => {
   try {
     if (i.isAutocomplete()) {
@@ -52,6 +76,24 @@ client.on(Events.InteractionCreate, async (i) => {
         return;
       }
       const query = String(i.options.getFocused()).toLowerCase();
+      if (
+        i.commandName === "builder" &&
+        i.options.getFocused(true).name !== "charakter"
+      ) {
+        const all = (
+          await api.request<{ data: Build[] }>("/api/builder/builds")
+        ).data;
+        await i.respond(
+          all
+            .filter((b) => b.name.toLowerCase().includes(query))
+            .slice(0, 25)
+            .map((b) => ({
+              name: `${b.name} · ${b.gameVersion}`.slice(0, 100),
+              value: b.id,
+            })),
+        );
+        return;
+      }
       await i.respond(
         (await characters())
           .filter((c) => c.name.toLowerCase().includes(query))
@@ -188,6 +230,70 @@ client.on(Events.InteractionCreate, async (i) => {
     if (i.commandName === "status") {
       await api.request("/health");
       await i.editReply("Backend erreichbar.");
+      return;
+    }
+    if (i.commandName === "builder") {
+      const sub = i.options.getSubcommand();
+      const all = (await api.request<{ data: Build[] }>("/api/builder/builds"))
+        .data;
+      if (sub === "profil" || sub === "sets") {
+        const characterId =
+          sub === "sets" ? i.options.getString("charakter", true) : null;
+        const list = all.filter(
+          (b) => !characterId || b.characterId === characterId,
+        );
+        await i.editReply({
+          embeds: [
+            embed("Deine Companion-Sets").setDescription(
+              list
+                .map(
+                  (b) =>
+                    `**${b.name}** · ${b.gameVersion}${b.active ? " · aktiv" : ""}\n\`${b.id}\``,
+                )
+                .join("\n\n")
+                .slice(0, 4000) || "Noch keine Sets gespeichert.",
+            ),
+          ],
+        });
+        return;
+      }
+      const id = i.options.getString("build", true);
+      const summary = (
+        await api.request<{ data: BuildSummary }>(
+          `/api/builder/builds/${encodeURIComponent(id)}/summary`,
+        )
+      ).data;
+      if (sub === "vergleichen") {
+        const other = (
+          await api.request<{ data: BuildSummary }>(
+            `/api/builder/builds/${encodeURIComponent(i.options.getString("anderer", true))}/summary`,
+          )
+        ).data;
+        if (summary.build.gameVersion !== other.build.gameVersion)
+          throw Error(
+            "Verschiedene Datenversionen können nicht stillschweigend verglichen werden.",
+          );
+        const portraits = [
+          ...new Set([summary.build.classId, other.build.classId]),
+        ].flatMap((id) => {
+          const image = classAttachment(id);
+          return image ? [image] : [];
+        });
+        await i.editReply({
+          embeds: [buildEmbed(summary), buildEmbed(other)],
+          files: portraits,
+        });
+        return;
+      }
+      await i.editReply({
+        embeds: [buildEmbed(summary)],
+        files: [
+          ...(sub === "teilen" ? [buildAttachment(summary.build)] : []),
+          ...[classAttachment(summary.build.classId)].flatMap((image) =>
+            image ? [image] : [],
+          ),
+        ],
+      });
       return;
     }
     if (i.commandName === "charakter") {

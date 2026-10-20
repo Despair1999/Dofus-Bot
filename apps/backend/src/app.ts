@@ -6,6 +6,7 @@ import { z, ZodError } from "zod";
 import { characterInput, progressInput } from "@dofus/core";
 import { GameDataStore } from "@dofus/game-data";
 import { PersonalStore, ConflictError } from "./store.js";
+import { BuilderStore, registerBuilder, parseEffects } from "./builder.js";
 import {
   Dofusdude,
   UpstreamError,
@@ -64,6 +65,9 @@ export async function createApp(options: AppOptions) {
     const privateRoute =
       url.startsWith("/api/characters") ||
       url.startsWith("/api/account") ||
+      url.startsWith("/api/builder/builds") ||
+      url.startsWith("/api/builder/targets") ||
+      url.startsWith("/api/builder/shares") ||
       request.method !== "GET" ||
       (url === "/api/quests" &&
         !!(request.query as { characterId?: string }).characterId);
@@ -107,10 +111,10 @@ export async function createApp(options: AppOptions) {
       .code(500)
       .send({ error: "Interner Fehler. Details im Backend-Protokoll." });
   });
-  app.get("/health", () => ({ status: "ok", version: "0.2.3" }));
+  app.get("/health", () => ({ status: "ok", version: "0.3.0" }));
   app.get("/api/status", () => ({
     data: {
-      version: "0.2.3",
+      version: "0.3.0",
       mode: "local-single-owner",
       database: "sqlite",
       sources: [api.status()],
@@ -121,6 +125,7 @@ export async function createApp(options: AppOptions) {
     page: z.coerce.number().int().min(1).max(100000).default(1),
     pageSize: z.coerce.number().int().min(1).max(100).default(30),
   };
+  registerBuilder(app, new BuilderStore(personal, game));
   app.get("/api/items", async (request) => {
     const filters = querySchema
       .extend({
@@ -130,12 +135,27 @@ export async function createApp(options: AppOptions) {
         typeId: z.coerce.number().int().positive().optional(),
         minLevel: z.coerce.number().int().min(0).max(200).optional(),
         maxLevel: z.coerce.number().int().min(0).max(200).optional(),
+        effects: z.string().max(6000).optional(),
+        effectMode: z.enum(["and", "or"]).default("and"),
         sort: z
           .enum(["name", "level", "level-asc", "level-desc"])
           .default("name"),
       })
       .parse(request.query);
-    if (game.status().itemCount > 0) return game.searchItems(filters);
+    if (game.status().itemCount > 0) {
+      const effectFilters = parseEffects(filters.effects);
+      if (
+        effectFilters.length &&
+        !String(game.status().version).endsWith("3.7.12.12")
+      )
+        throw Object.assign(
+          Error(
+            "Effektindex und Gegenstandskatalog haben unterschiedliche Datenversionen. Builder-Daten aktualisieren oder Effektfilter entfernen.",
+          ),
+          { statusCode: 409 },
+        );
+      return game.searchItems({ ...filters, effectFilters });
+    }
     if (filters.q.length < 2)
       return {
         data: [],
@@ -335,6 +355,27 @@ export async function createApp(options: AppOptions) {
   });
   app.delete("/api/characters/:id", (request, reply) => {
     const id = z.uuid().parse((request.params as { id: string }).id);
+    const count = Number(
+      (
+        personal.db
+          .prepare(
+            "SELECT count(*) n FROM builder_projects WHERE character_id=?",
+          )
+          .get(id) as { n: number }
+      ).n,
+    );
+    const handling = z
+      .object({ builds: z.enum(["keep", "delete"]).optional() })
+      .parse(request.query);
+    if (count && !handling.builds)
+      return reply.code(409).send({
+        error:
+          "Charakter besitzt gespeicherte Builds. builds=keep zum Behalten oder builds=delete zum Löschen wählen.",
+      });
+    if (handling.builds === "delete")
+      personal.db
+        .prepare("DELETE FROM builder_projects WHERE character_id=?")
+        .run(id);
     personal.deleteCharacter(id);
     return reply.code(204).send();
   });
@@ -362,6 +403,9 @@ export async function createApp(options: AppOptions) {
   });
   app.get("/api/account/export", () => ({ data: personal.export() }));
   app.delete("/api/account", (_request, reply) => {
+    personal.db.exec(
+      "DELETE FROM builder_shares; DELETE FROM builder_projects; DELETE FROM builder_target_profiles;",
+    );
     for (const character of personal.characters())
       personal.deleteCharacter(character.id);
     return reply.code(204).send();

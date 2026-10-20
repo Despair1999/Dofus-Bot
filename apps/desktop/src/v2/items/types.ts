@@ -37,6 +37,8 @@ export interface ItemType {
   count?: number;
 }
 export interface ItemFilters {
+  effects?: string;
+  effectMode?: "and" | "or";
   mainGroup: "equipment" | "resources";
   category?: string;
   typeId?: number;

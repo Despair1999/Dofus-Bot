@@ -1,5 +1,16 @@
 # Änderungen
 
+## 0.3.0 — 21.10.2026
+
+- Neuer Builder mit 16 kompatiblen Ausrüstungsslots, eigener Gegenstandsauswahl, gemeinsamen numerischen Effektfiltern, dynamischen Werten und Setboni.
+- Individuelle Rolls und Exomagie ohne Änderung des Originalkatalogs, Eigenschaftspunkte, Scrolls, manuelle Buffs und gespeicherte Gegnerbedingungen.
+- Gelieferte Bilder für alle 19 Klassen in Charakterverwaltung und Builder. Mehrere Sets pro Charakter, aktive Companion-Auswahl, Duplikate, Vergleiche und versioniertes JSON-Austauschformat.
+- Getrennte DOFUS-Datenstände 3.6.12.16 und 3.7.12.12: je 836 Klassensprüche, 1.729 Zauberstufen, lokale Icons; historische Item-/Seteffekte aus exakten JSON-Referenzen aufgelöst.
+- Schadensvorschau für verifiziert modellierte direkte Wirkungen; komplexe Kampfmechaniken werden ausdrücklich als nicht vollständig unterstützt markiert.
+- Deterministischer Build-Optimierer im Worker mit Fortschritt/Abbruch, Zielwerten, Ausschlüssen, fixierten Slots und Preis-/Schadensbedingungen. Keine Behauptung globaler Optimalität.
+- Offline-Entwürfe und Synchronisierung mit Konflikterkennung. Private Discord-Builder-Kommandos und dauerhafte Freigabewarteschlange für das konfigurierte Companion-Konto.
+- Signierter Windows-Updatekanal und Schutz veröffentlichter Dateien bleiben erhalten. Prüfungen und Grenzen: BUILDER_TEST_REPORT.md.
+
 ## 0.2.3 — 20.10.2026
 
 - Behebt den Offline-Start des lokalen Dienstes bei erweiterten Windows-Pfaden. Der Dienst startet aus seinem eigenen Verzeichnis mit relativem Einstiegspunkt.

@@ -1,14 +1,9 @@
+import { configure, backend, token } from "./environment";
 import { test, expect } from "@playwright/test";
-import { readFileSync, mkdirSync } from "node:fs";
-const token = readFileSync(
-  process.env.COMPANION_E2E_TOKEN_FILE || ".data/backend-token",
-  "utf8",
-).trim();
+import { mkdirSync } from "node:fs";
+
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(
-    (token) => sessionStorage.setItem("companion-token", token),
-    token,
-  );
+  await configure(page);
   await page.goto("/");
   await expect(
     page.getByRole("heading", { name: /Dein nächstes/, level: 1 }),
@@ -96,7 +91,7 @@ test("create character, real quest progress offline queue and reconnect", async 
     await expect(
       page.getByRole("heading", { name, exact: true }),
     ).toBeVisible();
-    const chars = await request.get("http://127.0.0.1:4310/api/characters", {
+    const chars = await request.get(`${backend}/api/characters`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const created = (await chars.json()).data.find((c: any) => c.name === name);
@@ -136,26 +131,26 @@ test("create character, real quest progress offline queue and reconnect", async 
     await expect(
       page.getByText("Fortschritt gespeichert und synchronisiert."),
     ).toBeVisible();
-    await page.route("http://127.0.0.1:4310/**", (route) => route.abort());
+    await page.route(`${backend}/**`, (route) => route.abort());
     await page
       .getByRole("button", { name: "Abschließen", exact: true })
       .click();
     await expect(
       page.getByText("Lokal gespeichert. Synchronisierung steht aus."),
     ).toBeVisible();
-    await page.unroute("http://127.0.0.1:4310/**");
+    await page.unroute(`${backend}/**`);
     await page.getByTitle("Synchronisieren", { exact: true }).click();
     await expect(
       page.getByText("Synchronisierung abgeschlossen."),
     ).toBeVisible();
     const progress = await request.get(
-      `http://127.0.0.1:4310/api/characters/${id}/progress`,
+      `${backend}/api/characters/${id}/progress`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     expect((await progress.json()).data[0].status).toBe("completed");
   } finally {
     if (id)
-      await request.delete(`http://127.0.0.1:4310/api/characters/${id}`, {
+      await request.delete(`${backend}/api/characters/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
   }

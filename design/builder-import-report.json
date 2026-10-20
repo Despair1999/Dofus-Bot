@@ -1,0 +1,260 @@
+{
+  "versions": [
+    {
+      "version": "3.6.12.16",
+      "items": 3826,
+      "itemsWithNumericEffects": 3826,
+      "sets": 931,
+      "spells": 836,
+      "levels": 1729,
+      "coverage": [
+        {
+          "classId": 1,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 2,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 3,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 4,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 5,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 6,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 7,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 8,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 9,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 10,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 11,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 12,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 13,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 14,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 15,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 16,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 17,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 18,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 20,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        }
+      ],
+      "unresolvedEffectReferences": []
+    },
+    {
+      "version": "3.7.12.12",
+      "items": 3831,
+      "itemsWithNumericEffects": 3831,
+      "sets": 940,
+      "spells": 836,
+      "levels": 1729,
+      "coverage": [
+        {
+          "classId": 1,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 2,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 3,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 4,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 5,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 6,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 7,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 8,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 9,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 10,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 11,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 12,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 13,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 14,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 15,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 16,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 17,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 18,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        },
+        {
+          "classId": 20,
+          "count": 44,
+          "missingLevels": [],
+          "missingIcons": []
+        }
+      ],
+      "unresolvedEffectReferences": []
+    }
+  ],
+  "icons": 836,
+  "sha256": "2c34ab6ac76ea9bdb7976a39245007f30c4cf43219dbc686bb17e14145bf579d",
+  "limitations": [
+    "Complex spell effects remain explicitly unsupported."
+  ],
+  "historicalEffectResolution": "Original release JSON reference tables, parsed as exact Python integers; no rounded SQLite rid values used."
+}
