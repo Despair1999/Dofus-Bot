@@ -1,0 +1,41 @@
+services:
+  backend:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile
+    environment:
+      COMPANION_TOKEN: ${COMPANION_TOKEN:?COMPANION_TOKEN must be set}
+      HOST: 0.0.0.0
+      PORT: 4310
+      DATA_DIR: /app/data
+    ports:
+      - "127.0.0.1:4310:4310"
+    volumes:
+      - companion-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4310/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  bot:
+    profiles: [discord]
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile
+    command: ["pnpm", "--filter", "@dofus/discord-bot", "start"]
+    environment:
+      COMPANION_TOKEN: ${COMPANION_TOKEN:?COMPANION_TOKEN must be set}
+      BACKEND_URL: http://127.0.0.1:4310
+      DISCORD_TOKEN: ${DISCORD_TOKEN:-}
+      DISCORD_OWNER_ID: ${DISCORD_OWNER_ID:-}
+      DISCORD_DB_PATH: /app/data/discord.sqlite
+    network_mode: service:backend
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - companion-data:/app/data
+    restart: unless-stopped
+volumes:
+  companion-data:

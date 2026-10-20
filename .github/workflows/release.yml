@@ -1,0 +1,68 @@
+name: Windows release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+      - run: pnpm install --frozen-lockfile
+      - name: Verify update signing configuration
+        shell: pwsh
+        env:
+          UPDATER_PUBLIC_KEY: ${{ vars.TAURI_UPDATER_PUBLIC_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if (-not $env:UPDATER_PUBLIC_KEY -or -not $env:TAURI_SIGNING_PRIVATE_KEY) {
+            throw 'Set TAURI_UPDATER_PUBLIC_KEY repository variable and TAURI_SIGNING_PRIVATE_KEY secret before a release.'
+          }
+          $configPath = 'apps/desktop/src-tauri/tauri.conf.json'
+          $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json -AsHashtable
+          $config.plugins.updater.pubkey = $env:UPDATER_PUBLIC_KEY
+          $config.bundle.createUpdaterArtifacts = $true
+          $config | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $configPath -Encoding utf8
+      - run: pnpm typecheck
+      - run: pnpm test
+      - uses: tauri-apps/tauri-action@v0
+        id: tauri
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tagName: v__VERSION__
+          releaseName: DOFUS Companion v__VERSION__
+          releaseBody: 'Windows-Installer und signiertes Update. Installation und bekannte Einschränkungen: siehe README.md und IMPLEMENTATION_STATUS.md.'
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
+          args: --bundles nsis
+      - run: ./infrastructure/scripts/package-portable.ps1
+      - name: Attach portable archive to draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $config = Get-Content -LiteralPath 'apps/desktop/src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json
+          $portable = Get-ChildItem -LiteralPath artifacts -Filter '*-portable.zip' | Select-Object -First 1
+          gh release upload ('v' + $config.version) $portable.FullName --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Portable-Archiv konnte nicht angehängt werden.' }
+      - name: Save portable archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable
+          path: artifacts/*-portable.zip

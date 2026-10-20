@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DOFUS Companion",
+  "version": "0.1.0",
+  "identifier": "fr.dofus.companion",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "pnpm build && node ../../infrastructure/scripts/bundle-backend.mjs",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "DOFUS Companion",
+        "width": 1380,
+        "height": 900,
+        "minWidth": 350,
+        "minHeight": 100,
+        "transparent": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:4310 http://localhost:4310 https://api.github.com https://github.com https://cdn.jsdelivr.net https://tessdata.projectnaptha.com; worker-src 'self' blob:; media-src 'self' blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "createUpdaterArtifacts": false,
+    "shortDescription": "Dein unabhängiger DOFUS-Assistent",
+    "windows": {
+      "nsis": {
+        "languages": [
+          "German"
+        ],
+        "displayLanguageSelector": false
+      }
+    },
+    "resources": {
+      "resources/": "service/"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/Despair1999/Dofus-Bot/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhGQzU3RThDRkM1MEY4RTIKUldUaStGRDhqSDdGajZXeU1EdFBuWjNCaHkrSWlRUGtWUi8xMjlkQXZ5Kzh0RzlzTWtoek4xaEcK"
+    }
+  }
+}

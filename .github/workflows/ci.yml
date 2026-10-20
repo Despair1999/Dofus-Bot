@@ -1,0 +1,57 @@
+name: Quality checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - name: Audit production dependencies
+        run: pnpm audit --prod --audit-level high
+  windows-desktop:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @dofus/desktop build
+      - run: node infrastructure/scripts/bundle-backend.mjs
+      - run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+      - name: Build installer without update signing secrets
+        shell: pwsh
+        run: |
+          $configPath = 'apps/desktop/src-tauri/tauri.conf.json'
+          $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json -AsHashtable
+          $config.bundle.createUpdaterArtifacts = $false
+          $config | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $configPath -Encoding utf8
+      - run: pnpm --filter @dofus/desktop tauri build --bundles nsis
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-unsigned
+          path: apps/desktop/src-tauri/target/release/bundle/nsis/*-setup.exe
+      - run: ./infrastructure/scripts/package-portable.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable-unsigned
+          path: artifacts/*-portable.zip

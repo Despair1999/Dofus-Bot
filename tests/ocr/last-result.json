@@ -1,0 +1,29 @@
+{
+  "executedAt": "2026-10-20T14:45:07.658Z",
+  "engine": "tesseract.js 6, local WASM",
+  "offline": true,
+  "results": [
+    {
+      "fixture": "de.png",
+      "lang": "deu",
+      "synthetic": true,
+      "text": "Questjournal\n\nPrüfung des Schülers\nSprich mit dem Lehrer.\nSammle 3 blaue Blumen.\n",
+      "confidence": 95,
+      "matchedId": 1,
+      "similarity": 1,
+      "blankText": "",
+      "elapsedMs": 578
+    },
+    {
+      "fixture": "fr.png",
+      "lang": "fra",
+      "synthetic": true,
+      "text": "Journal de quêtes\nÉpreuve de l’élève\nParlez au professeur.\nRécoltez 3 fleurs bleues.\n",
+      "confidence": 94,
+      "matchedId": 1,
+      "similarity": 1,
+      "blankText": "",
+      "elapsedMs": 475
+    }
+  ]
+}

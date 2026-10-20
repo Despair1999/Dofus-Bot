@@ -1,0 +1,15 @@
+{
+  "test": "standalone-bundled-backend",
+  "passed": true,
+  "time": "2026-10-20T14:44:23.912Z",
+  "node": "v22.15.0",
+  "cwdOutsideRepository": true,
+  "health": true,
+  "unauthorizedRejected": true,
+  "characterCreated": true,
+  "liveItemCount": 30,
+  "questCount": 1976,
+  "importedQuestProgress": true,
+  "importedQuestIdempotency": true,
+  "importedQuestConflict": true
+}

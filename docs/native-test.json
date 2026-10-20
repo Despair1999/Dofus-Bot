@@ -1,0 +1,16 @@
+{
+  "testedAt": "2026-10-20T14:52:28.419Z",
+  "runtime": "Windows x64 Tauri release EXE / WebView2",
+  "url": "http://tauri.localhost/",
+  "passed": [
+    "native launch",
+    "bundled backend automatic startup",
+    "automatic local authentication",
+    "actual Gelano search + recipe",
+    "native SQLite favorite",
+    "global hotkey registration and removal",
+    "overlay enter and leave",
+    "actual local screenshot OCR in production WebView2"
+  ],
+  "pageErrors": []
+}
