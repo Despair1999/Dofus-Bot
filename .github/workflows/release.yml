@@ -63,6 +63,7 @@ jobs:
           includeUpdaterJson: true
           args: --bundles nsis
       - run: ./infrastructure/scripts/package-portable.ps1
+      - run: ./infrastructure/scripts/package-signed-release.ps1
       - name: Attach portable archive to draft release
         shell: pwsh
         env:
@@ -70,7 +71,8 @@ jobs:
         run: |
           $config = Get-Content -LiteralPath 'apps/desktop/src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json
           $portable = Get-ChildItem -LiteralPath artifacts -Filter '*-portable.zip' | Select-Object -First 1
-          gh release upload ('v' + $config.version) $portable.FullName --clobber
+          $setup = Get-ChildItem -LiteralPath artifacts -Filter '*-setup.zip' | Select-Object -First 1
+          gh release upload ('v' + $config.version) $portable.FullName $setup.FullName --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Portable-Archiv konnte nicht angehängt werden.' }
       - name: Save portable archive
         uses: actions/upload-artifact@v4

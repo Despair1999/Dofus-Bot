@@ -1,4 +1,4 @@
-# Prüfbericht v0.2.0
+# Prüfbericht v0.2.1
 
 Umgebung: Windows x64, Node 22.15, pnpm 11.25, Rust/Tauri 2, Chromium und Microsoft WebView2. Datum: 20.10.2026. Historische v0.1-Ergebnisse stehen unverändert unter [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
 
@@ -7,8 +7,8 @@ Umgebung: Windows x64, Node 22.15, pnpm 11.25, Rust/Tauri 2, Chromium und Micros
 - `pnpm typecheck`: alle fünf Workspaces erfolgreich.
 - `pnpm lint`: erfolgreich.
 - `pnpm test`: **41 Tests erfolgreich**, davon Core 6, Spieldaten 8, Desktop 10, Backend 8 und Discord 9.
-- Rust: vier native Validierungstests erfolgreich. Der separate Release-Signaturtest benötigt den gebauten Installer und wird ausdrücklich mit `--ignored` ausgeführt; Ergebnis siehe Release-Nachweis unten.
-- Browser: **17 End-to-End-Fälle im gemeinsamen Lauf erfolgreich**. Ergänzte Materiallink-, Almanax-Ressourcenlink- sowie F8-/Strg-Umschalt-D-Aufnahmen anschließend gezielt erfolgreich geprüft.
+- Rust: sechs native Tests erfolgreich, einschließlich realer Listener-Eigentumsprüfung und Windows-Job-Lebensdauer. Eine interne Kindprozess-Fixture wird nicht separat ausgeführt. Der Release-Signaturtest wird zusätzlich ausdrücklich mit dem tatsächlich signierten Installer ausgeführt.
+- Browser: **18 End-to-End-Fälle im abschließenden gemeinsamen Lauf gegen den gebündelten v0.2.1-Dienst erfolgreich**. Einschließlich Material-/Almanax-Link, F8-/Strg-Umschalt-D-Aufnahme und absichtlich verzögerter alter Suchanfrage.
 - Vollständiger realer Quellenimport: 21.554 eindeutige Item-IDs und 1.976 Quests, keine nicht aufgelösten API-IDs oder Rezeptmaterialziele. [Importbericht](design/catalog-import-v2.json).
 - Live-Bildprüfung: 20 von 20 Stichproben aus allen fünf Kategorien erfolgreich als PNG geladen. Dies ist keine vollständige HTTP-Prüfung sämtlicher Bildadressen. [Bildprüfung](design/image-audit-v2.json).
 - Installierter öffentlicher Startkatalog: transaktionale Übernahme in einen leeren Datenbestand ausgeführt; zweiter Aufruf überspringt vorhandenen vollständigen Katalog.
@@ -19,23 +19,23 @@ Umgebung: Windows x64, Node 22.15, pnpm 11.25, Rust/Tauri 2, Chromium und Micros
 | Fälle | Tatsächlicher Nachweis / Grenze |
 |---|---|
 | 1–4 | Live-Suchvorschau `gela`, Gelano-ID 2469 direkt öffnen, vollständige Ergebnisse und strikte Kategorien geprüft. |
-| 5 | AbortController/Sequenzsicherung implementiert; Wechsel und Tastaturbedienung geprüft, kein gesonderter Netzwerklatenz-Stresstest. |
+| 5 | Verzögerte Anfrage `gela` und danach `gelano`: Die ältere Antwort ersetzt die neuen Suchvorschläge nicht. |
 | 6–9 | Alle Kategorien und Mengen gegen Originalbestand geprüft; 20 echte Bilddownloads plus sichtbare Rezept-/Itembilder. Fehlende Bildreferenzen dokumentiert. |
 | 10–14 | Echte Kategoriehierarchie und Elternzählung, Questsuche/Schritte sowie kompletter Import geprüft. Voraussetzungen/Erfolge dargestellt; vollständige interpretierte Questketten nicht vorhanden. Zwei Originalguides über Webquellen verifiziert. |
 | 15–19 | Itemkopf, acht Gelano-Materialien, Mengenwechsel 1→7, Materialnamen und Materialdetail-Link geprüft. Unbekannte Preise bleiben unbekannt. |
 | 20–22 | Alle 19 Klassen, Alias-Suche und stabile Sacrieur-ID geprüft; Erstellung/Bearbeitung und Legacy-Datenerhalt abgedeckt. Neutrale eigene Symbole. |
 | 23–25 | Wochenansicht mit sieben Tagen, Vor-/Zurücknavigation und Ressourcenlink geprüft. Monats-/Zeitzonenlogik separat getestet. |
 | 26–29 | Aufnahme echter Tastendrücke im Browser, dauerhafte Belegung und Rücksetzen geprüft. Native Registrierung und Reserved-/Duplicate-Prüfung separat. |
-| 30–31 | Native OS-F8-Umschaltung, Rettungskombination, Click-through-Abschaltung, Deckkraft/Geometrie über vollständigen Prozessneustart und sauberes Beenden geprüft. Eine gefundene Windows-Fenstererzeugungsblockade wurde korrigiert und der vollständige Ablauf erneut erfolgreich ausgeführt. [Nativer Bericht](docs/native-v2-test.json). |
+| 30–31 | Native OS-F8-Umschaltung, Rettungskombination, Click-through-Abschaltung, Deckkraft/Geometrie über Prozessneustart, sauberes und hartes Beenden geprüft. Alter v0.1-Dienst aus anderem Verzeichnis erfolgreich übernommen. [Nativer Bericht](docs/native-v2-test.json). |
 | 32 | Physischer Mehrmonitor-/DPI-Test nicht ausgeführt. Sichtbarkeitsbegrenzung und Positionswiederherstellung implementiert. |
-| 33–36 | Kryptografische und Installer-/Upgrade-Ergebnisse werden nach dem finalen Build unten ergänzt; bis dahin kein bestätigter Live-Upgrade-Nachweis. |
+| 33–36 | Der erste tatsächliche Upgradeversuch fand einen verwaisten v0.1-Dienst. v0.2.0 wurde zurückgezogen. v0.2.1 korrigiert Dienstübergabe und Prozesslebensdauer; die erneute Installer-/Datenprüfung wird unten ergänzt. |
 | 37 | Neun Discord-Modul-/Loopback-Tests erfolgreich; echte Discord-Anmeldung nicht ausgeführt. |
 | 38 | Offline-Detailcache, ausstehender Fortschritt und Reconnect erfolgreich geprüft. |
 | 39–40 | Layouts bei 600, 1366, 1920, 2560 und 3440 Pixeln auf horizontalen Überlauf geprüft; Screenshots erstellt. Verschiedene physische DPI-Skalierungen nicht getestet. |
 
 ## Release-Nachweis
 
-Ein Windows-x64-NSIS-Installer und ein Portable-ZIP wurden gebaut. Ein weiterer Build enthält die Korrektur der synchronen Windows-Overlay-Erzeugung. **Finale Signatur-, Installer- und Veröffentlichungsprüfung noch in Arbeit.** Dieser Absatz wird ausschließlich anhand tatsächlich ausgeführter Prüfungen aktualisiert.
+Windows-x64-NSIS-Installer, Setup-ZIP und Portable-ZIP wurden gebaut. Der erste vollständige Upgradeversuch installierte v0.2.0, deckte beim Neustart jedoch den verwaisten Hintergrunddienst von v0.1 auf. Dieses Release wurde zurückgezogen. v0.2.1 behebt diese Ursache, inklusive eines über den bekannten Codehash begrenzten Übergangs aus alten Portable-Verzeichnissen. Die finalen Artefakt-, Signatur- und Upgrade-Ergebnisse werden nach erneuter Prüfung ergänzt.
 
 ## Bekannte Grenzen
 

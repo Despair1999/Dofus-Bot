@@ -1,6 +1,6 @@
 # Windows-Updates
 
-v0.2.0 verwendet dieselbe Anwendungs-ID `fr.dofus.companion`, denselben öffentlichen Minisign-Schlüssel und denselben GitHub-Endpunkt wie v0.1.0. Der private Schlüssel bleibt außerhalb der Versionsverwaltung.
+v0.2.1 verwendet dieselbe Anwendungs-ID `fr.dofus.companion`, denselben öffentlichen Minisign-Schlüssel und denselben GitHub-Endpunkt wie v0.1.0. Der private Schlüssel bleibt außerhalb der Versionsverwaltung.
 
 ## Für Anwender
 
@@ -17,7 +17,7 @@ Persönliche Daten liegen in den vorhandenen Windows-AppData-Verzeichnissen, get
 ```powershell
 $env:COMPANION_CATALOG_PATH = (Resolve-Path '.data/game-data.sqlite').Path
 pnpm --filter @dofus/desktop tauri build --bundles nsis
-pnpm --filter @dofus/desktop exec tauri signer sign --private-key-path .data/updater.key --password= src-tauri/target/release/bundle/nsis/'DOFUS Companion_0.2.0_x64-setup.exe'
+pnpm --filter @dofus/desktop exec tauri signer sign --private-key-path .data/updater.key --password= src-tauri/target/release/bundle/nsis/'DOFUS Companion_0.2.1_x64-setup.exe'
 ```
 
 Der private Schlüssel darf niemals im Repository, ZIP, Log oder Release erscheinen. Windows-Authenticode und Tauri-Updatesignaturen sind unterschiedliche Verfahren: Eine gültige Updatesignatur unterdrückt keine Windows-SmartScreen-Warnung.
@@ -27,3 +27,5 @@ Der private Schlüssel darf niemals im Repository, ZIP, Log oder Release erschei
 Der Release-Workflow erzeugt weiterhin zunächst einen Entwurf. Er benötigt die Repositoryvariable `TAURI_UPDATER_PUBLIC_KEY` sowie das Secret `TAURI_SIGNING_PRIVATE_KEY`; bei verschlüsseltem Schlüssel zusätzlich dessen Passwort-Secret. Die lokale Release-Publikation kann den vorhandenen Git-Credential-Helper verwenden, ohne dessen Zugangsdaten auszugeben.
 
 Spieldaten werden unabhängig unter **Einstellungen → Spieldaten** aktualisiert: Größen- und SHA-256-Prüfung, fortsetzbarer Download, transaktionaler Import. Fehler lassen den vorherigen Katalog bestehen. Bereits überprüfte Downloaddateien werden wiederverwendet.
+
+v0.2.1 übernimmt einen nach dem alten v0.1-Updater zurückgebliebenen Dienst nur bei passendem Programmpfad oder beim exakt geprüften v0.1-Backendcode im ursprünglichen Portable-Bundle. Neue Hintergrunddienste sind an ein Windows-Jobobjekt gebunden und enden deshalb auch beim direkten Prozessende durch den Updater. Ein fremder Dienst auf Port 4310 wird nicht beendet.

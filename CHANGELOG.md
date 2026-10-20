@@ -1,5 +1,12 @@
 # Änderungen
 
+## 0.2.1 — 20.10.2026
+
+- Stabilisierung des tatsächlichen Upgrades von v0.1: Ein verwaister Companion-Dienst wird nur anhand seines Listener-PIDs und des exakt passenden gebündelten Programmpfads übernommen. Fremde Prozesse werden nicht beendet.
+- Windows-Jobobjekt beendet den eigenen Dienst auch dann, wenn der Updater den Desktopprozess direkt beendet.
+- Zwei zusätzliche native Prozesstests prüfen Eigentumsgrenzen und Beenden ohne Shutdown-Callback.
+- v0.2.0 wurde während der Upgrade-Abnahme zurückgezogen; v0.2.1 enthält den vollständigen Funktionsumfang mit der korrigierten Dienstübergabe.
+
 ## 0.2.0 — 20.10.2026
 
 - Neues geliefertes Logo, Wortmarke und Windows-Icon.

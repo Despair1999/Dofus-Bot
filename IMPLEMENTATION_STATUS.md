@@ -1,4 +1,4 @@
-# Umsetzungsstand v0.2.0
+# Umsetzungsstand v0.2.1
 
 Die Änderungen sind im vorhandenen Monorepo umgesetzt. Prüfungen und Release-Ergebnisse stehen in [TEST_REPORT.md](TEST_REPORT.md).
 

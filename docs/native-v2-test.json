@@ -1,6 +1,7 @@
 {
-  "testedAt": "2026-10-20T17:44:18.081Z",
+  "testedAt": "2026-10-20T18:03:19.471Z",
   "runtime": "Windows x64 / Tauri / WebView2",
+  "version": "0.2.1",
   "passed": [
     "native startup and global hotkey registration",
     "bundled catalog activated automatically",
@@ -8,11 +9,18 @@
     "actual Windows recovery chord disables click-through and opens settings",
     "overlay opacity and native geometry persist after reload",
     "closing main also stops overlay and its own backend",
-    "overlay settings and SQL layout survive full native process restart"
+    "overlay settings and SQL layout survive full native process restart",
+    "forcibly terminating desktop also stops owned backend through Windows job object"
   ],
   "notTested": [
     "physical multi-monitor movement",
     "all DPI scales",
     "actual DOFUS screenshots"
-  ]
+  ],
+  "legacyTransition": {
+    "fromVersion": "0.1.0",
+    "toVersion": "0.2.1",
+    "differentServiceDirectory": true,
+    "verifiedLegacyCodeHash": true
+  }
 }

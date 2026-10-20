@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
 import { spawnSync, spawn } from "node:child_process";
-import { writeFile } from "node:fs/promises";
+import { writeFile, readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const endpoint = "http://127.0.0.1:9223";
@@ -122,15 +122,20 @@ await expect
   })
   .toBe(true);
 passed.push("closing main also stops overlay and its own backend");
-const child = spawn(resolve(".data/portable-0.2.0/dofus-companion.exe"), [], {
-  windowsHide: true,
-  detached: true,
-  stdio: "ignore",
-  env: {
-    ...process.env,
-    WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: "--remote-debugging-port=9223",
+const version = JSON.parse(await readFile("package.json", "utf8")).version;
+const child = spawn(
+  resolve(`.data/portable-${version}/dofus-companion.exe`),
+  [],
+  {
+    windowsHide: true,
+    detached: true,
+    stdio: "ignore",
+    env: {
+      ...process.env,
+      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: "--remote-debugging-port=9223",
+    },
   },
-});
+);
 child.unref();
 await expect
   .poll(async () => {
@@ -184,7 +189,20 @@ await page
   .getByRole("button", { name: "Overlay & Hotkeys speichern", exact: true })
   .click();
 await invoke("save_native_settings", { settings: original.settings });
-await invoke("plugin:window|close", { label: "main" }).catch(() => {});
+process.kill(child.pid);
+await expect
+  .poll(async () => {
+    try {
+      await fetch("http://127.0.0.1:4310/health");
+      return false;
+    } catch {
+      return true;
+    }
+  })
+  .toBe(true);
+passed.push(
+  "forcibly terminating desktop also stops owned backend through Windows job object",
+);
 await browser.close().catch(() => {});
 await writeFile(
   "docs/native-v2-test.json",
@@ -192,6 +210,7 @@ await writeFile(
     {
       testedAt: new Date().toISOString(),
       runtime: "Windows x64 / Tauri / WebView2",
+      version,
       passed,
       notTested: [
         "physical multi-monitor movement",

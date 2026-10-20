@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync, mkdirSync } from "node:fs";
-const token = readFileSync(".data/backend-token", "utf8").trim();
+const token = readFileSync(
+  process.env.COMPANION_E2E_TOKEN_FILE || ".data/backend-token",
+  "utf8",
+).trim();
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
     (token) => sessionStorage.setItem("companion-token", token),

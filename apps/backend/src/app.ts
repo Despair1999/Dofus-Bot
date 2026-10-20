@@ -107,10 +107,10 @@ export async function createApp(options: AppOptions) {
       .code(500)
       .send({ error: "Interner Fehler. Details im Backend-Protokoll." });
   });
-  app.get("/health", () => ({ status: "ok", version: "0.2.0" }));
+  app.get("/health", () => ({ status: "ok", version: "0.2.1" }));
   app.get("/api/status", () => ({
     data: {
-      version: "0.2.0",
+      version: "0.2.1",
       mode: "local-single-owner",
       database: "sqlite",
       sources: [api.status()],

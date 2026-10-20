@@ -7,7 +7,9 @@ use std::{
 };
 use tauri::{Manager, RunEvent};
 mod companion;
+mod service;
 struct Backend(Mutex<Option<Child>>);
+struct ServiceLifetime(Mutex<Option<service::ServiceJob>>);
 #[derive(serde::Serialize)]
 struct LocalConnection {
     url: String,
@@ -45,6 +47,7 @@ fn main() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Backend(Mutex::new(None)))
+        .manage(ServiceLifetime(Mutex::new(None)))
         .on_window_event(|window, event| {
             if window.label() == "main"
                 && matches!(event, tauri::WindowEvent::CloseRequested { .. })
@@ -68,6 +71,7 @@ fn main() {
                 let directory = data_dir(app.handle()).map_err(std::io::Error::other)?;
                 fs::create_dir_all(&directory)?;
                 let resources = app.path().resource_dir()?.join("service");
+                service::reclaim_previous_service(&resources.join("node.exe"))?;
                 let log = fs::OpenOptions::new()
                     .create(true)
                     .append(true)
@@ -90,7 +94,16 @@ fn main() {
                     use std::os::windows::process::CommandExt;
                     command.creation_flags(0x08000000);
                 }
-                let child = command.spawn()?;
+                let mut child = command.spawn()?;
+                let guard = match service::ServiceJob::attach(&child) {
+                    Ok(guard) => guard,
+                    Err(error) => {
+                        let _ = child.kill();
+                        let _ = child.wait();
+                        return Err(error.into());
+                    }
+                };
+                *app.state::<ServiceLifetime>().0.lock().unwrap() = Some(guard);
                 *app.state::<Backend>().0.lock().unwrap() = Some(child);
             }
             Ok(())

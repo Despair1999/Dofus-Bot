@@ -1,6 +1,6 @@
 # DOFUS Companion
 
-Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend und optionaler Discord-Bot. **v0.2.0** integriert das neue Branding, einen vollständigen verfügbaren Itemkatalog mit Suchvorschlägen, Questkategorien, bebilderte Rezepte, Klassenauswahl, Almanax-Zeitstrahl und ein separates konfigurierbares Overlay.
+Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend und optionaler Discord-Bot. **v0.2.1** integriert das neue Branding, einen vollständigen verfügbaren Itemkatalog mit Suchvorschlägen, Questkategorien, bebilderte Rezepte, Klassenauswahl, Almanax-Zeitstrahl und ein separates konfigurierbares Overlay.
 
 Windows-Pakete: [Releases](https://github.com/Despair1999/Dofus-Bot/releases). Für bestehende Installationen: **Einstellungen → Nach Updates suchen**. Details: [UPDATE_GUIDE.md](UPDATE_GUIDE.md). Umsetzungsgrenzen und ausgeführte Prüfungen: [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), [TEST_REPORT.md](TEST_REPORT.md).
 
