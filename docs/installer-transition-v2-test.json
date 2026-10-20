@@ -1,0 +1,9 @@
+{
+  "testedAt": "2026-10-20T18:21:14.366Z",
+  "version": "0.2.2",
+  "scope": "Real silent NSIS installer with a controlled v0.1 service locking the installed node.exe; service data isolated from user databases",
+  "installerExitCode": 0,
+  "registryVersion": "0.2.2",
+  "legacyServiceReleased": true,
+  "preinstallGuardCompleted": true
+}

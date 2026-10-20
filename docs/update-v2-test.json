@@ -1,0 +1,19 @@
+{
+  "testedAt": "2026-10-20T18:21:28.560Z",
+  "fromVersion": "0.1.0",
+  "toVersion": "0.2.2",
+  "source": "Complete silent NSIS installer transition -> installed application restart",
+  "installerCompleted": true,
+  "tamperedInstallerRejectedBySeparateSignatureTest": true,
+  "preserved": [
+    "existing SQL task",
+    "SQL setting favorites",
+    "SQL setting overlay-layouts-v2",
+    "SQL setting todos"
+  ],
+  "nativeProfilesChecked": 0,
+  "isolatedProfileAndProgressMigration": "service-upgrade-v2-test.json",
+  "backendVersion": "0.2.2",
+  "release": "https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.2.2",
+  "signatureVerifiedByActualUpdater": false
+}

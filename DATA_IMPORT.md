@@ -1,4 +1,4 @@
-# Datenimport v0.2.1
+# Datenimport v0.2.2
 
 Geprüfter Import am 20.10.2026, dofus-sqlite `v6.0_3.7.12.12`. Mengen stammen aus dem Importbericht [design/catalog-import-v2.json](design/catalog-import-v2.json), nicht aus fest programmierten Sollwerten.
 

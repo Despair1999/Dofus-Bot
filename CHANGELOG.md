@@ -1,5 +1,11 @@
 # Änderungen
 
+## 0.2.2 — 20.10.2026
+
+- Der NSIS-Installer übernimmt den geprüften alten Companion-Dienst bereits vor dem Dateiaustausch. Dadurch bleiben laufende alte Node-Dateien beim Upgrade von v0.1 nicht gesperrt.
+- Kleines eingebettetes Übergabeprogramm verwendet dieselbe eng begrenzte Prozessprüfung wie die Anwendung. Fremde Prozesse werden weiterhin nicht beendet.
+- v0.2.0 und v0.2.1 wurden während der vollständigen Upgrade-Abnahme zurückgezogen. v0.2.2 ist die abschließend geprüfte Veröffentlichung.
+
 ## 0.2.1 — 20.10.2026
 
 - Stabilisierung des tatsächlichen Upgrades von v0.1: Ein verwaister Companion-Dienst wird nur anhand seines Listener-PIDs und des exakt passenden gebündelten Programmpfads übernommen. Fremde Prozesse werden nicht beendet.

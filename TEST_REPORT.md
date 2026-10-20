@@ -1,4 +1,4 @@
-# Prüfbericht v0.2.1
+# Prüfbericht v0.2.2
 
 Umgebung: Windows x64, Node 22.15, pnpm 11.25, Rust/Tauri 2, Chromium und Microsoft WebView2. Datum: 20.10.2026. Historische v0.1-Ergebnisse stehen unverändert unter [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
 
@@ -8,7 +8,7 @@ Umgebung: Windows x64, Node 22.15, pnpm 11.25, Rust/Tauri 2, Chromium und Micros
 - `pnpm lint`: erfolgreich.
 - `pnpm test`: **41 Tests erfolgreich**, davon Core 6, Spieldaten 8, Desktop 10, Backend 8 und Discord 9.
 - Rust: sechs native Tests erfolgreich, einschließlich realer Listener-Eigentumsprüfung und Windows-Job-Lebensdauer. Eine interne Kindprozess-Fixture wird nicht separat ausgeführt. Der Release-Signaturtest wird zusätzlich ausdrücklich mit dem tatsächlich signierten Installer ausgeführt.
-- Browser: **18 End-to-End-Fälle im abschließenden gemeinsamen Lauf gegen den gebündelten v0.2.1-Dienst erfolgreich**. Einschließlich Material-/Almanax-Link, F8-/Strg-Umschalt-D-Aufnahme und absichtlich verzögerter alter Suchanfrage.
+- Browser: **18 End-to-End-Fälle erfolgreich**. Einschließlich Material-/Almanax-Link, F8-/Strg-Umschalt-D-Aufnahme und absichtlich verzögerter alter Suchanfrage. Native WebView2-/Dienstprüfungen separat.
 - Vollständiger realer Quellenimport: 21.554 eindeutige Item-IDs und 1.976 Quests, keine nicht aufgelösten API-IDs oder Rezeptmaterialziele. [Importbericht](design/catalog-import-v2.json).
 - Live-Bildprüfung: 20 von 20 Stichproben aus allen fünf Kategorien erfolgreich als PNG geladen. Dies ist keine vollständige HTTP-Prüfung sämtlicher Bildadressen. [Bildprüfung](design/image-audit-v2.json).
 - Installierter öffentlicher Startkatalog: transaktionale Übernahme in einen leeren Datenbestand ausgeführt; zweiter Aufruf überspringt vorhandenen vollständigen Katalog.
@@ -28,14 +28,18 @@ Umgebung: Windows x64, Node 22.15, pnpm 11.25, Rust/Tauri 2, Chromium und Micros
 | 26–29 | Aufnahme echter Tastendrücke im Browser, dauerhafte Belegung und Rücksetzen geprüft. Native Registrierung und Reserved-/Duplicate-Prüfung separat. |
 | 30–31 | Native OS-F8-Umschaltung, Rettungskombination, Click-through-Abschaltung, Deckkraft/Geometrie über Prozessneustart, sauberes und hartes Beenden geprüft. Alter v0.1-Dienst aus anderem Verzeichnis erfolgreich übernommen. [Nativer Bericht](docs/native-v2-test.json). |
 | 32 | Physischer Mehrmonitor-/DPI-Test nicht ausgeführt. Sichtbarkeitsbegrenzung und Positionswiederherstellung implementiert. |
-| 33–36 | Der erste tatsächliche Upgradeversuch fand einen verwaisten v0.1-Dienst. v0.2.0 wurde zurückgezogen. v0.2.1 korrigiert Dienstübergabe und Prozesslebensdauer; die erneute Installer-/Datenprüfung wird unten ergänzt. |
+| 33–36 | Alte Dienst-Dateisperre reproduziert; kompletter v0.2.2-Installer erfolgreich bis zum Windows-Registryeintrag geprüft. Original-/manipulierte Installersignatur getestet. Profile/Fortschritt über echte alte und neue Dienstpakete in einer isolierten Datenbank geprüft; vorhandene native Aufgaben/Favoriten/Overlay-Einstellungen separat über den Installer erhalten. |
 | 37 | Neun Discord-Modul-/Loopback-Tests erfolgreich; echte Discord-Anmeldung nicht ausgeführt. |
 | 38 | Offline-Detailcache, ausstehender Fortschritt und Reconnect erfolgreich geprüft. |
 | 39–40 | Layouts bei 600, 1366, 1920, 2560 und 3440 Pixeln auf horizontalen Überlauf geprüft; Screenshots erstellt. Verschiedene physische DPI-Skalierungen nicht getestet. |
 
 ## Release-Nachweis
 
-Windows-x64-NSIS-Installer, Setup-ZIP und Portable-ZIP wurden gebaut. Der erste vollständige Upgradeversuch installierte v0.2.0, deckte beim Neustart jedoch den verwaisten Hintergrunddienst von v0.1 auf. Dieses Release wurde zurückgezogen. v0.2.1 behebt diese Ursache, inklusive eines über den bekannten Codehash begrenzten Übergangs aus alten Portable-Verzeichnissen. Die finalen Artefakt-, Signatur- und Upgrade-Ergebnisse werden nach erneuter Prüfung ergänzt.
+Windows-x64-NSIS-Installer, Setup-ZIP und Portable-ZIP wurden gebaut. v0.2.0 und v0.2.1 wurden während der Abnahme zurückgezogen: Der alte Dienst blieb bestehen und blockierte den Austausch seiner Node-Datei. v0.2.2 übernimmt den eigenen Dienst bereits vor dem Dateiaustausch durch einen eingebetteten Installer-Helfer und schützt neue Dienste durch ein Windows-Jobobjekt.
+
+Der vollständige NSIS-Lauf mit einem kontrollierten, dateisperrenden v0.1-Dienst liefert Exitcode 0 und Windows-Registryversion 0.2.2. [Installerbericht](docs/installer-transition-v2-test.json). Die installierte App startet anschließend mit Dienstversion 0.2.2. Native Aufgaben, Favoriten und Overlay-Einstellungen wurden erhalten. Im tatsächlichen nativen Benutzerbestand lagen keine Charaktere vor; der Erhalt von Profilen und pausiertem Questfortschritt wurde deshalb mit beiden echten Dienstpaketen in einer **getrennten Testdatenbank** geprüft. [Dienstmigration](docs/service-upgrade-v2-test.json).
+
+Der finale GitHub-Updaterlauf wird nach Veröffentlichung im [Upgradebericht](docs/update-v2-test.json) ergänzt. Es wird kein vollständiges Upgrade allein aus einer ersetzten EXE abgeleitet: Registryversion, Backendversion und Benutzerzustand werden getrennt geprüft.
 
 ## Bekannte Grenzen
 

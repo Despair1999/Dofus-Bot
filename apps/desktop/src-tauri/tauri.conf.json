@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DOFUS Companion",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "identifier": "fr.dofus.companion",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://127.0.0.1:1420",
-    "beforeBuildCommand": "pnpm build && node ../../infrastructure/scripts/bundle-backend.mjs",
+    "beforeBuildCommand": "pnpm build && node ../../infrastructure/scripts/bundle-backend.mjs && cargo build --manifest-path src-tauri/Cargo.toml --release --bin companion-service-guard",
     "frontendDist": "../dist"
   },
   "app": {
@@ -37,7 +37,8 @@
         "languages": [
           "German"
         ],
-        "displayLanguageSelector": false
+        "displayLanguageSelector": false,
+        "installerHooks": "./windows/hooks.nsh"
       }
     },
     "resources": {

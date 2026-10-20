@@ -1,0 +1,13 @@
+{
+  "testedAt": "2026-10-20T18:21:34.453Z",
+  "fromVersion": "0.1.0",
+  "toVersion": "0.2.2",
+  "scope": "Actual old and new bundled services, isolated fresh SQLite directory; profile/progress created through v0.1 API",
+  "passed": [
+    "existing character ID/name/server/className/level/version/updatedAt preserved",
+    "paused quest progress preserved byte-for-byte as JSON",
+    "class ID migrated to 11",
+    "service restart survives Windows process termination"
+  ],
+  "userDatabasesModified": false
+}

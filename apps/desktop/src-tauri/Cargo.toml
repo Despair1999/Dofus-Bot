@@ -1,9 +1,15 @@
 [package]
 name = "dofus-companion"
-version = "0.2.1"
+default-run = "dofus-companion"
+version = "0.2.2"
 description = "Independent DOFUS Companion"
 authors = ["DOFUS Companion contributors"]
 edition = "2021"
+
+[[bin]]
+name = "companion-service-guard"
+path = "src/bin/companion-service-guard.rs"
+test = false
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

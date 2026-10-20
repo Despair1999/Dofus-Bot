@@ -1,7 +1,7 @@
 {
-  "testedAt": "2026-10-20T18:03:19.471Z",
+  "testedAt": "2026-10-20T18:21:32.542Z",
   "runtime": "Windows x64 / Tauri / WebView2",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "passed": [
     "native startup and global hotkey registration",
     "bundled catalog activated automatically",
@@ -16,11 +16,5 @@
     "physical multi-monitor movement",
     "all DPI scales",
     "actual DOFUS screenshots"
-  ],
-  "legacyTransition": {
-    "fromVersion": "0.1.0",
-    "toVersion": "0.2.1",
-    "differentServiceDirectory": true,
-    "verifiedLegacyCodeHash": true
-  }
+  ]
 }

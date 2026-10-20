@@ -146,7 +146,8 @@ mod platform {
                         return Err(io::Error::last_os_error());
                     }
                     let actual = String::from_utf16_lossy(&image[..length as usize]);
-                    if comparable(Path::new(&actual))? != comparable(executable)?
+                    if comparable(executable).ok().as_ref()
+                        != Some(&comparable(Path::new(&actual))?)
                         && !is_known_legacy_service(Path::new(&actual))
                     {
                         return Err(io::Error::other("Port 4310 wird von einem anderen Programm verwendet. Dieses wurde nicht beendet."));

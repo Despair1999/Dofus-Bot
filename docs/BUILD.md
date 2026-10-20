@@ -1,8 +1,8 @@
-# Windows-Build 0.2.1
+# Windows-Build 0.2.2
 
 Windows x64 NSIS und Portable-ZIP erfolgreich gebaut. Der signierte Installer verwendet denselben öffentlichen Updateschlüssel wie v0.1. Der öffentliche Item-/Questkatalog, Node-Laufzeit und Backend sind enthalten.
 
-Dateien und SHA-256: [BUILD_V2_SHA256.json](BUILD_V2_SHA256.json). [Release](https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.2.1), [Update-Anleitung](../UPDATE_GUIDE.md), [aktueller Testbericht](../TEST_REPORT.md).
+Dateien und SHA-256: [BUILD_V2_SHA256.json](BUILD_V2_SHA256.json). [Release](https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.2.2), [Update-Anleitung](../UPDATE_GUIDE.md), [aktueller Testbericht](../TEST_REPORT.md).
 
 ---
 
