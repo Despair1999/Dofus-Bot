@@ -34,7 +34,7 @@ Windows x64 / Node 22.15.0 / React / Chromium / Tauri. Work began 20 October 202
 - Signed NSIS installer upgraded the existing v0.2.3 installation to v0.3.0 with its old service running. Registry version and install location verified; service used separate test data.
 - Installed v0.3.0 Builder opens, supplied portrait loads, real item picker returns Gelano by ID.
 - Machine-readable evidence: [release report](docs/builder-release-test.json), [service upgrade](docs/builder-service-upgrade-test.json), [installer](docs/installer-transition-v3-test.json), [native Builder](docs/builder-native-test.json), [native lifecycle](docs/native-v2-test.json).
-- Public update availability is recorded after publication; it is not inferred from local packaging.
+- Published [v0.3.0](https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.3.0) contains seven verified assets. Public latest.json returns HTTP 200 and version 0.3.0. The actual native v0.2.2 updater displays “Version 0.3.0 ist verfügbar.” The old portable copy remains on the update page; the normal installed copy is already v0.3.0.
 
 ## Practical limits
 

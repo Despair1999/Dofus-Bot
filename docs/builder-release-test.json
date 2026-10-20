@@ -10,11 +10,17 @@
   "tamperedInstallerRejected": true,
   "installerTransitionPassed": true,
   "installedBuilderPassed": true,
-  "updaterOffered": false,
+  "updaterOffered": true,
   "evidence": [
     "builder-service-upgrade-test.json",
     "native-v2-test.json",
     "installer-transition-v3-test.json",
     "builder-native-test.json"
-  ]
+  ],
+  "published": true,
+  "updaterFrom": "0.2.2",
+  "release": "https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.3.0",
+  "updateCheckedAt": "2026-10-20T22:38:36.498Z",
+  "publicManifestStatus": 200,
+  "publishedAssets": 7
 }
