@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createWorker } from "tesseract.js";
 import { Camera, Upload, ScanLine } from "lucide-react";
 import { matchText } from "./matching";
+import { api, type Config } from "./client";
 type Candidate = {
   id: number;
   name: string;
@@ -12,12 +13,26 @@ export default function Scanner({
   candidates,
   onSearch,
   onPick,
+  config,
+  initialKind = "quests",
 }: {
   candidates: Candidate[];
   onSearch: (text: string, kind: "items" | "quests") => void;
   onPick: (id: number, kind: "items" | "quests") => void;
+  config?: Config;
+  initialKind?: "items" | "quests";
 }) {
-  const [kind, setKind] = useState<"items" | "quests">("quests");
+  const [kind, setKind] = useState<"items" | "quests">(initialKind);
+  const [remote, setRemote] = useState<
+      {
+        id: number;
+        name: string;
+        score: number;
+        stepSuggestion?: number;
+        stepLabel?: string;
+      }[]
+    >([]),
+    [matchingError, setMatchingError] = useState("");
   const [image, setImage] = useState(""),
     [text, setText] = useState(""),
     [status, setStatus] = useState(""),
@@ -25,6 +40,36 @@ export default function Scanner({
     [confidence, setConfidence] = useState(0),
     [language, setLanguage] = useState("deu");
   const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    let stopped = false;
+    setRemote([]);
+    setMatchingError("");
+    if (!config || !text.trim()) return;
+    const timer = setTimeout(() => {
+      void api<
+        {
+          id: number;
+          name: string;
+          score: number;
+          stepSuggestion?: number;
+          stepLabel?: string;
+        }[]
+      >("/api/recognize", config, { text, kind })
+        .then((result) => {
+          if (!stopped) setRemote(result.data);
+        })
+        .catch((error) => {
+          if (!stopped)
+            setMatchingError(
+              error instanceof Error ? error.message : String(error),
+            );
+        });
+    }, 250);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [text, kind, config?.url, config?.token]);
   async function capture() {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -75,10 +120,11 @@ export default function Scanner({
       setBusy(false);
     }
   }
-  const matches = matchText(
+  const localMatches = matchText(
     text,
     candidates.filter((c) => c.kind === kind),
   );
+  const matches = remote.length ? remote : localMatches;
   return (
     <>
       <div className="section-head">
@@ -178,6 +224,11 @@ export default function Scanner({
         >
           Erste Textzeile in Datenbank suchen
         </button>
+        {matchingError && (
+          <p role="alert">
+            Abgleich mit dem vollständigen Katalog: {matchingError}
+          </p>
+        )}
         <div className="stack">
           {matches.map((c) => (
             <button
@@ -186,6 +237,14 @@ export default function Scanner({
               onClick={() => onPick(c.id, kind)}
             >
               <span>{c.name}</span>
+              {"stepSuggestion" in c && c.stepSuggestion !== undefined && (
+                <span>
+                  Schrittvorschlag {c.stepSuggestion + 1}:{" "}
+                  {"stepLabel" in c
+                    ? String(c.stepLabel)
+                    : "Bitte in der Quest prüfen"}
+                </span>
+              )}
               <small>
                 {Math.round(c.score * 100)} % Textübereinstimmung · auswählen
               </small>

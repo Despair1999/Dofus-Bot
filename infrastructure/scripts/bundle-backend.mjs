@@ -40,6 +40,45 @@ const result = await build({
   },
 });
 await copyFile(process.execPath, resolve(resources, "node.exe"));
+// Optional public catalog snapshot. It contains no account tables or credentials.
+const catalogPath = process.env.COMPANION_CATALOG_PATH;
+if (catalogPath) {
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = new DatabaseSync(resolve(catalogPath), { readOnly: true });
+  try {
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+      .all()
+      .map((row) => row.name);
+    const permitted = new Set([
+      "game_meta",
+      "quests",
+      "game_imports",
+      "catalog_migrations",
+      "item_types",
+      "catalog_items",
+      "catalog_search_tokens",
+      "recipe_ingredients",
+      "classes",
+      "quest_categories",
+      "quest_category_links",
+    ]);
+    if (tables.some((name) => !permitted.has(name)))
+      throw new Error(
+        "Katalog enthält unerwartete Tabellen; Paketierung abgebrochen.",
+      );
+    if (db.prepare("SELECT count(*) n FROM catalog_items").get().n < 1000)
+      throw new Error("Katalog ist unvollständig.");
+    if (Object.values(db.prepare("PRAGMA quick_check").get())[0] !== "ok")
+      throw new Error("Katalogintegrität fehlgeschlagen.");
+  } finally {
+    db.close();
+  }
+  await copyFile(
+    resolve(catalogPath),
+    resolve(resources, "catalog-seed.sqlite"),
+  );
+}
 
 // Node embeds third-party notices in its release LICENSE. Preserve the exact
 // version used for the bundled executable, never substitute a newer release.

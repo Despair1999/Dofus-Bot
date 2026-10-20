@@ -1,0 +1,179 @@
+.v2-craft-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr auto 1fr 0.6fr;
+  gap: 15px;
+  align-items: end;
+}
+.v2-craft-inputs label {
+  font-size: 11px;
+}
+.v2-craft-inputs input {
+  width: 100%;
+  font-size: 12px;
+}
+.v2-craft-inputs button {
+  font-size: 11px;
+  min-height: 40px;
+}
+.v2-craft-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 25px 0 16px;
+  gap: 15px;
+}
+.v2-checkbox {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 9px;
+  font-size: 12px;
+  color: #a7bc99;
+}
+.v2-craft-toolbar select {
+  font-size: 11px;
+}
+.v2-craft-table-scroll {
+  overflow: auto;
+}
+.v2-craft-table {
+  min-width: 720px;
+}
+.v2-craft-table th {
+  white-space: nowrap;
+  font-size: 10px;
+  color: #9cb38a;
+  letter-spacing: 0.4px;
+  padding: 15px 10px;
+}
+.v2-craft-table td {
+  font-size: 12px;
+  padding: 13px 10px;
+}
+.v2-craft-table input {
+  width: 95px;
+  font-size: 12px;
+}
+.v2-material-link {
+  background: transparent;
+  color: #cddfc1;
+  padding: 0;
+  text-align: left;
+  justify-content: flex-start;
+  gap: 12px;
+  min-width: 210px;
+}
+.v2-material-link span:not(.v2-item-placeholder) {
+  flex: 1;
+}
+.v2-material-link strong {
+  display: block;
+  max-width: 260px;
+  font-size: 12px;
+  white-space: normal;
+}
+.v2-material-link small {
+  display: block;
+  font-size: 10px;
+  margin-top: 5px;
+}
+.v2-material-link > svg {
+  color: #93b076;
+}
+.v2-missing {
+  color: #e5cf9b;
+}
+.v2-complete {
+  color: #b0d48a;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+}
+.v2-unknown {
+  color: #b8a17f;
+  font-size: 11px;
+}
+.v2-craft-totals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 13px;
+  margin: 27px 0;
+}
+.v2-craft-metric {
+  border: 1px solid #3a4e34;
+  background: #1c2d22;
+  padding: 18px;
+  border-radius: 9px;
+}
+.v2-craft-metric small {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #a8bf95;
+}
+.v2-craft-metric strong {
+  display: block;
+  font-size: 18px;
+  margin: 12px 0 8px;
+  font-family: Manrope, sans-serif;
+  overflow-wrap: anywhere;
+}
+.v2-craft-metric span {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #859c7c;
+  display: block;
+}
+.v2-project-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #33432f;
+  padding: 13px 0;
+  gap: 15px;
+}
+.v2-project-open {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  background: transparent;
+  color: #c6dcb6;
+  padding: 0;
+  text-align: left;
+  font-size: 13px;
+}
+.v2-project-open small {
+  font-size: 10px;
+  margin-top: 5px;
+}
+@media (max-width: 1200px) {
+  .v2-craft-inputs {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .v2-craft-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .v2-craft-inputs {
+    grid-template-columns: 1fr 1fr;
+  }
+  .v2-craft-inputs button {
+    grid-column: 1/-1;
+  }
+  .v2-craft-totals {
+    gap: 8px;
+  }
+  .v2-craft-metric {
+    padding: 13px;
+  }
+  .v2-craft-metric strong {
+    font-size: 16px;
+  }
+  .v2-craft-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

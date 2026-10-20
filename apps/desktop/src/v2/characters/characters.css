@@ -1,0 +1,218 @@
+.v2-character-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 18px;
+}
+.v2-character-card {
+  border: 1px solid #3b5040;
+  border-radius: 13px;
+  overflow: hidden;
+  background: linear-gradient(150deg, #263b2e, #182722);
+}
+.v2-character-card.selected {
+  border-color: #b4d884;
+  box-shadow: inset 0 0 0 1px #9dbe7040;
+}
+.v2-character-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: 25px 20px 19px;
+  border: 0;
+  border-radius: 0;
+  color: #d7e4ce;
+  background: transparent;
+}
+.v2-character-main h3 {
+  font-size: 20px;
+  margin: 18px 0 5px;
+}
+.v2-character-main p {
+  font-size: 12px;
+  margin: 0 0 3px;
+  color: #bacfa8;
+}
+.v2-character-main .pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+}
+.v2-character-art {
+  height: 108px;
+  width: 108px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9fc17d;
+  background: radial-gradient(circle, #56733b55, transparent 75%);
+  border-radius: 50%;
+}
+.v2-character-art > img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+.v2-level {
+  position: absolute;
+  bottom: -3px;
+  right: -4px;
+  background: #b9dd88;
+  color: #23381c;
+  border-radius: 20px;
+  padding: 5px 8px;
+  border: 3px solid #21372a;
+  font-size: 12px;
+  font-weight: 700;
+}
+.v2-character-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 15px;
+  border-top: 1px solid #344a39;
+}
+.v2-character-actions > button:first-child {
+  flex: 1;
+  font-size: 11px;
+  padding: 9px;
+}
+.v2-legacy-class {
+  font-size: 9px;
+  color: #d2bc83;
+  padding-top: 8px;
+}
+.v2-active-summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  color: #a4ba96;
+  padding: 18px 0 0;
+}
+.v2-active-summary > button {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.v2-class-field {
+  position: relative;
+  min-width: 0;
+}
+.v2-field-label {
+  display: block;
+  color: #a9b6b0;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.v2-class-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+  min-height: 48px;
+  border: 1px solid #34413e;
+  background: #111b1d;
+  color: #c7d8c2;
+  padding: 7px 12px;
+  font-weight: 500;
+}
+.v2-class-trigger > img {
+  width: 31px;
+  height: 31px;
+  object-fit: contain;
+}
+.v2-class-trigger > span {
+  display: block;
+  flex: 1;
+  font-size: 13px;
+}
+.v2-class-trigger small {
+  display: block;
+  font-size: 9px;
+}
+.v2-class-popover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  border: 1px solid #667e4b;
+  border-radius: 10px;
+  background: #192923;
+  box-shadow: 0 16px 36px #0007;
+  overflow: hidden;
+}
+.v2-class-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid #3d543c;
+  color: #96b47d;
+}
+.v2-class-search > input {
+  border: 0;
+  padding: 5px;
+  background: transparent;
+  flex: 1;
+  font-size: 12px;
+}
+.v2-class-popover [role="listbox"] {
+  max-height: 310px;
+  overflow: auto;
+  padding: 5px;
+}
+.v2-class-popover [role="option"] {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  width: 100%;
+  background: transparent;
+  color: #c8d9be;
+  padding: 9px;
+  text-align: left;
+  border-radius: 6px;
+}
+.v2-class-popover [role="option"].highlighted,
+.v2-class-popover [aria-selected="true"] {
+  background: #344b2d;
+}
+.v2-class-popover [role="option"] > img {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+}
+.v2-class-popover [role="option"] > span {
+  flex: 1;
+  min-width: 0;
+}
+.v2-class-popover strong {
+  display: block;
+  font-size: 12px;
+}
+.v2-class-popover small {
+  display: block;
+  font-size: 9px;
+}
+.v2-class-popover p {
+  font-size: 12px;
+  margin: 10px;
+}
+.v2-characters #character-form {
+  scroll-margin-top: 25px;
+}
+@media (max-width: 700px) {
+  .v2-character-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+  .v2-character-main h3 {
+    font-size: 17px;
+  }
+  .v2-active-summary {
+    flex-wrap: wrap;
+  }
+}

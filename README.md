@@ -1,6 +1,10 @@
 # DOFUS Companion
 
-Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend, importierte Questdaten und optionaler Discord-Bot. Das Repository enthält eine erste funktionsfähige Implementierung wichtiger Kernabläufe. Der gesamte Umfang des Masterprompts ist **noch nicht fertig**; maßgeblich ist [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend und optionaler Discord-Bot. **v0.2.0** integriert das neue Branding, einen vollständigen verfügbaren Itemkatalog mit Suchvorschlägen, Questkategorien, bebilderte Rezepte, Klassenauswahl, Almanax-Zeitstrahl und ein separates konfigurierbares Overlay.
+
+Windows-Pakete: [Releases](https://github.com/Despair1999/Dofus-Bot/releases). Für bestehende Installationen: **Einstellungen → Nach Updates suchen**. Details: [UPDATE_GUIDE.md](UPDATE_GUIDE.md). Umsetzungsgrenzen und ausgeführte Prüfungen: [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), [TEST_REPORT.md](TEST_REPORT.md).
+
+Der geprüfte öffentliche Katalog enthält 21.554 Items, 4.743 Rezepte, 1.976 Quests und 19 Klassen. [Datenqualität und Import](DATA_IMPORT.md) dokumentieren auch fehlende Bildreferenzen und Effekttexte. Der Windows-Release liefert diesen Katalog mit; persönliche Profile und Fortschritte bleiben davon getrennt.
 
 ## Schnellstart unter Windows
 
@@ -19,12 +23,13 @@ Ein lokaler Windows-Installer und ein Portable-ZIP wurden tatsächlich gebaut un
 
 ## Bereits nutzbar
 
-- Gegenstände suchen, Werte/Rezept anzeigen, Namen kopieren und Favoriten speichern; echte Dofusdude-Daten, Cache mit Ausfallanzeige.
+- Suchvorschläge während der Eingabe, Direktdetails, mehrsprachige Suche, Kategorien, Typ/Stufe/Sortierung, vollständige Trefferzahlen und Pagination.
 - Questdaten von dofus-sqlite herunterladen, SHA-256 prüfen und atomar importieren; deutsche/französische Namen, bekannte Schritte und Ziele durchsuchen.
 - Charaktere registrieren, Fortschritt manuell bestätigen und zwischen Desktop und dem optionalen privaten Discord-Zugriff synchronisieren.
 - Lokale OCR mit Tesseract für freigegebene/importierte Screenshots, Textabgleich und manuell bestätigte Vorschläge. Sprachmodelle benötigen beim ersten Download Internet.
-- Materialbedarf, eigene Bestände/Preise und Erlös nach Zukaufkosten berechnen; keine erfundenen Marktpreise.
-- Almanax, lokale Aufgaben, Favoriten, vier Fensteransichten, konfigurierbarer Scanner-Hotkey und lokale Speicherung mit Synchronisierungswarteschlange.
+- Bebilderte Materialnamen, skalierbare Rezeptmengen, eigene Serverpreis-/Bestandsprofile, CSV und gespeicherte Crafting-Projekte; unbekannte Preise erzeugen keinen erfundenen Gewinn.
+- Suchbares Klassen-Dropdown mit stabilen IDs, Almanax-Wochen-/Monatsansicht, Einkaufslisten und Kalenderexport, Aufgaben und Favoriten.
+- Separates Overlay mit Modulpositionen/-größen, Profilen, Transparenz, Fixierung, Click-through und festem Rettungs-Hotkey. Tastenkombinationen durch Drücken aufnehmen und dauerhaft speichern.
 - Discord: Charakterformular, Profile/Questfortschritt, Itemauswahl, Questsuche, Crafting-Rechner und persistente Dungeon-Gruppen mit Warteliste/Erinnerung.
 
 ## Entwicklungsbefehle

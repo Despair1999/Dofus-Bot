@@ -1,1 +1,14 @@
-{"name":"@dofus/core","version":"0.1.0","private":true,"type":"module","exports":"./src/index.ts","scripts":{"typecheck":"tsc --noEmit","test":"tsx --test tests/*.test.ts"},"dependencies":{"zod":"^4.1.0"}}
+{
+  "name": "@dofus/core",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  }
+}

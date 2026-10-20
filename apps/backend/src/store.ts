@@ -1,6 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
-import type { Character, CharacterInput, Progress } from "@dofus/core";
+import type {
+  Character,
+  CharacterInput,
+  Progress,
+  GameClass,
+} from "@dofus/core";
 
 export class ConflictError extends Error {
   constructor(public current: unknown) {
@@ -22,11 +27,33 @@ export class PersonalStore {
       CREATE TABLE IF NOT EXISTS activity_logs(id INTEGER PRIMARY KEY, action TEXT NOT NULL, subject TEXT NOT NULL, created_at TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS quest_progress_status ON character_quests(status);
       INSERT OR IGNORE INTO migrations VALUES(1,datetime('now'));`);
+    const columns = this.db.prepare("PRAGMA table_info(characters)").all() as {
+      name: string;
+    }[];
+    if (!columns.some((c) => c.name === "class_id"))
+      this.db.exec(
+        "ALTER TABLE characters ADD COLUMN class_id INTEGER; INSERT OR IGNORE INTO migrations VALUES(2,datetime('now'));",
+      );
+  }
+  migrateClasses(classes: GameClass[]) {
+    const normalize = (s: string) =>
+      s.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().trim();
+    for (const character of this.characters().filter(
+      (c) => c.classId == null,
+    )) {
+      const matches = classes.filter((c) =>
+        c.aliases.some((a) => normalize(a) === normalize(character.className)),
+      );
+      if (matches.length === 1)
+        this.db
+          .prepare("UPDATE characters SET class_id=? WHERE id=?")
+          .run(matches[0].id, character.id);
+    }
   }
   characters(): Character[] {
     return this.db
       .prepare(
-        "SELECT id,name,server,class_name AS className,level,version,updated_at AS updatedAt FROM characters ORDER BY updated_at DESC",
+        "SELECT id,name,server,class_name AS className,class_id AS classId,level,version,updated_at AS updatedAt FROM characters ORDER BY updated_at DESC",
       )
       .all() as unknown as Character[];
   }
@@ -38,7 +65,9 @@ export class PersonalStore {
       updatedAt: new Date().toISOString(),
     };
     this.db
-      .prepare("INSERT INTO characters VALUES(?,?,?,?,?,?,?)")
+      .prepare(
+        "INSERT INTO characters(id,name,server,class_name,level,version,updated_at,class_id) VALUES(?,?,?,?,?,?,?,?)",
+      )
       .run(
         character.id,
         character.name,
@@ -47,6 +76,7 @@ export class PersonalStore {
         character.level,
         character.version,
         character.updatedAt,
+        input.classId ?? null,
       );
     this.audit("character.created", character.id);
     return character;
@@ -58,13 +88,14 @@ export class PersonalStore {
   ): Character {
     const result = this.db
       .prepare(
-        "UPDATE characters SET name=?,server=?,class_name=?,level=?,version=version+1,updated_at=? WHERE id=? AND version=?",
+        "UPDATE characters SET name=?,server=?,class_name=?,level=?,class_id=?,version=version+1,updated_at=? WHERE id=? AND version=?",
       )
       .run(
         input.name,
         input.server,
         input.className,
         input.level,
+        input.classId ?? null,
         new Date().toISOString(),
         id,
         expectedVersion,

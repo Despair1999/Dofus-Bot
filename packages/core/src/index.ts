@@ -4,6 +4,7 @@ export const characterInput = z.object({
   name: z.string().trim().min(1).max(64),
   server: z.string().trim().min(1).max(64),
   className: z.string().trim().min(1).max(64),
+  classId: z.number().int().positive().nullable().optional(),
   level: z.number().int().min(1).max(200),
 });
 export type CharacterInput = z.infer<typeof characterInput>;
@@ -34,17 +35,33 @@ export interface Item {
   type: string;
   category: string;
   imageUrl?: string;
+  nameFr?: string;
+  nameEn?: string;
+  typeId?: number;
+  mainGroup?: 'equipment'|'resources';
+  iconId?: number;
 }
 export interface Ingredient {
   itemId: number;
   quantity: number;
   category?: string;
+  name?: string;
+  imageUrl?: string;
+  level?: number;
+  type?: string;
 }
 export interface ItemDetail extends Item {
   description: string;
   effects: string[];
   recipe: Ingredient[];
   source: string;
+  requirements?: string;
+  weight?: number;
+  setId?: number|null;
+  setName?: string;
+  rawEffects?: unknown[];
+  effectsAvailable?: boolean;
+  version?: string;
 }
 export interface Envelope<T> {
   data: T;
@@ -52,7 +69,12 @@ export interface Envelope<T> {
   fetchedAt?: string;
   cached?: boolean;
   stale?: boolean;
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  version?: string|null;
 }
+export interface GameClass {id:number;classId:number;name:string;nameDe:string;nameFr:string;nameEn:string;aliases:string[];icon:string;portrait:string;source:string;placeholder:boolean}
 
 export function normalize(text: string): string {
   return text

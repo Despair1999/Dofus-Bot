@@ -1,8 +1,11 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
+import {toggleOverlay} from './v2/overlay/service';
+export {isOverlayWindow,publishOverlaySnapshot,listenCompanionActions,listenSnapshotRequest,toggleOverlay} from './v2/overlay/service';
 export type Mode = "dashboard" | "compact" | "overlay" | "hotbar";
 export async function windowMode(mode: Mode) {
   if (!isTauri()) return;
+  if(mode==='overlay'){await toggleOverlay();return;}
   const win = getCurrentWindow();
   await win.setAlwaysOnTop(mode !== "dashboard");
   await win.setDecorations(mode === "dashboard");

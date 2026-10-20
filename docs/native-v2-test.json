@@ -1,0 +1,18 @@
+{
+  "testedAt": "2026-10-20T17:44:18.081Z",
+  "runtime": "Windows x64 / Tauri / WebView2",
+  "passed": [
+    "native startup and global hotkey registration",
+    "bundled catalog activated automatically",
+    "actual Windows F8 toggles independent overlay on and off",
+    "actual Windows recovery chord disables click-through and opens settings",
+    "overlay opacity and native geometry persist after reload",
+    "closing main also stops overlay and its own backend",
+    "overlay settings and SQL layout survive full native process restart"
+  ],
+  "notTested": [
+    "physical multi-monitor movement",
+    "all DPI scales",
+    "actual DOFUS screenshots"
+  ]
+}

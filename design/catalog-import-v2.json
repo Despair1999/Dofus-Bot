@@ -1,0 +1,39 @@
+{
+  "testedAt": "2026-10-20T17:30:43.125Z",
+  "unknownTypeIds": [
+    264
+  ],
+  "itemCount": 21554,
+  "sourceItemCount": 21554,
+  "uniqueSourceItemCount": 21554,
+  "apiItemCount": 17377,
+  "apiCategoryCounts": {
+    "equipment": 4095,
+    "resources": 3521,
+    "consumables": 3366,
+    "quest": 3907,
+    "cosmetics": 2488
+  },
+  "unmatchedApiIds": [],
+  "missingImages": 3086,
+  "missingRecipeTargets": 0,
+  "categoryCounts": {
+    "equipment": 4095,
+    "resources": 3521,
+    "consumables": 3366,
+    "quest": 3907,
+    "cosmetics": 6665
+  },
+  "classCount": 19,
+  "recipeCount": 4743,
+  "formattedEffectsCount": 17377,
+  "progress": {
+    "phase": "complete",
+    "percent": 100,
+    "message": "Spieldaten erfolgreich importiert"
+  },
+  "source": "dofus-sqlite",
+  "version": "v6.0_3.7.12.12",
+  "questCount": 1976,
+  "updatedAt": "2026-10-20T17:30:39.480Z"
+}

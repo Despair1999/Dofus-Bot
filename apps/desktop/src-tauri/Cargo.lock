@@ -928,8 +928,10 @@ dependencies = [
 
 [[package]]
 name = "dofus-companion"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
+ "base64 0.22.1",
+ "minisign-verify",
  "serde",
  "serde_json",
  "tauri",

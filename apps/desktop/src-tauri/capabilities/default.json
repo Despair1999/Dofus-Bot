@@ -1,1 +1,33 @@
-{"identifier":"main","description":"Local companion window capabilities","windows":["main"],"permissions":["core:default","core:window:allow-set-always-on-top","core:window:allow-set-decorations","core:window:allow-set-size","core:window:allow-start-dragging","sql:default","sql:allow-execute","global-shortcut:allow-register","global-shortcut:allow-unregister","global-shortcut:allow-is-registered","updater:default",{"identifier":"opener:allow-open-url","allow":[{"url":"https://*"}]}]}
+{
+  "identifier": "main",
+  "description": "Local companion window capabilities",
+  "windows": [
+    "main",
+    "overlay"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-decorations",
+    "core:window:allow-set-size",
+    "core:window:allow-start-dragging",
+    "sql:default",
+    "sql:allow-execute",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-is-registered",
+    "updater:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://*"
+        }
+      ]
+    },
+    "core:event:default",
+    "core:window:allow-close",
+    "core:window:allow-show",
+    "core:window:allow-hide"
+  ]
+}

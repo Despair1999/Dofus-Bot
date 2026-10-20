@@ -36,12 +36,23 @@ jobs:
           $config | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $configPath -Encoding utf8
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Retrieve verified public catalog snapshot
+        shell: pwsh
+        run: |
+          $catalog = Get-Content -LiteralPath design/catalog-bundle.json -Raw | ConvertFrom-Json
+          New-Item -ItemType Directory -Path .data -Force | Out-Null
+          Invoke-WebRequest -Uri $catalog.url -OutFile .data/release-catalog.sqlite
+          $actual = (Get-FileHash -LiteralPath .data/release-catalog.sqlite -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $catalog.sha256 -or (Get-Item -LiteralPath .data/release-catalog.sqlite).Length -ne $catalog.size) {
+            throw 'Public catalog digest or size does not match the reviewed snapshot.'
+          }
       - uses: tauri-apps/tauri-action@v0
         id: tauri
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          COMPANION_CATALOG_PATH: ${{ github.workspace }}/.data/release-catalog.sqlite
         with:
           projectPath: apps/desktop
           tagName: v__VERSION__

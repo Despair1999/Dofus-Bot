@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   );
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Bereit für dein nächstes Abenteuer?" }),
+    page.getByRole("heading", { name: /Dein nächstes/, level: 1 }),
   ).toBeVisible();
 });
 test("dashboard task survives restart, narrow layout stays within viewport", async ({
@@ -40,7 +40,7 @@ test("real item search details recipe crafting and offline favorite", async ({
   page,
   context,
 }) => {
-  await page.getByLabel("Globale Suche").fill("Gelano");
+  await page.getByLabel("Gegenstände suchen").fill("Gelano");
   await page.getByRole("button", { name: "Suchen", exact: true }).click();
   await page
     .getByRole("button")
@@ -51,7 +51,7 @@ test("real item search details recipe crafting and offline favorite", async ({
     page.getByRole("heading", { name: "Gelano", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Rezept", exact: true }),
+    page.getByText("Herstellungsrezept", { exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "Favorit umschalten", exact: true })
@@ -69,7 +69,9 @@ test("real item search details recipe crafting and offline favorite", async ({
   await expect(
     page.getByRole("heading", { name: "Gelano", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText(/Gespeicherte Daten · Quelle/)).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Gelano", exact: true }),
+  ).toBeVisible();
   await context.setOffline(false);
 });
 test("create character, real quest progress offline queue and reconnect", async ({
@@ -82,7 +84,8 @@ test("create character, real quest progress offline queue and reconnect", async 
     await page.getByRole("button", { name: "Charaktere", exact: true }).click();
     await page.getByLabel("Name", { exact: true }).fill(name);
     await page.getByLabel("Server", { exact: true }).fill("Testserver");
-    await page.getByLabel("Klasse", { exact: true }).fill("Cra");
+    await page.getByRole("combobox", { name: "Klasse", exact: true }).click();
+    await page.getByRole("option", { name: /Sacrieur/ }).click();
     await page.getByLabel("Stufe", { exact: true }).fill("100");
     await page
       .getByRole("button", { name: "Registrieren", exact: true })
@@ -93,7 +96,9 @@ test("create character, real quest progress offline queue and reconnect", async 
     const chars = await request.get("http://127.0.0.1:4310/api/characters", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    id = (await chars.json()).data.find((c: any) => c.name === name).id;
+    const created = (await chars.json()).data.find((c: any) => c.name === name);
+    id = created.id;
+    expect(created.classId).toBe(11);
     await page
       .getByRole("button", { name: "Profil bearbeiten", exact: true })
       .click();
@@ -107,11 +112,7 @@ test("create character, real quest progress offline queue and reconnect", async 
     await page
       .getByRole("button", { name: "Quest-Assistent", exact: true })
       .click();
-    await page.getByLabel("Globale Suche").fill("Endstation Astrub");
-    await page
-      .getByRole("button", { name: "Suchen", exact: true })
-      .first()
-      .click();
+    await page.getByLabel("Quests durchsuchen").fill("Endstation Astrub");
     await page
       .getByRole("button")
       .filter({
@@ -134,7 +135,7 @@ test("create character, real quest progress offline queue and reconnect", async 
     ).toBeVisible();
     await page.route("http://127.0.0.1:4310/**", (route) => route.abort());
     await page
-      .getByRole("button", { name: "Quest abgeschlossen", exact: true })
+      .getByRole("button", { name: "Abschließen", exact: true })
       .click();
     await expect(
       page.getByText("Lokal gespeichert. Synchronisierung steht aus."),

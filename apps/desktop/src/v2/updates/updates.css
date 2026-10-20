@@ -1,0 +1,66 @@
+.update-summary {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+.update-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 62px;
+  width: 62px;
+  flex-shrink: 0;
+  border: 1px solid #486340;
+  border-radius: 15px;
+  color: #b8d890;
+  background: #2a3b2a;
+}
+.update-status-icon.verified {
+  color: #ceee9f;
+  background: #354b2a;
+}
+.update-summary h3 {
+  margin: 2px 0 8px;
+}
+.update-summary p {
+  font-size: 13px;
+  margin: 0;
+}
+.update-changelog {
+  margin-top: 22px;
+  padding: 15px;
+  background: #13201a;
+  border: 1px solid #354b36;
+  border-radius: 8px;
+}
+.update-changelog summary {
+  cursor: pointer;
+  color: #c4d6b5;
+  font-size: 13px;
+}
+.update-changelog pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font:
+    12px/1.8 "DM Sans",
+    sans-serif;
+  color: #a6b9a1;
+}
+.update-download {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 25px;
+  font-size: 12px;
+  color: #b1c89d;
+}
+.update-download progress {
+  width: 100%;
+  height: 8px;
+  accent-color: #b9e779;
+}
+.update-error {
+  border-color: #805746;
+  background: #392c25;
+  color: #efd1b1;
+}

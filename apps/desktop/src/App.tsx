@@ -1,62 +1,87 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  BookOpen,
-  Search,
   LayoutDashboard,
+  Package,
+  BookOpen,
   ScanLine,
   Hammer,
   Users,
-  Settings,
-  Star,
-  ArrowUpRight,
-  Compass,
   CalendarDays,
-  Check,
+  Star,
+  Settings,
   RefreshCw,
   Wifi,
   WifiOff,
-  PanelLeftClose,
   Layers,
-  Clipboard,
+  PanelLeftClose,
+  ChevronRight,
   Plus,
   Trash2,
-  Download,
   ShieldCheck,
-  Sparkles,
-  ChevronRight,
-  Package,
-  Pin,
+  ArrowUpRight,
+  Compass,
+  Check,
+  Clipboard,
+  Search,
 } from "lucide-react";
-import { isTauri, invoke } from "@tauri-apps/api/core";
-import { materials, profit } from "@dofus/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
+import type {
+  Character,
+  CharacterInput,
+  GameClass,
+  Progress,
+} from "@dofus/core";
+import type { Quest } from "@dofus/game-data";
 import {
   api,
   cached,
-  enqueue,
   flush,
+  enqueue,
   ApiError,
   type Config,
-  type Character,
-  type Quest,
-  type Item,
   type Mutation,
 } from "./client";
 import { read, write, erase } from "./storage";
-import { windowMode, openExternal, shortcut, type Mode } from "./native";
-import Scanner from "./Scanner";
-import CharacterEditor from "./CharacterEditor";
+import {
+  windowMode,
+  isOverlayWindow,
+  toggleOverlay,
+  publishOverlaySnapshot,
+  listenCompanionActions,
+  listenSnapshotRequest,
+  type Mode,
+} from "./native";
 import { createSerialQueue } from "./serial";
-type Tab =
-  | "dashboard"
-  | "items"
-  | "quests"
-  | "scanner"
-  | "craft"
-  | "characters"
-  | "almanax"
-  | "favorites"
-  | "settings";
-const tabs: { id: Tab; label: string; icon: typeof Search }[] = [
+import Scanner from "./Scanner";
+import ItemsPage from "./v2/items/ItemsPage";
+import ItemSearchBar from "./v2/items/ItemSearchBar";
+import {
+  defaultFilters,
+  type ItemFilters,
+  type CatalogDetail,
+} from "./v2/items/types";
+import CraftingPage from "./v2/craft/CraftingPage";
+import QuestsPage from "./v2/quests/QuestsPage";
+import CharactersPage from "./v2/characters/CharactersPage";
+import AlmanaxTimeline, { type AlmanaxDay } from "./v2/almanax/AlmanaxTimeline";
+import { todayISO } from "./v2/almanax/calendar";
+import OverlayView from "./v2/overlay/OverlayView";
+import OverlaySettings from "./v2/overlay/OverlaySettings";
+import UpdatePanel from "./v2/updates/UpdatePanel";
+import CatalogPanel from "./v2/settings/CatalogPanel";
+import { useRoute, navigatePath, type View } from "./v2/routing";
+import appPackage from "../package.json";
+import "./v2/v2.css";
+
+type Todo = { id: string; text: string; done: boolean };
+type Favorite = {
+  id: number;
+  name: string;
+  kind: "item" | "quest";
+  category?: string;
+};
+type SavedProgress = Pick<Progress, "questId" | "step" | "status" | "version">;
+const tabs: { id: View; label: string; icon: typeof Search }[] = [
   { id: "dashboard", label: "Übersicht", icon: LayoutDashboard },
   { id: "items", label: "Gegenstände", icon: Package },
   { id: "quests", label: "Quest-Assistent", icon: BookOpen },
@@ -67,406 +92,524 @@ const tabs: { id: Tab; label: string; icon: typeof Search }[] = [
   { id: "favorites", label: "Favoriten", icon: Star },
   { id: "settings", label: "Einstellungen", icon: Settings },
 ];
-type Progress = {
-  questId: number;
-  step: number;
-  status: string;
-  version: number;
-};
-type Todo = { id: string; text: string; done: boolean };
-type Favorite = {
-  id: number;
-  name: string;
-  kind: "item" | "quest";
-  category?: string;
-};
 export default function App() {
-  const [tab, setTab] = useState<Tab>("dashboard"),
-    [mode, setMode] = useState<Mode>("dashboard"),
+  return isOverlayWindow() ? <OverlayView /> : <MainApp />;
+}
+function MainApp() {
+  const route = useRoute();
+  const tab = tabs.some((t) => t.id === route.view) ? route.view : "dashboard";
+  const [ready, setReady] = useState(false),
     [config, setConfig] = useState<Config>({
       url: "http://127.0.0.1:4310",
       token: "",
     }),
-    [ready, setReady] = useState(false),
     [online, setOnline] = useState(false),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
-    [query, setQuery] = useState(""),
-    [category, setCategory] = useState("equipment"),
-    [items, setItems] = useState<Item[]>([]),
-    [quests, setQuests] = useState<Quest[]>([]),
-    [item, setItem] = useState<Item | null>(null),
-    [quest, setQuest] = useState<Quest | null>(null),
     [characters, setCharacters] = useState<Character[]>([]),
+    [classes, setClasses] = useState<GameClass[]>([]),
     [active, setActive] = useState(""),
-    [progress, setProgress] = useState<Progress[]>([]),
+    [progress, setProgress] = useState<SavedProgress[]>([]),
     [favorites, setFavorites] = useState<Favorite[]>([]),
     [todos, setTodos] = useState<Todo[]>([]),
     [todo, setTodo] = useState(""),
+    [quest, setQuest] = useState<Quest | null>(null),
+    [craftItem, setCraftItem] = useState<CatalogDetail | null>(null),
     [pending, setPending] = useState(0),
     [lastSync, setLastSync] = useState(""),
-    [stale, setStale] = useState(false),
-    [almanax, setAlmanax] = useState<any>(null),
-    [date, setDate] = useState(
-      new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Berlin" }),
-    ),
-    [update, setUpdate] = useState<any>(null),
-    [hotkey, setHotkey] = useState("CommandOrControl+Shift+D"),
-    [opacity, setOpacity] = useState(94),
-    [onboarding, setOnboarding] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
-  const modeQueue = useRef(createSerialQueue());
-  const character = characters.find((c) => c.id === active);
-  const current = progress.find((p) => p.questId === quest?.id);
-  const currentStep = quest?.steps[current?.step ?? 0];
+    [mode, setMode] = useState<Mode>("dashboard"),
+    [scannerKind, setScannerKind] = useState<"items" | "quests">("quests"),
+    [almanax, setAlmanax] = useState<AlmanaxDay | null>(null),
+    [onboarding, setOnboarding] = useState(false),
+    [catalogRevision, setCatalogRevision] = useState(0),
+    [dashboardQuery, setDashboardQuery] = useState("");
+  const lastSearch = useRef("/items/search");
   useEffect(() => {
+    if (route.view === "items" && !route.id) lastSearch.current = route.path;
+  }, [route.view, route.id, route.path]);
+  const modeQueue = useRef(createSerialQueue());
+  const questRequest = useRef(0);
+  const character = characters.find((c) => c.id === active);
+  const gameClass = classes.find((c) => c.id === character?.classId);
+  const current = progress.find((p) => p.questId === quest?.id);
+  useEffect(() => {
+    let cancelled = false;
     void (async () => {
       try {
         const saved = await read<Config>("config", {
           url: "http://127.0.0.1:4310",
           token: "",
         });
+        if (cancelled) return;
         setConfig({
           ...saved,
           token: sessionStorage.getItem("companion-token") ?? "",
         });
-        setOnboarding(!(await read("onboarded", false)));
         setCharacters(await read("characters", []));
         setActive(await read("active", ""));
         setFavorites(await read("favorites", []));
         setTodos(await read("todos", []));
         setQuest(await read("activeQuest", null));
+        setCraftItem(await read("craft:active-item", null));
         setPending((await read<Mutation[]>("outbox", [])).length);
-        setReady(true);
-      } catch (e) {
-        setNotice(String(e));
+        setOnboarding(!(await read("onboarded", false)));
+        if (!cancelled) setReady(true);
+      } catch (error) {
+        setNotice(String(error));
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
   useEffect(() => {
-    if (!ready) return;
-    let disposed = false;
-    async function health() {
-      try {
-        const res = await fetch(`${config.url}/health`, {
-          signal: AbortSignal.timeout(4000),
-        });
-        if (!disposed) setOnline(res.ok);
-      } catch {
-        if (!disposed) setOnline(false);
-      }
-    }
-    void health();
-    const timer = setInterval(health, 30000);
-    return () => {
-      disposed = true;
-      clearInterval(timer);
-    };
-  }, [ready, config.url]);
-  useEffect(() => {
-    if (!active || !ready) return;
-    void read<Progress[]>(`progress:${active}`, []).then(setProgress);
-  }, [active, ready]);
-  useEffect(() => {
     if (!ready || !isTauri()) return;
-    let cancelled = false;
+    let stopped = false;
     void (async () => {
-      for (let attempt = 0; attempt < 30 && !cancelled; attempt++) {
+      for (let attempt = 0; attempt < 40 && !stopped; attempt++) {
         try {
           const local = await invoke<Config>("local_connection");
-          if (!cancelled) {
+          const response = await api<Character[]>("/api/characters", local);
+          if (!stopped) {
             setConfig(local);
-            const response = await api<Character[]>("/api/characters", local);
             setCharacters(response.data);
-            setOnline(true);
             await write("characters", response.data);
+            setOnline(true);
           }
           return;
         } catch {
           await new Promise((r) => setTimeout(r, 300));
         }
       }
-      if (!cancelled)
+      if (!stopped)
         setNotice(
-          "Der lokale Dienst ist noch nicht erreichbar. Verbindung in Einstellungen prüfen.",
+          "Der lokale Dienst ist noch nicht erreichbar. Bitte Verbindung und Diagnose in den Einstellungen prüfen.",
         );
+    })();
+    return () => {
+      stopped = true;
+    };
+  }, [ready]);
+  useEffect(() => {
+    if (!ready) return;
+    let stopped = false;
+    async function health() {
+      try {
+        const response = await fetch(`${config.url}/health`, {
+          signal: AbortSignal.timeout(4000),
+        });
+        if (!stopped) setOnline(response.ok);
+      } catch {
+        if (!stopped) setOnline(false);
+      }
+    }
+    void health();
+    const timer = setInterval(health, 15000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [ready, config.url]);
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    void cached<GameClass[]>("/api/classes", config)
+      .then((result) => {
+        if (!cancelled) setClasses(result.data);
+      })
+      .catch(() => {});
+    void cached<AlmanaxDay>(`/api/almanax?date=${todayISO()}&lang=de`, config)
+      .then((result) => {
+        if (!cancelled) setAlmanax(result.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, config.url, config.token, catalogRevision]);
+  useEffect(() => {
+    if (!ready || !active) {
+      setProgress([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const local = await read<SavedProgress[]>(`progress:${active}`, []);
+      if (!cancelled) setProgress(local);
+      const queue = await read<Mutation[]>("outbox", []);
+      if (queue.some((m) => m.characterId === active)) return;
+      try {
+        const result = await api<Progress[]>(
+          `/api/characters/${active}/progress`,
+          config,
+        );
+        if (!cancelled) {
+          setProgress(result.data);
+          await write(`progress:${active}`, result.data);
+        }
+      } catch {
+        /* Local confirmed state remains usable. */
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [ready]);
+  }, [ready, active, config.url, config.token]);
   useEffect(() => {
-    document.documentElement.style.background =
-      mode === "overlay" ? "transparent" : "#101719";
-  }, [mode]);
-  useEffect(() => {
-    function key(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
-      if (e.key === "Escape" && mode !== "dashboard")
-        void changeMode("dashboard");
-    }
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
-  }, [mode]);
-  async function action(fn: () => Promise<void>) {
+    if (!ready) return;
+    const reconnect = () => void synchronize();
+    addEventListener("online", reconnect);
+    return () => removeEventListener("online", reconnect);
+  }, [ready, config.url, config.token, active]);
+  async function run(task: () => Promise<void>): Promise<boolean> {
     setBusy(true);
     setNotice("");
     try {
-      await fn();
-    } catch (e) {
-      setNotice(e instanceof Error ? e.message : String(e));
+      await task();
+      return true;
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : String(error));
+      return false;
     } finally {
       setBusy(false);
     }
   }
   async function changeMode(next: Mode) {
     await modeQueue.current(() =>
-      action(async () => {
+      run(async () => {
+        if (next === "overlay") {
+          await toggleOverlay();
+          return;
+        }
         await windowMode(next);
         setMode(next);
-      }),
+      }).then(() => {}),
     );
   }
-  async function sync() {
-    await action(async () => {
+  function navigate(view: View) {
+    setNotice("");
+    navigatePath(view === "dashboard" ? "/" : `/${view}`);
+  }
+  function navigateItem(id: number, category?: string) {
+    navigatePath(
+      `/items/${id}${category ? `?category=${encodeURIComponent(category)}` : ""}`,
+    );
+  }
+  function navigateSearch(
+    query: string,
+    filters: ItemFilters = defaultFilters,
+    page = 1,
+  ) {
+    const params = new URLSearchParams({
+      q: query,
+      mainGroup: filters.mainGroup,
+      sort: filters.sort,
+      page: String(page),
+    });
+    for (const [key, value] of Object.entries(filters))
+      if (value !== undefined) params.set(key, String(value));
+    const path = `/items/search?${params}`;
+    lastSearch.current = path;
+    navigatePath(path);
+  }
+  async function selectQuest(id: number) {
+    const sequence = ++questRequest.current;
+    navigatePath(`/quests/${id}`);
+    try {
+      const result = await cached<Quest>(`/api/quests/${id}?lang=de`, config);
+      if (sequence === questRequest.current) {
+        setQuest(result.data);
+        await write("activeQuest", result.data);
+      }
+    } catch (error) {
+      setNotice(String(error));
+    }
+  }
+  async function selectCraft(item: CatalogDetail) {
+    setCraftItem(item);
+    await write("craft:active-item", item);
+    navigate("craft");
+  }
+  async function synchronize() {
+    return run(async () => {
       await flush(config);
       const result = await api<Character[]>("/api/characters", config);
       setCharacters(result.data);
       await write("characters", result.data);
       if (active) {
-        const p = await api<Progress[]>(
+        const result = await api<Progress[]>(
           `/api/characters/${active}/progress`,
           config,
         );
-        setProgress(p.data);
-        await write(`progress:${active}`, p.data);
+        setProgress(result.data);
+        await write(`progress:${active}`, result.data);
       }
-      setPending(0);
-      setLastSync(new Date().toLocaleTimeString("de-DE"));
+      setPending((await read<Mutation[]>("outbox", [])).length);
       setOnline(true);
+      setLastSync(new Date().toLocaleTimeString("de-DE"));
       setNotice("Synchronisierung abgeschlossen.");
     });
   }
-  async function search(kind: "items" | "quests", q = query) {
-    await action(async () => {
-      const path =
-        kind === "items"
-          ? `/api/items?q=${encodeURIComponent(q)}&category=${category}&lang=de`
-          : `/api/quests?q=${encodeURIComponent(q)}&lang=de`;
-      const res = await cached<any[]>(path, config);
-      if (kind === "items") {
-        setItems(res.data);
-        setItem(null);
-      } else {
-        setQuests(res.data);
-        setQuest(null);
-      }
-      setStale(!!res.stale);
-      setTab(kind);
-      if (!res.data.length) setNotice("Keine passenden Einträge gefunden.");
-    });
-  }
-  async function selectItem(id: number, cat = category) {
-    await action(async () => {
-      const r = await cached<Item>(
-        `/api/items/${id}?category=${cat}&lang=de`,
-        config,
+  async function saveProgress(
+    target: Quest,
+    step: number,
+    status: Progress["status"],
+  ) {
+    if (!active) {
+      setNotice(
+        "Wähle zuerst einen Charakter, um deinen Fortschritt zu speichern.",
       );
-      setItem(r.data);
-      setStale(!!r.stale);
-      setTab("items");
-    });
-  }
-  async function selectQuest(id: number) {
-    await action(async () => {
-      const r = await cached<Quest>(`/api/quests/${id}?lang=de`, config);
-      setQuest(r.data);
-      await write("activeQuest", r.data);
-      setTab("quests");
-      setStale(!!r.stale);
-    });
-  }
-  async function saveProgress(step: number, status = "active") {
-    if (!quest || !active) {
-      setNotice("Erstelle und wähle zuerst einen Charakter.");
       return;
     }
-    await action(async () => {
-      const m: Mutation = {
+    await run(async () => {
+      const existing = progress.find((p) => p.questId === target.id);
+      const mutation: Mutation = {
         id: crypto.randomUUID(),
         characterId: active,
-        questId: quest.id,
+        questId: target.id,
         step,
         status,
-        expectedVersion: current?.version ?? 0,
+        expectedVersion: existing?.version ?? 0,
       };
-      await enqueue(m);
-      const local = {
-        questId: quest.id,
-        step,
-        status,
-        version: current?.version ?? 0,
-      };
-      const next = [...progress.filter((p) => p.questId !== quest.id), local];
+      await enqueue(mutation);
+      const next = [
+        ...progress.filter((p) => p.questId !== target.id),
+        { questId: target.id, step, status, version: existing?.version ?? 0 },
+      ];
       setProgress(next);
+      setQuest(target);
+      await write("activeQuest", target);
       await write(`progress:${active}`, next);
       setPending((await read<Mutation[]>("outbox", [])).length);
       try {
         await flush(config);
-        const response = await api<Progress[]>(
+        const result = await api<Progress[]>(
           `/api/characters/${active}/progress`,
           config,
         );
-        setProgress(response.data);
-        await write(`progress:${active}`, response.data);
+        setProgress(result.data);
+        await write(`progress:${active}`, result.data);
         setPending(0);
         setNotice("Fortschritt gespeichert und synchronisiert.");
-      } catch (e) {
-        if (e instanceof ApiError && e.status === 409)
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 409)
           throw new Error(
-            "Versionskonflikt: Die Änderung bleibt in der Warteschlange. In Einstellungen prüfen.",
-            { cause: e },
+            "Versionskonflikt: Deine Änderung bleibt lokal erhalten. Prüfe die Warteschlange in den Einstellungen.",
+            { cause: error },
           );
         setNotice("Lokal gespeichert. Synchronisierung steht aus.");
       }
     });
   }
-  async function favorite(f: Favorite) {
-    const next = favorites.some((v) => v.id === f.id && v.kind === f.kind)
-      ? favorites.filter((v) => !(v.id === f.id && v.kind === f.kind))
-      : [...favorites, f];
+  async function favorite(value: Favorite) {
+    const next = favorites.some(
+      (f) => f.id === value.id && f.kind === value.kind,
+    )
+      ? favorites.filter((f) => !(f.id === value.id && f.kind === value.kind))
+      : [...favorites, value];
     setFavorites(next);
     await write("favorites", next);
   }
-  async function loadAlmanax() {
-    await action(async () => {
-      const r = await cached<any>(`/api/almanax?date=${date}&lang=de`, config);
-      setAlmanax(r.data);
-      setStale(!!r.stale);
-    });
-  }
-  function navigate(next: Tab) {
-    setTab(next);
-    setNotice("");
-    if (next === "almanax") void loadAlmanax();
-  }
-  async function checkUpdates() {
-    await action(async () => {
-      if (!isTauri()) {
-        const r = await fetch(
-          "https://api.github.com/repos/Despair1999/Dofus-Bot/releases/latest",
-          { signal: AbortSignal.timeout(10000) },
-        );
-        if (r.status === 404) {
-          setNotice("Noch keine veröffentlichte Version verfügbar.");
-          return;
-        }
-        if (!r.ok) throw new Error(`GitHub: HTTP ${r.status}`);
-        const release = await r.json();
-        setNotice(
-          `GitHub-Version: ${release.tag_name}. Installation ist in der Windows-App verfügbar.`,
-        );
-        return;
-      }
-      const { check } = await import("@tauri-apps/plugin-updater");
-      const next = await check();
-      setUpdate(next);
+  async function saveCharacter(input: CharacterInput, existing?: Character) {
+    return run(async () => {
+      const result = await api<Character>(
+        existing ? `/api/characters/${existing.id}` : "/api/characters",
+        config,
+        existing ? { ...input, expectedVersion: existing.version } : input,
+        existing ? "PUT" : "POST",
+      );
+      const next = existing
+        ? characters.map((c) => (c.id === existing.id ? result.data : c))
+        : [...characters, result.data];
+      setCharacters(next);
+      setActive(result.data.id);
+      await write("characters", next);
+      await write("active", result.data.id);
       setNotice(
-        next
-          ? `Version ${next.version} ist verfügbar.`
-          : "Du verwendest die aktuelle Version.",
+        existing ? "Charakter aktualisiert." : "Charakter registriert.",
       );
     });
   }
-  const questCard = (
-    <section className="panel quest-card">
-      <div className="panel-title">
-        <span>
-          <BookOpen size={18} /> Quest-Assistent
-        </span>
-        <span className="pill">{quest ? "Manuell bestätigt" : "Bereit"}</span>
-      </div>
-      {quest ? (
-        <>
-          <h2>{quest.name}</h2>
-          <p>
-            {currentStep?.description ||
-              currentStep?.name ||
-              "Keine strukturierten Schritte vorhanden."}
-          </p>
-          <div className="progress">
-            <i
-              style={{
-                width: `${quest.steps.length ? Math.min(100, ((current?.step ?? 0) / quest.steps.length) * 100) : 0}%`,
-              }}
-            />
-          </div>
-          <div className="split">
-            <small>
-              Schritt {Math.min((current?.step ?? 0) + 1, quest.steps.length)}{" "}
-              von {quest.steps.length}
-            </small>
-            <button className="text-button" onClick={() => navigate("quests")}>
-              Quest öffnen <ArrowUpRight size={15} />
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="quest-symbol">
-            <Compass size={32} />
-          </div>
-          <h2>Dein nächstes Abenteuer</h2>
-          <p>
-            Suche eine Quest oder erkenne dein geöffnetes Questjournal. Dein
-            Fortschritt bleibt bei dir.
-          </p>
-          <button onClick={() => navigate("quests")}>
-            Quest auswählen <ChevronRight size={16} />
-          </button>
-        </>
-      )}
-    </section>
+  async function deleteCharacter(target: Character) {
+    if (
+      !confirm(
+        `Charakter ${target.name} einschließlich seines bestätigten Questfortschritts löschen?`,
+      )
+    )
+      return false;
+    return run(async () => {
+      await api(`/api/characters/${target.id}`, config, undefined, "DELETE");
+      const next = characters.filter((c) => c.id !== target.id);
+      setCharacters(next);
+      await write("characters", next);
+      await write(`progress:${target.id}`, []);
+      if (active === target.id) {
+        setActive("");
+        setProgress([]);
+        await write("active", "");
+      }
+      const queue = (await read<Mutation[]>("outbox", [])).filter(
+        (m) => m.characterId !== target.id,
+      );
+      await write("outbox", queue);
+      setPending(queue.length);
+      setNotice("Charakter gelöscht.");
+    });
+  }
+  const snapshot = useMemo(
+    () => ({
+      character: character ?? null,
+      quest,
+      step: current?.step ?? 0,
+      materials: quest?.materials?.map((m) => ({
+        name: m.name,
+        quantity: m.quantity,
+      })),
+      almanax,
+      favorites,
+      tasks: todos,
+    }),
+    [character, quest, current?.step, almanax, favorites, todos],
   );
+  const snapshotRef = useRef(snapshot);
+  snapshotRef.current = snapshot;
+  useEffect(() => {
+    if (ready) void publishOverlaySnapshot(snapshot);
+  }, [ready, snapshot]);
+  useEffect(() => {
+    if (!ready) return;
+    let disposed = false;
+    const releases: (() => void)[] = [];
+    void (async () => {
+      for (const off of [
+        await listenSnapshotRequest(
+          () => void publishOverlaySnapshot(snapshotRef.current),
+        ),
+        await listenCompanionActions((action) => {
+          if (action === "settings") navigate("settings");
+          else if (action === "questScanner" || action === "itemScanner") {
+            setScannerKind(action === "itemScanner" ? "items" : "quests");
+            navigate("scanner");
+          } else if (action === "search") {
+            navigate("items");
+            setTimeout(
+              () =>
+                document
+                  .querySelector<HTMLInputElement>("input[role=combobox]")
+                  ?.focus(),
+              100,
+            );
+          } else if (action === "compact") void changeMode("compact");
+          else if (action.startsWith("items:"))
+            navigateItem(Number(action.slice(6)));
+          else if (action.startsWith("quests:"))
+            void selectQuest(Number(action.slice(7)));
+          else if (action === "quests") navigate("quests");
+          else if (action === "treasure") {
+            navigate("settings");
+            setNotice(
+              "Schatzsuche ist derzeit wegen fehlender verifizierter DBI-Daten nicht verfügbar.",
+            );
+          } else navigate("dashboard");
+        }),
+      ]) {
+        if (disposed) off();
+        else releases.push(off);
+      }
+    })();
+    return () => {
+      disposed = true;
+      releases.forEach((off) => off());
+    };
+  }, [ready, config.url, config.token]);
+  useEffect(() => {
+    function keyboard(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        const input = document.querySelector<HTMLInputElement>(
+          'input[role=combobox],input[aria-label="Quests durchsuchen"]',
+        );
+        if (input) input.focus();
+        else {
+          navigate("items");
+          setTimeout(
+            () =>
+              document
+                .querySelector<HTMLInputElement>("input[role=combobox]")
+                ?.focus(),
+            100,
+          );
+        }
+      }
+      if (event.key === "Escape" && mode !== "dashboard")
+        void changeMode("dashboard");
+    }
+    addEventListener("keydown", keyboard);
+    return () => removeEventListener("keydown", keyboard);
+  }, [mode]);
+  async function addTodo() {
+    if (!todo.trim()) return;
+    const next = [
+      ...todos,
+      { id: crypto.randomUUID(), text: todo.trim(), done: false },
+    ];
+    setTodos(next);
+    setTodo("");
+    await write("todos", next);
+  }
+  async function exportData() {
+    const progressByCharacter: Record<string, SavedProgress[]> = {};
+    for (const c of characters)
+      progressByCharacter[c.id] = await read(`progress:${c.id}`, []);
+    const contents = {
+      version: 2,
+      characters,
+      progressByCharacter,
+      favorites,
+      todos,
+      outbox: await read("outbox", []),
+      overlayLayouts: await read("overlay-layouts-v2", null),
+      craftingProjects: await read("craft:projects", []),
+      shoppingLists: await read("shopping-lists", []),
+    };
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(contents, null, 2)], {
+        type: "application/json",
+      }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "dofus-companion-export.json";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   if (!ready)
     return (
       <div className="loading">
-        <RefreshCw className="spin" /> Companion wird vorbereitet …
-      </div>
-    );
-  if (mode === "overlay")
-    return (
-      <div className="overlay-only" style={{ opacity: opacity / 100 }}>
-        <div className="overlay-drag" data-tauri-drag-region>
-          <span data-tauri-drag-region>DOFUS Companion · Quest</span>
-          <button
-            title="Hauptfenster öffnen"
-            className="icon-button"
-            onClick={() => void changeMode("dashboard")}
-          >
-            <Layers size={17} />
-          </button>
-        </div>
-        {questCard}
+        <RefreshCw className="spin" /> Dein Companion wird vorbereitet …
       </div>
     );
   if (mode === "hotbar")
     return (
       <div className="mini" data-tauri-drag-region>
-        <strong>DC</strong>
-        {[Search, BookOpen, ScanLine, Hammer].map((Icon, i) => (
+        <img
+          src="/branding/icon.png"
+          width={38}
+          height={38}
+          alt="DOFUS Companion"
+        />
+        {[Search, BookOpen, ScanLine, Hammer].map((Icon, index) => (
           <button
-            key={i}
-            title={["Items", "Quests", "Scan", "Crafting"][i]}
+            key={index}
+            title={["Items", "Quests", "Scan", "Crafting"][index]}
             onClick={() => {
-              setTab((["items", "quests", "scanner", "craft"] as Tab[])[i]);
+              navigate(
+                (["items", "quests", "scanner", "craft"] as View[])[index],
+              );
               void changeMode("compact");
             }}
           >
-            <Icon size={20} />
+            <Icon size={19} />
           </button>
         ))}
         <button
@@ -477,31 +620,49 @@ export default function App() {
         </button>
       </div>
     );
+  const filterParams =
+    route.id && route.view === "items"
+      ? new URL(lastSearch.current, location.origin).searchParams
+      : route.params;
+  const parsedFilters: ItemFilters = {
+    mainGroup:
+      filterParams.get("mainGroup") === "resources" ? "resources" : "equipment",
+    sort: (filterParams.get("sort") as ItemFilters["sort"]) || "name",
+    category: filterParams.get("category") || undefined,
+    typeId: filterParams.has("typeId")
+      ? Number(filterParams.get("typeId"))
+      : undefined,
+    minLevel: filterParams.has("minLevel")
+      ? Number(filterParams.get("minLevel"))
+      : undefined,
+    maxLevel: filterParams.has("maxLevel")
+      ? Number(filterParams.get("maxLevel"))
+      : undefined,
+  };
   return (
-    <div className={`app ${mode}`}>
+    <div className={`app v2-shell ${mode}`}>
       {mode === "dashboard" && (
         <aside className="sidebar">
           <div className="brand">
-            <div className="brand-mark">
-              D<span>◆</span>
-            </div>
-            <div>
-              DOFUS<span>COMPANION</span>
-            </div>
+            <img
+              className="v2-brand-image"
+              src="/branding/wordmark.png"
+              alt="DOFUS Companion"
+            />
           </div>
           <div className="workspace">
-            <span className="status-dot" /> DEIN ABENTEUER, ORGANISIERT
+            <span className="status-dot" /> DEIN ABENTEUER. DEIN COMPANION.
           </div>
           <nav>
-            {tabs.map((t) => (
+            {tabs.map((entry) => (
               <button
-                key={t.id}
-                className={tab === t.id ? "nav active" : "nav"}
-                onClick={() => navigate(t.id)}
+                key={entry.id}
+                className={`nav ${tab === entry.id ? "active" : ""}`}
+                onClick={() => navigate(entry.id)}
               >
-                <t.icon size={19} />
-                {t.label}
-                {t.id === "scanner" && <span className="nav-tag">OCR</span>}
+                <entry.icon size={19} />
+                {entry.label}
+                {entry.id === "scanner" && <span className="nav-tag">OCR</span>}
               </button>
             ))}
           </nav>
@@ -510,18 +671,22 @@ export default function App() {
               <ShieldCheck size={18} />
               <div>
                 Dein Spiel. Deine Kontrolle.
-                <small>Keine automatisierten Spielaktionen</small>
+                <small>Unabhängiges Community-Projekt</small>
               </div>
             </div>
             <button className="profile" onClick={() => navigate("characters")}>
               <div className="avatar">
-                {character?.name.slice(0, 2).toUpperCase() || "＋"}
+                {gameClass ? (
+                  <img src={gameClass.icon} alt="" />
+                ) : (
+                  character?.name.slice(0, 2).toUpperCase() || "＋"
+                )}
               </div>
               <span>
                 {character?.name || "Charakter hinzufügen"}
                 <small>
                   {character
-                    ? `${character.className} · Stufe ${character.level}`
+                    ? `${gameClass?.nameDe || character.className} · Stufe ${character.level}`
                     : "Dein persönliches Profil"}
                 </small>
               </span>
@@ -534,24 +699,41 @@ export default function App() {
         <header>
           <div className="breadcrumb">
             Mein Companion <ChevronRight size={13} />
-            <strong>{tabs.find((t) => t.id === tab)?.label}</strong>
+            <strong>{tabs.find((entry) => entry.id === tab)?.label}</strong>
+            {route.id && (
+              <>
+                <ChevronRight size={13} />
+                <span>{tab === "quests" ? "Quest" : "Details"}</span>
+              </>
+            )}
           </div>
-          <div className="header-actions">
+          <div className="v2-header-buttons">
             <span className={`connection ${online ? "online" : ""}`}>
               {online ? <Wifi size={14} /> : <WifiOff size={14} />}{" "}
               {online ? "Backend erreichbar" : "Offline"}
             </span>
             <button
-              title="Synchronisieren"
               className="icon-button"
+              title="Synchronisieren"
               disabled={busy}
-              onClick={() => void sync()}
+              onClick={() => void synchronize()}
             >
               <RefreshCw size={17} className={busy ? "spin" : ""} />
             </button>
             <button
-              title="Ansichtsmodus wechseln"
               className="icon-button"
+              title="Overlay ein-/ausblenden"
+              onClick={() =>
+                void run(async () => {
+                  await toggleOverlay();
+                })
+              }
+            >
+              <Layers size={18} />
+            </button>
+            <button
+              className="icon-button"
+              title="Ansichtsmodus wechseln"
               onClick={() =>
                 void changeMode(mode === "dashboard" ? "compact" : "dashboard")
               }
@@ -561,39 +743,74 @@ export default function App() {
           </div>
         </header>
         <div className="content">
+          {mode === "compact" && (
+            <div className="v2-compact-nav">
+              {tabs.map((entry) => (
+                <button
+                  className="secondary"
+                  key={entry.id}
+                  title={entry.label}
+                  onClick={() => navigate(entry.id)}
+                >
+                  <entry.icon size={15} />
+                </button>
+              ))}
+            </div>
+          )}
           <div className="page-heading">
             <div>
               <span className="eyebrow">
-                DOFUS COMPANION / DEIN PERSÖNLICHER ASSISTENT
+                DOFUS COMPANION / DIE WELT DER ZWÖLF AN DEINER SEITE
               </span>
               <h1>
                 {tab === "dashboard" ? (
                   <>
-                    Bereit für dein nächstes <em>Abenteuer?</em>
+                    Dein nächstes <em>Abenteuer wartet.</em>
                   </>
                 ) : (
-                  tabs.find((t) => t.id === tab)?.label
+                  tabs.find((entry) => entry.id === tab)?.label
                 )}
               </h1>
               <p>
-                {tab === "dashboard"
-                  ? "Alles, was du für die Welt der Zwölf brauchst. An einem Ort."
-                  : "Spielwissen, das dir weiterhilft. Mit nachvollziehbaren Quellen."}
+                {
+                  (
+                    {
+                      dashboard:
+                        "Mehr Überblick. Weniger Umwege. Dein persönlicher Begleiter für DOFUS.",
+                      items:
+                        "Die Enzyklopädie für Ausrüstung, Ressourcen und deine nächsten Ideen.",
+                      quests:
+                        "Geschichten entdecken und jeden bestätigten Schritt im Blick behalten.",
+                      craft:
+                        "Von der Idee zum fertigen Gegenstand. Mit deinem persönlichen Materialplan.",
+                      characters:
+                        "Deine Charaktere, Klassen und Fortschritte – übersichtlich verbunden.",
+                      almanax:
+                        "Plane deine Opfergaben und entdecke die nächsten Tagesboni.",
+                      scanner:
+                        "Deine Aufnahme. Lokale Erkennung. Du bestätigst das Ergebnis.",
+                      favorites:
+                        "Deine wichtigsten Gegenstände und Quests direkt griffbereit.",
+                      settings: "Dein Companion, so wie du ihn brauchst.",
+                    } as Record<View, string>
+                  )[tab]
+                }
               </p>
             </div>
             <div className="version">
-              v0.1.0 <span>ENTWICKLUNG</span>
+              v{appPackage.version}
+              <span>COMMUNITY</span>
             </div>
           </div>
-          {onboarding && (
+          {onboarding && tab === "dashboard" && (
             <section className="onboarding">
-              <Sparkles size={23} />
+              <Compass size={24} />
               <div>
                 <strong>Willkommen in deinem Companion</strong>
                 <p>
-                  Starte das Backend, hinterlege den lokalen Zugangsschlüssel in
-                  den Einstellungen und lege deinen Charakter an. Itemdaten
-                  werden bei der Suche geladen, Questdaten einmalig importiert.
+                  Importiere den vollständigen Spieldatenkatalog, lege deinen
+                  Charakter an und richte dein persönliches Overlay ein.
+                  Bestehende Profile und Fortschritte bleiben erhalten.
                 </p>
               </div>
               <button
@@ -607,119 +824,145 @@ export default function App() {
               </button>
             </section>
           )}
-          <form
-            className="global-search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void search(tab === "quests" ? "quests" : "items");
-            }}
-          >
-            <Search size={21} />
-            <input
-              ref={searchRef}
-              aria-label="Globale Suche"
-              placeholder={
-                tab === "quests"
-                  ? "Questname suchen …"
-                  : "Gegenstände durchsuchen …"
-              }
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <kbd>Strg K</kbd>
-            <button disabled={busy || query.trim().length < 2}>Suchen</button>
-          </form>
           {notice && (
-            <div role="status" className="notice">
-              {notice}
+            <div className="notice" role="status">
+              <span>{notice}</span>
               <button className="text-button" onClick={() => setNotice("")}>
                 Schließen
               </button>
             </div>
           )}
-          {stale && (
-            <div className="notice">
-              Gespeicherte Daten · Quelle zurzeit nicht erreichbar. Dieser Stand
-              kann veraltet sein.
-            </div>
-          )}
           {tab === "dashboard" && (
-            <>
+            <div className="v2-dashboard">
+              <section className="panel v2-dashboard-search">
+                <span className="eyebrow">SCHNELL GEFUNDEN</span>
+                <h2>Wonach suchst du heute?</h2>
+                <ItemSearchBar
+                  config={config}
+                  value={dashboardQuery}
+                  onChange={setDashboardQuery}
+                  onSubmit={(q) => navigateSearch(q)}
+                  onSelect={(item) => navigateItem(item.id, item.category)}
+                  filters={defaultFilters}
+                />
+              </section>
               <div className="stats">
                 <Stat
                   icon={<Users />}
                   label="AKTIVER CHARAKTER"
-                  value={character?.name || "Noch kein Charakter"}
+                  value={character?.name || "Dein Profil anlegen"}
                   sub={
                     character
                       ? `${character.server} · Stufe ${character.level}`
-                      : "Profil manuell anlegen"
+                      : "Mit deiner Klasse beginnen"
                   }
                 />
                 <Stat
                   icon={<BookOpen />}
-                  label="QUESTFORTSCHRITT"
+                  label="DEIN QUESTFORTSCHRITT"
                   value={`${progress.filter((p) => p.status === "completed").length} abgeschlossen`}
-                  sub={`${progress.filter((p) => p.status === "active").length} aktive Quests`}
+                  sub={`${progress.filter((p) => p.status === "active").length} aktiv`}
                 />
                 <Stat
                   icon={<Star />}
                   label="DEINE SAMMLUNG"
                   value={`${favorites.length} Favoriten`}
-                  sub="Lokal auf deinem Gerät"
+                  sub="Gegenstände und Geschichten"
                 />
                 <Stat
                   icon={<RefreshCw />}
                   label="SYNCHRONISIERUNG"
                   value={
-                    pending
-                      ? `${pending} ausstehend`
-                      : lastSync || "Noch nicht verbunden"
+                    pending ? `${pending} ausstehend` : lastSync || "Bereit"
                   }
-                  sub={online ? "Backend ist erreichbar" : "Offline nutzbar"}
+                  sub={
+                    online
+                      ? "Lokaler Dienst erreichbar"
+                      : "Gespeicherte Daten bleiben verfügbar"
+                  }
                 />
               </div>
               <div className="dashboard-grid">
-                {questCard}
-                <section className="panel quick-panel">
+                <section className="panel quest-card">
                   <div className="panel-title">
                     <span>
-                      <Sparkles size={18} /> Schnellzugriff
+                      <BookOpen size={18} /> Dein Quest-Assistent
+                    </span>
+                    <span className="pill">
+                      {quest ? "Von dir ausgewählt" : "Bereit"}
+                    </span>
+                  </div>
+                  <div className="quest-symbol">
+                    <Compass size={30} />
+                  </div>
+                  <h2>{quest?.name || "Dein nächstes Abenteuer"}</h2>
+                  <p>
+                    {quest?.steps[current?.step ?? 0]?.description ||
+                      "Entdecke deinen nächsten Questschritt, plane Materialien und behalte deinen Fortschritt im Blick."}
+                  </p>
+                  {quest && (
+                    <div className="progress">
+                      <i
+                        style={{
+                          width:
+                            current?.status === "completed"
+                              ? "100%"
+                              : `${quest.steps.length ? ((current?.step ?? 0) / quest.steps.length) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                  <button
+                    onClick={() =>
+                      quest ? void selectQuest(quest.id) : navigate("quests")
+                    }
+                  >
+                    {quest ? "Quest fortsetzen" : "Quest auswählen"}{" "}
+                    <ChevronRight size={16} />
+                  </button>
+                </section>
+                <section className="panel">
+                  <div className="panel-title">
+                    <span>
+                      <Layers size={18} /> Schnellzugriff
                     </span>
                   </div>
                   <div className="quick-grid">
                     {(
                       [
                         {
-                          label: "Item finden",
-                          sub: "Werte & Rezepte",
-                          icon: Package,
                           target: "items",
+                          title: "Gegenstände",
+                          subtitle: "Werte, Bilder & Rezepte",
+                          icon: Package,
                         },
                         {
-                          label: "Quest erkennen",
-                          sub: "Lokale OCR",
-                          icon: ScanLine,
                           target: "scanner",
+                          title: "Quest erkennen",
+                          subtitle: "Lokale Bildschirm-OCR",
+                          icon: ScanLine,
                         },
                         {
-                          label: "Crafting planen",
-                          sub: "Material & Kosten",
-                          icon: Hammer,
                           target: "craft",
+                          title: "Crafting planen",
+                          subtitle: "Materialien & Einkauf",
+                          icon: Hammer,
                         },
                         {
-                          label: "Almanax prüfen",
-                          sub: "Opfergabe & Bonus",
-                          icon: CalendarDays,
                           target: "almanax",
+                          title: "Almanax",
+                          subtitle: "Deine Woche im Blick",
+                          icon: CalendarDays,
                         },
                       ] as const
-                    ).map((x) => (
-                      <button key={x.target} onClick={() => navigate(x.target)}>
-                        <x.icon size={25} />
-                        <strong>{x.label}</strong>
-                        <small>{x.sub}</small>
+                    ).map((shortcut) => (
+                      <button
+                        key={shortcut.target}
+                        onClick={() => navigate(shortcut.target)}
+                      >
+                        <shortcut.icon size={24} />
+                        <strong>{shortcut.title}</strong>
+                        <small>{shortcut.subtitle}</small>
                         <ArrowUpRight size={15} />
                       </button>
                     ))}
@@ -731,25 +974,14 @@ export default function App() {
                       <Check size={18} /> Deine Aufgaben
                     </span>
                     <span className="pill">
-                      {todos.filter((t) => t.done).length}/{todos.length}
+                      {todos.filter((task) => task.done).length}/{todos.length}
                     </span>
                   </div>
                   <form
                     className="toolbar"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (!todo.trim()) return;
-                      const next = [
-                        ...todos,
-                        {
-                          id: crypto.randomUUID(),
-                          text: todo.trim(),
-                          done: false,
-                        },
-                      ];
-                      setTodos(next);
-                      void write("todos", next);
-                      setTodo("");
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void addTodo();
                     }}
                   >
                     <input
@@ -763,680 +995,300 @@ export default function App() {
                       <Plus size={17} />
                     </button>
                   </form>
-                  <div className="stack">
-                    {todos.map((t) => (
-                      <div className="todo" key={t.id}>
-                        <input
-                          aria-label={`${t.text} erledigt`}
-                          type="checkbox"
-                          checked={t.done}
-                          onChange={() => {
-                            const next = todos.map((v) =>
-                              v.id === t.id ? { ...v, done: !v.done } : v,
-                            );
-                            setTodos(next);
-                            void write("todos", next);
-                          }}
-                        />
-                        <span className={t.done ? "done" : ""}>{t.text}</span>
-                        <button
-                          className="icon-button"
-                          title="Aufgabe löschen"
-                          onClick={() => {
-                            const next = todos.filter((v) => v.id !== t.id);
-                            setTodos(next);
-                            void write("todos", next);
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                  {todos.map((task) => (
+                    <div className="todo" key={task.id}>
+                      <input
+                        type="checkbox"
+                        aria-label={`${task.text} erledigt`}
+                        checked={task.done}
+                        onChange={() => {
+                          const next = todos.map((t) =>
+                            t.id === task.id ? { ...t, done: !t.done } : t,
+                          );
+                          setTodos(next);
+                          void write("todos", next);
+                        }}
+                      />
+                      <span className={task.done ? "done" : ""}>
+                        {task.text}
+                      </span>
+                      <button
+                        className="icon-button"
+                        title="Aufgabe löschen"
+                        onClick={() => {
+                          const next = todos.filter((t) => t.id !== task.id);
+                          setTodos(next);
+                          void write("todos", next);
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
                   {!todos.length && (
-                    <p className="empty-text">
+                    <div className="v2-task-empty">
                       Platz für deine nächsten Ziele.
-                    </p>
+                    </div>
                   )}
                 </section>
                 <section className="panel source-card">
                   <div className="panel-title">
                     <span>
-                      <ShieldCheck size={18} /> Transparent & unabhängig
+                      <CalendarDays size={18} /> Heute im Almanax
                     </span>
                   </div>
-                  <h3>Spieldaten mit Herkunft.</h3>
+                  <h3>{almanax?.bonus.type.name || "Dein tägliches Ritual"}</h3>
                   <p>
-                    Items und Almanax von Dofusdude. Quests aus dofus-sqlite.
-                    Fehlende Daten werden als solche angezeigt.
+                    {almanax?.bonus.description ||
+                      "Öffne den Kalender, um Opfergaben und Tagesboni aus der Quelle zu laden."}
                   </p>
-                  <div className="source-row">
-                    <span>Dofusdude API</span>
-                    <span className="pill">Live bei Abfrage</span>
-                  </div>
-                  <div className="source-row">
-                    <span>Questdatenbank</span>
-                    <button
-                      className="text-button"
-                      onClick={() => navigate("settings")}
-                    >
-                      Import verwalten <ArrowUpRight size={13} />
-                    </button>
-                  </div>
+                  {almanax && (
+                    <div className="source-row">
+                      <span>
+                        {almanax.tribute.quantity} × {almanax.tribute.item.name}
+                      </span>
+                      <button
+                        className="text-button"
+                        onClick={() =>
+                          navigateItem(
+                            almanax.tribute.item.ankama_id,
+                            almanax.tribute.item.subtype,
+                          )
+                        }
+                      >
+                        Ressource <ArrowUpRight size={13} />
+                      </button>
+                    </div>
+                  )}
+                  <button
+                    className="text-button"
+                    onClick={() => navigate("almanax")}
+                  >
+                    Wochenübersicht öffnen <ArrowUpRight size={14} />
+                  </button>
                   <small>
-                    Inoffizielles Community-Projekt. Nicht mit Ankama verbunden.
+                    Quelle: Dofusdude · Keine automatische Spielaktion.
                   </small>
                 </section>
               </div>
-            </>
+            </div>
           )}
           {tab === "items" && (
-            <>
-              <div className="toolbar">
-                <select
-                  aria-label="Itemkategorie"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  {[
-                    ["equipment", "Ausrüstung"],
-                    ["resources", "Ressourcen"],
-                    ["consumables", "Verbrauchsgegenstände"],
-                    ["quest", "Questgegenstände"],
-                    ["cosmetics", "Kosmetik"],
-                  ].map(([id, name]) => (
-                    <option key={id} value={id}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="secondary"
-                  onClick={() =>
-                    void action(async () => {
-                      setQuery(await navigator.clipboard.readText());
-                    })
-                  }
-                >
-                  <Clipboard size={16} /> Namen aus Zwischenablage
-                </button>
-                <small>
-                  Ausgewählte Kategorie wird bei der nächsten Suche verwendet.
-                </small>
-              </div>
-              <div className="results-layout">
-                <section className="panel result-list">
-                  <div className="panel-title">
-                    <span>{items.length} Suchergebnisse</span>
-                  </div>
-                  {items.map((i) => (
-                    <button
-                      className={`result ${item?.id === i.id ? "selected" : ""}`}
-                      key={i.id}
-                      onClick={() => void selectItem(i.id, i.category)}
-                    >
-                      {i.imageUrl ? (
-                        <img src={i.imageUrl} alt="" />
-                      ) : (
-                        <Package size={24} />
-                      )}
-                      <span>
-                        <strong>{i.name}</strong>
-                        <small>
-                          Stufe {i.level} · {i.type}
-                        </small>
-                      </span>
-                      <ChevronRight size={16} />
-                    </button>
-                  ))}
-                  {!items.length && (
-                    <Empty
-                      icon={<Search />}
-                      title="Finde dein nächstes Item"
-                      text="Gib mindestens zwei Zeichen ein. Es werden ausschließlich Daten der gewählten Quelle angezeigt."
-                    />
-                  )}
-                </section>
-                <section className="panel detail">
-                  {item ? (
-                    <>
-                      <div className="item-heading">
-                        {item.imageUrl && (
-                          <img src={item.imageUrl} alt={item.name} />
-                        )}
-                        <div>
-                          <span className="eyebrow">
-                            {item.type} · STUFE {item.level}
-                          </span>
-                          <h2>{item.name}</h2>
-                        </div>
-                      </div>
-                      <p>{item.description}</p>
-                      <div className="toolbar">
-                        <button
-                          onClick={() =>
-                            void navigator.clipboard.writeText(item.name)
-                          }
-                        >
-                          <Clipboard size={16} /> Suchnamen kopieren
-                        </button>
-                        <button
-                          className="secondary"
-                          onClick={() =>
-                            void favorite({
-                              id: item.id,
-                              name: item.name,
-                              kind: "item",
-                              category: item.category,
-                            })
-                          }
-                        >
-                          <Star size={16} /> Favorit umschalten
-                        </button>
-                        <button
-                          className="secondary"
-                          onClick={() => navigate("craft")}
-                        >
-                          <Hammer size={16} /> Rezept planen
-                        </button>
-                      </div>
-                      <h3>Effekte</h3>
-                      <ul className="effects">
-                        {item.effects?.map((e, i) => (
-                          <li key={i}>{e}</li>
-                        ))}
-                      </ul>
-                      {!item.effects?.length && (
-                        <p>Keine Effekte von der Quelle geliefert.</p>
-                      )}
-                      <h3>Rezept</h3>
-                      {item.recipe?.length ? (
-                        item.recipe.map((r, i) => (
-                          <button
-                            className="result"
-                            key={i}
-                            onClick={() =>
-                              void selectItem(r.itemId, r.category)
-                            }
-                          >
-                            <span>Gegenstand #{r.itemId}</span>
-                            <strong>× {r.quantity}</strong>
-                          </button>
-                        ))
-                      ) : (
-                        <p>Kein Rezept von der Quelle geliefert.</p>
-                      )}
-                      <Source>
-                        {item.source || "Dofusdude API"} · ID {item.id}
-                      </Source>
-                    </>
-                  ) : (
-                    <Empty
-                      icon={<Package />}
-                      title="Ein Item, alle Details"
-                      text="Wähle links einen Gegenstand, um Werte und verfügbare Rezepte zu laden."
-                    />
-                  )}
-                </section>
-              </div>
-            </>
+            <ItemsPage
+              config={config}
+              query={route.params.get("q") || ""}
+              itemId={route.id}
+              itemCategory={
+                route.id ? route.params.get("category") || undefined : undefined
+              }
+              filters={parsedFilters}
+              page={Number(route.params.get("page") || 1)}
+              navigateItem={navigateItem}
+              onSearch={navigateSearch}
+              onCraft={(item) => void selectCraft(item)}
+              onFavorite={(item) =>
+                void favorite({
+                  id: item.id,
+                  name: item.name,
+                  category: item.category,
+                  kind: "item",
+                })
+              }
+              onBack={() => navigatePath(lastSearch.current)}
+            />
           )}
           {tab === "quests" && (
-            <div className="results-layout">
-              <section className="panel result-list">
-                <div className="panel-title">
-                  <span>
-                    <BookOpen size={17} /> Quests
-                  </span>
-                  <button
-                    className="text-button"
-                    onClick={() => void search("quests")}
+            <>
+              <div className="toolbar">
+                <label>
+                  Fortschritt für
+                  <select
+                    aria-label="Aktiver Charakter"
+                    value={active}
+                    onChange={(event) => {
+                      setActive(event.target.value);
+                      void write("active", event.target.value);
+                    }}
                   >
-                    Suchen
-                  </button>
-                </div>
-                {quests.map((q) => (
-                  <button
-                    key={q.id}
-                    className="result"
-                    onClick={() => void selectQuest(q.id)}
-                  >
-                    <span>
-                      <strong>{q.name}</strong>
-                      <small>
-                        {q.nameFr} · Stufe {q.level ?? "unbekannt"}
-                      </small>
-                    </span>
-                    <ChevronRight size={16} />
-                  </button>
-                ))}
-                {!quests.length && (
-                  <Empty
-                    icon={<BookOpen />}
-                    title="Deine Quest beginnt hier"
-                    text="Suche nach einem Namen. Vor der ersten Suche müssen Questdaten in den Einstellungen importiert werden."
-                  />
-                )}
-              </section>
-              <section className="panel detail">
-                {quest ? (
-                  <>
-                    <div className="panel-title">
-                      <span className="eyebrow">QUEST #{quest.id}</span>
-                      <button
-                        className="icon-button"
-                        title="Favorit umschalten"
-                        onClick={() =>
-                          void favorite({
-                            id: quest.id,
-                            name: quest.name,
-                            kind: "quest",
-                          })
-                        }
-                      >
-                        <Star size={18} />
-                      </button>
-                    </div>
-                    <h2>{quest.name}</h2>
-                    <p>{quest.nameFr}</p>
-                    <label>
-                      Fortschritt für
-                      <select
-                        aria-label="Aktiver Charakter"
-                        value={active}
-                        onChange={(e) => {
-                          setActive(e.target.value);
-                          void write("active", e.target.value);
-                        }}
-                      >
-                        <option value="">Charakter wählen</option>
-                        {characters.map((c) => (
-                          <option value={c.id} key={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <div className="quest-steps">
-                      {quest.steps.map((s, i) => (
-                        <article
-                          className={
-                            i === (current?.step ?? 0) ? "step current" : "step"
-                          }
-                          key={s.id}
-                        >
-                          <span className="step-number">{i + 1}</span>
-                          <div>
-                            <h3>{s.name || `Schritt ${i + 1}`}</h3>
-                            <p>{s.description}</p>
-                            <ul>
-                              {s.objectives.map((o) => (
-                                <li key={o.id}>
-                                  {o.description ||
-                                    `Ziel #${o.id}: keine übersetzte Beschreibung verfügbar`}
-                                  {o.mapId && (
-                                    <small>
-                                      {" "}
-                                      · Map-ID {o.mapId} (keine Route berechnet)
-                                    </small>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                            <button
-                              className="secondary"
-                              disabled={busy || !active}
-                              onClick={() => void saveProgress(i)}
-                            >
-                              Als aktuellen Schritt bestätigen
-                            </button>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                    <div className="toolbar">
-                      <button
-                        disabled={!active || busy}
-                        onClick={() =>
-                          void saveProgress(
-                            Math.min(
-                              (current?.step ?? 0) + 1,
-                              Math.max(0, quest.steps.length - 1),
-                            ),
-                          )
-                        }
-                      >
-                        Nächster Schritt
-                      </button>
-                      <button
-                        className="secondary"
-                        disabled={!active || busy}
-                        onClick={() =>
-                          void saveProgress(current?.step ?? 0, "completed")
-                        }
-                      >
-                        <Check size={16} /> Quest abgeschlossen
-                      </button>
-                      <button
-                        className="secondary"
-                        disabled={!active || busy}
-                        onClick={() =>
-                          void saveProgress(current?.step ?? 0, "paused")
-                        }
-                      >
-                        Pausieren
-                      </button>
-                    </div>
-                    <button
-                      className="text-button"
-                      onClick={() =>
-                        void openExternal(
-                          `https://www.google.com/search?q=${encodeURIComponent("site:dofuspourlesnoobs.com " + (quest.nameFr || quest.name))}`,
-                        )
-                      }
-                    >
-                      Originalguide auf Dofus Pour les Noobs suchen{" "}
-                      <ArrowUpRight size={15} />
-                    </button>
-                    <Source>
-                      {quest.source} · Version {quest.version}. Fortschritt wird
-                      ausschließlich manuell bestätigt.
-                    </Source>
-                  </>
-                ) : (
-                  <Empty
-                    icon={<Compass />}
-                    title="Der nächste Schritt zählt"
-                    text="Wähle eine Quest aus der Suche. Hier siehst du alle tatsächlich importierten Schritte."
-                  />
-                )}
-              </section>
-            </div>
+                    <option value="">Charakter wählen</option>
+                    {characters.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <QuestsPage
+                config={config}
+                selectedId={route.id}
+                initialQuery={
+                  route.params.has("q")
+                    ? route.params.get("q") || ""
+                    : undefined
+                }
+                activeCharacterId={active || undefined}
+                progress={progress}
+                onQuestSelect={(id) => void selectQuest(id)}
+                onProgress={saveProgress}
+                onFavorite={(target) =>
+                  void favorite({
+                    id: target.id,
+                    name: target.name,
+                    kind: "quest",
+                  })
+                }
+                navigateItem={navigateItem}
+              />
+            </>
+          )}
+          {tab === "craft" && (
+            <CraftingPage
+              config={config}
+              item={craftItem}
+              navigateItem={navigateItem}
+              onNotice={setNotice}
+            />
+          )}
+          {tab === "characters" && (
+            <CharactersPage
+              key={catalogRevision}
+              config={config}
+              characters={characters}
+              activeId={active}
+              busy={busy}
+              onSelect={(id) => {
+                setActive(id);
+                void write("active", id);
+              }}
+              onRefresh={() => void synchronize()}
+              onSave={saveCharacter}
+              onDelete={deleteCharacter}
+            />
+          )}
+          {tab === "almanax" && (
+            <AlmanaxTimeline
+              config={config}
+              onOpenItem={navigateItem}
+              onNotice={setNotice}
+            />
           )}
           {tab === "scanner" && (
             <Scanner
-              candidates={[
-                ...quests.map((q) => ({ ...q, kind: "quests" as const })),
-                ...items.map((i) => ({ ...i, kind: "items" as const })),
-              ]}
-              onSearch={(text, kind) => {
-                setQuery(text);
-                void search(kind, text);
-              }}
-              onPick={(id, kind) => {
-                if (kind === "quests") void selectQuest(id);
-                else void selectItem(id);
-              }}
+              key={scannerKind}
+              initialKind={scannerKind}
+              config={config}
+              candidates={[]}
+              onSearch={(text, kind) =>
+                kind === "items"
+                  ? navigateSearch(text)
+                  : navigatePath(`/quests?q=${encodeURIComponent(text)}`)
+              }
+              onPick={(id, kind) =>
+                kind === "items" ? navigateItem(id) : void selectQuest(id)
+              }
             />
-          )}
-          {tab === "craft" && <Craft item={item} notify={setNotice} />}
-          {tab === "characters" && (
-            <>
-              <section className="panel">
-                <div className="panel-title">
-                  <span>
-                    <Users size={18} /> Deine Charaktere
-                  </span>
-                  <button
-                    className="secondary"
-                    disabled={busy}
-                    onClick={() => void sync()}
-                  >
-                    <RefreshCw size={16} /> Laden
-                  </button>
-                </div>
-                <div className="character-grid">
-                  {characters.map((c) => (
-                    <button
-                      className={`character-card ${active === c.id ? "chosen" : ""}`}
-                      key={c.id}
-                      onClick={() => {
-                        setActive(c.id);
-                        void write("active", c.id);
-                      }}
-                    >
-                      <div className="avatar">{c.name.slice(0, 2)}</div>
-                      <h3>{c.name}</h3>
-                      <p>
-                        {c.className} · Stufe {c.level}
-                      </p>
-                      <small>{c.server}</small>
-                      {active === c.id && <span className="pill">Aktiv</span>}
-                    </button>
-                  ))}
-                </div>
-                {!characters.length && (
-                  <p>
-                    Noch kein Charakter gespeichert. Profile werden manuell
-                    registriert.
-                  </p>
-                )}
-              </section>
-              <section className="panel">
-                <h2>Neuen Charakter anlegen</h2>
-                {character && (
-                  <CharacterEditor
-                    key={character.id}
-                    character={character}
-                    busy={busy}
-                    onSave={(input) =>
-                      action(async () => {
-                        const response = await api<Character>(
-                          `/api/characters/${character.id}`,
-                          config,
-                          { ...input, expectedVersion: character.version },
-                          "PUT",
-                        );
-                        const next = characters.map((c) =>
-                          c.id === character.id ? response.data : c,
-                        );
-                        setCharacters(next);
-                        await write("characters", next);
-                        setNotice("Charakter aktualisiert.");
-                      })
-                    }
-                    onDelete={() =>
-                      action(async () => {
-                        if (
-                          !confirm(
-                            `Charakter ${character.name} und seinen Questfortschritt unwiderruflich löschen?`,
-                          )
-                        )
-                          return;
-                        await api(
-                          `/api/characters/${character.id}`,
-                          config,
-                          undefined,
-                          "DELETE",
-                        );
-                        const next = characters.filter(
-                          (c) => c.id !== character.id,
-                        );
-                        setCharacters(next);
-                        setActive("");
-                        setProgress([]);
-                        await write("characters", next);
-                        await write("active", "");
-                        await write(`progress:${character.id}`, []);
-                        const outbox = await read<Mutation[]>("outbox", []);
-                        const retained = outbox.filter(
-                          (m) => m.characterId !== character.id,
-                        );
-                        await write("outbox", retained);
-                        setPending(retained.length);
-                        setNotice("Charakter gelöscht.");
-                      })
-                    }
-                  />
-                )}
-                <form
-                  className="form-grid"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const f = new FormData(e.currentTarget);
-                    void action(async () => {
-                      const r = await api<Character>(
-                        "/api/characters",
-                        config,
-                        {
-                          name: f.get("name"),
-                          server: f.get("server"),
-                          className: f.get("className"),
-                          level: Number(f.get("level")),
-                        },
-                      );
-                      const next = [...characters, r.data];
-                      setCharacters(next);
-                      setActive(r.data.id);
-                      await write("characters", next);
-                      await write("active", r.data.id);
-                      setNotice("Charakter angelegt.");
-                    });
-                  }}
-                >
-                  <label>
-                    Name
-                    <input required name="name" maxLength={60} />
-                  </label>
-                  <label>
-                    Server
-                    <input required name="server" maxLength={60} />
-                  </label>
-                  <label>
-                    Klasse
-                    <input required name="className" maxLength={60} />
-                  </label>
-                  <label>
-                    Stufe
-                    <input
-                      name="level"
-                      required
-                      type="number"
-                      min="1"
-                      max="200"
-                      defaultValue="1"
-                    />
-                  </label>
-                  <button disabled={busy}>
-                    <Plus size={16} /> Registrieren
-                  </button>
-                </form>
-              </section>
-            </>
-          )}
-          {tab === "almanax" && (
-            <section className="panel">
-              <div className="panel-title">
-                <span>
-                  <CalendarDays size={18} /> Dein Almanax
-                </span>
-                <div className="toolbar">
-                  <input
-                    aria-label="Almanax-Datum"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                  <button disabled={busy} onClick={() => void loadAlmanax()}>
-                    Laden
-                  </button>
-                </div>
-              </div>
-              {almanax ? (
-                <>
-                  <span className="eyebrow">{almanax.date || date}</span>
-                  <h2>{almanax.bonus?.type?.name || "Tagesbonus"}</h2>
-                  <p>{almanax.bonus?.description}</p>
-                  <div className="almanax-tribute">
-                    <CalendarDays size={42} />
-                    <div>
-                      <small>OPFERGABE</small>
-                      <h3>
-                        {almanax.tribute?.quantity ?? "?"} ×{" "}
-                        {almanax.tribute?.item?.name ||
-                          "Nicht von der Quelle geliefert"}
-                      </h3>
-                      <p>
-                        {almanax.reward_kamas ?? "—"} Kamas Belohnung laut
-                        Quelle
-                      </p>
-                    </div>
-                  </div>
-                  <Source>
-                    Dofusdude API · {date} · Keine automatische In-Game-Abgabe.
-                  </Source>
-                </>
-              ) : (
-                <Empty
-                  icon={<CalendarDays />}
-                  title="Ein Ritual für jeden Tag"
-                  text="Wähle ein Datum und lade Bonus sowie Opfergabe aus der API."
-                />
-              )}
-            </section>
           )}
           {tab === "favorites" && (
             <section className="panel">
               <div className="panel-title">
                 <span>
-                  <Star size={18} /> Angeheftet
+                  <Star size={18} /> Deine Favoriten
                 </span>
                 <span className="pill">{favorites.length}</span>
               </div>
-              {favorites.map((f) => (
-                <div className="favorite-row" key={`${f.kind}:${f.id}`}>
-                  <button
-                    className="result"
-                    onClick={() =>
-                      f.kind === "item"
-                        ? void selectItem(f.id, f.category)
-                        : void selectQuest(f.id)
-                    }
-                  >
-                    <Pin size={17} />
-                    <span>
-                      {f.name}
-                      <small>
-                        {f.kind === "item" ? "Gegenstand" : "Quest"} · #{f.id}
-                      </small>
-                    </span>
-                    <ArrowUpRight size={16} />
-                  </button>
-                  <button
-                    className="icon-button"
-                    title="Favorit entfernen"
-                    onClick={() => void favorite(f)}
-                  >
-                    <Trash2 size={17} />
-                  </button>
-                </div>
-              ))}
+              <div className="v2-favorites-grid">
+                {favorites.map((f) => (
+                  <article className="v2-favorite" key={`${f.kind}:${f.id}`}>
+                    <button
+                      onClick={() =>
+                        f.kind === "item"
+                          ? navigateItem(f.id, f.category)
+                          : void selectQuest(f.id)
+                      }
+                    >
+                      <Star size={17} />
+                      <span>
+                        {f.name}
+                        <small>
+                          {f.kind === "item" ? "Gegenstand" : "Quest"}
+                        </small>
+                      </span>
+                    </button>
+                    <button
+                      className="icon-button"
+                      title="Favorit entfernen"
+                      onClick={() => void favorite(f)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </article>
+                ))}
+              </div>
               {!favorites.length && (
-                <Empty
-                  icon={<Star />}
-                  title="Gutes Wissen bleibt griffbereit"
-                  text="Markiere Items und Quests als Favoriten, um sie hier wiederzufinden."
-                />
+                <div className="empty">
+                  <Star size={35} />
+                  <h3>Gutes Wissen bleibt griffbereit.</h3>
+                  <p>Markiere einen Gegenstand oder eine Quest als Favorit.</p>
+                </div>
               )}
             </section>
           )}
           {tab === "settings" && (
             <>
+              <UpdatePanel />
+              <CatalogPanel
+                config={config}
+                onComplete={() => setCatalogRevision((value) => value + 1)}
+              />
+              <OverlaySettings onNotice={setNotice} />
+              <section className="panel">
+                <div className="panel-title">
+                  <span>
+                    <Layers size={18} /> Hauptfenster
+                  </span>
+                </div>
+                <div className="toolbar">
+                  <button
+                    className="secondary"
+                    onClick={() => void changeMode("dashboard")}
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    className="secondary"
+                    onClick={() => void changeMode("compact")}
+                  >
+                    Compact Mode
+                  </button>
+                  <button
+                    className="secondary"
+                    onClick={() => void changeMode("hotbar")}
+                  >
+                    Mini-Hotbar
+                  </button>
+                </div>
+                <small>
+                  Escape bringt das Hauptfenster aus einer kompakten Ansicht
+                  zurück.
+                </small>
+              </section>
               <section className="panel">
                 <div className="panel-title">
                   <span>
                     <Wifi size={18} /> Backend-Verbindung
                   </span>
+                  <span className="pill">Einzelbenutzer-Modus</span>
                 </div>
                 <form
-                  className="form-grid"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void action(async () => {
+                  className="form-grid v2-connection-form"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void run(async () => {
                       await write("config", { url: config.url, token: "" });
                       sessionStorage.setItem("companion-token", config.token);
                       setNotice(
-                        "Verbindung gespeichert. Der Schlüssel bleibt nur für diese Sitzung gespeichert.",
+                        "Verbindung gespeichert. Der Schlüssel wird nur für diese Sitzung gespeichert.",
                       );
                     });
                   }}
@@ -1447,8 +1299,8 @@ export default function App() {
                       type="url"
                       required
                       value={config.url}
-                      onChange={(e) =>
-                        setConfig({ ...config, url: e.target.value })
+                      onChange={(event) =>
+                        setConfig({ ...config, url: event.target.value })
                       }
                     />
                   </label>
@@ -1458,202 +1310,68 @@ export default function App() {
                       type="password"
                       autoComplete="off"
                       value={config.token}
-                      onChange={(e) =>
-                        setConfig({ ...config, token: e.target.value })
+                      onChange={(event) =>
+                        setConfig({ ...config, token: event.target.value })
                       }
-                      placeholder="Aus .data/backend-token"
                     />
                   </label>
                   <button>Verbindung speichern</button>
                   <button
                     type="button"
                     className="secondary"
-                    onClick={() => void sync()}
+                    onClick={() => void synchronize()}
                   >
                     Verbindung testen & synchronisieren
                   </button>
+                  <small>
+                    Die Windows-App startet ihr lokales Backend automatisch. Für
+                    die Browseransicht liegt der Schlüssel in
+                    .data/backend-token bzw. deiner eigenen .env. Keine
+                    Ankama-Zugangsdaten eingeben.
+                  </small>
                 </form>
-                <p>
-                  Das Backend erzeugt beim ersten Start einen lokalen Schlüssel.
-                  Kein Ankama-Login erforderlich. Der lokale Modus gehört einer
-                  Person; Discord-Zugriff ist auf den konfigurierten Eigentümer
-                  beschränkt.
-                </p>
               </section>
               <section className="panel">
-                <div className="panel-title">
-                  <span>
-                    <Download size={18} /> Anwendung & Spieldaten aktualisieren
-                  </span>
-                </div>
+                <h2>Datenschutz & Synchronisierung</h2>
                 <p>
-                  App-Updates werden über GitHub Releases bereitgestellt und vor
-                  der Installation kryptografisch geprüft. Es ist noch keine
-                  stabile Veröffentlichung vorausgesetzt.
+                  {pending} Änderung(en) warten auf Synchronisierung.
+                  Versionskonflikte werden nicht automatisch überschrieben.
                 </p>
                 <div className="toolbar">
-                  <button disabled={busy} onClick={() => void checkUpdates()}>
-                    <RefreshCw size={16} /> Nach Updates suchen
+                  <button
+                    className="secondary"
+                    onClick={() => void run(exportData)}
+                  >
+                    <Clipboard size={16} /> Eigene Daten exportieren
                   </button>
-                  {update && (
-                    <button
-                      disabled={busy}
-                      onClick={() =>
-                        void action(async () => {
-                          await update.downloadAndInstall();
+                  <button
+                    className="secondary"
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Ausstehende lokale Änderungen verwerfen? Anschließend erneut synchronisieren.",
+                        )
+                      )
+                        void run(async () => {
+                          await write("outbox", []);
+                          setPending(0);
                           setNotice(
-                            "Update installiert. Anwendung bitte neu starten.",
+                            "Warteschlange verworfen. Jetzt den Serverstand synchronisieren.",
                           );
-                        })
-                      }
-                    >
-                      Version {update.version} installieren
-                    </button>
-                  )}
-                  <button
-                    className="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      void action(async () => {
-                        const r = await api<any>("/api/data/status", config);
-                        setNotice(JSON.stringify(r.data));
-                      })
-                    }
-                  >
-                    Questdatenstatus
-                  </button>
-                  <button
-                    className="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      void action(async () => {
-                        const r = await api<any>(
-                          "/api/data/update",
-                          config,
-                          {},
-                        );
-                        setNotice(
-                          typeof r.data === "string"
-                            ? r.data
-                            : JSON.stringify(r.data),
-                        );
-                      })
-                    }
-                  >
-                    Questdaten importieren
-                  </button>
-                </div>
-                <small>
-                  Der erstmalige Questimport lädt eine große SQLite-Datei. Der
-                  bisherige Bestand bleibt bei Importfehlern erhalten.
-                </small>
-              </section>
-              <section className="panel">
-                <h2>Fenster & Hotkeys</h2>
-                <div className="toolbar">
-                  {(
-                    ["dashboard", "compact", "overlay", "hotbar"] as Mode[]
-                  ).map((m) => (
-                    <button
-                      className="secondary"
-                      key={m}
-                      onClick={() => void changeMode(m)}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-                <label>
-                  Overlay-Deckkraft {opacity} %
-                  <input
-                    type="range"
-                    min="35"
-                    max="100"
-                    value={opacity}
-                    onChange={(e) => setOpacity(Number(e.target.value))}
-                  />
-                </label>
-                <div className="toolbar">
-                  <input
-                    aria-label="Globale Tastenkombination"
-                    value={hotkey}
-                    onChange={(e) => setHotkey(e.target.value)}
-                  />
-                  <button
-                    onClick={() =>
-                      void action(async () => {
-                        await shortcut(hotkey, () => {
-                          setTab("scanner");
                         });
-                        setNotice("Hotkey für den Scanner registriert.");
-                      })
-                    }
+                    }}
                   >
-                    Scanner-Hotkey registrieren
-                  </button>
-                  <button
-                    className="secondary"
-                    onClick={() =>
-                      void action(async () => {
-                        if (!isTauri())
-                          throw new Error("Nur in der Windows-App verfügbar.");
-                        const { unregister } =
-                          await import("@tauri-apps/plugin-global-shortcut");
-                        await unregister(hotkey);
-                        setNotice("Hotkey deaktiviert.");
-                      })
-                    }
-                  >
-                    Deaktivieren
-                  </button>
-                </div>
-                <small>
-                  Esc kehrt aus einer kompakten Ansicht zum Hauptfenster zurück.
-                  Globale Hotkeys gelten für diese Sitzung.
-                </small>
-              </section>
-              <section className="panel">
-                <h2>Datenschutz & Konflikte</h2>
-                <p>
-                  {pending} lokale Änderung(en) warten auf Synchronisierung. Bei
-                  einem Versionskonflikt bleibt die Warteschlange erhalten;
-                  automatische Überschreibung ist deaktiviert.
-                </p>
-                <div className="toolbar">
-                  <button
-                    className="secondary"
-                    onClick={() =>
-                      void action(async () => {
-                        const exported = {
-                          characters,
-                          progress,
-                          favorites,
-                          todos,
-                          outbox: await read("outbox", []),
-                        };
-                        const blob = new Blob(
-                          [JSON.stringify(exported, null, 2)],
-                          { type: "application/json" },
-                        );
-                        const a = document.createElement("a");
-                        a.href = URL.createObjectURL(blob);
-                        a.download = "companion-export.json";
-                        a.click();
-                        URL.revokeObjectURL(a.href);
-                      })
-                    }
-                  >
-                    Eigene lokale Daten exportieren
+                    Warteschlange verwerfen
                   </button>
                   <button
                     className="danger"
                     onClick={() => {
                       if (
                         confirm(
-                          "Alle lokalen Daten einschließlich nicht synchronisierter Änderungen löschen? Backend-Daten bleiben erhalten.",
+                          "Alle lokalen Daten einschließlich nicht synchronisierter Änderungen löschen? Backend-Profile bleiben erhalten.",
                         )
                       )
-                        void action(async () => {
+                        void run(async () => {
                           await erase();
                           sessionStorage.clear();
                           location.reload();
@@ -1662,34 +1380,15 @@ export default function App() {
                   >
                     Lokale Daten löschen
                   </button>
-                  <button
-                    className="secondary"
-                    onClick={() => {
-                      if (
-                        confirm(
-                          "Ausstehende lokale Queständerungen verwerfen? Danach erneut synchronisieren.",
-                        )
-                      )
-                        void action(async () => {
-                          await write("outbox", []);
-                          setPending(0);
-                          setNotice(
-                            "Warteschlange verworfen. Jetzt synchronisieren, um den Serverstand zu laden.",
-                          );
-                        });
-                    }}
-                  >
-                    Warteschlange verwerfen
-                  </button>
                 </div>
               </section>
             </>
           )}
           <footer>
             <span>
-              <ShieldCheck size={13} /> Lokal gedacht. Mit Quellen belegt.
+              <ShieldCheck size={13} /> Dein Spiel. Deine Kontrolle.
             </span>
-            <span>DOFUS Companion · Unabhängiges Community-Projekt</span>
+            <span>DOFUS Companion · Unabhängig von Ankama</span>
           </footer>
         </div>
       </main>
@@ -1715,225 +1414,6 @@ function Stat({
       </div>
       <strong>{value}</strong>
       <small>{sub}</small>
-    </section>
-  );
-}
-function Empty({
-  icon,
-  title,
-  text,
-}: {
-  icon: ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="empty">
-      <span>{icon}</span>
-      <h3>{title}</h3>
-      <p>{text}</p>
-    </div>
-  );
-}
-function Source({ children }: { children: ReactNode }) {
-  return (
-    <div className="source">
-      <ShieldCheck size={14} />
-      <small>{children}</small>
-    </div>
-  );
-}
-function Craft({
-  item,
-  notify,
-}: {
-  item: Item | null;
-  notify: (text: string) => void;
-}) {
-  const [quantity, setQuantity] = useState(1),
-    [sale, setSale] = useState(0),
-    [tax, setTax] = useState(2),
-    [prices, setPrices] = useState<Record<number, number>>({}),
-    [stock, setStock] = useState<Record<number, number>>({}),
-    [server, setServer] = useState(""),
-    [savedAt, setSavedAt] = useState("");
-  useEffect(() => {
-    void read<any>("craft", null).then((s) => {
-      if (s) {
-        setPrices(s.prices ?? {});
-        setStock(s.stock ?? {});
-        setServer(s.server ?? "");
-        setSavedAt(s.savedAt ?? "");
-      }
-    });
-  }, []);
-  const recipe = item?.recipe ?? [];
-  const needs = materials(recipe.length ? [{ recipe, quantity }] : [], stock);
-  const total = needs.reduce(
-    (sum, r) => sum + r.missing * (prices[r.itemId] ?? 0),
-    0,
-  );
-  const complete =
-    recipe.length > 0 && recipe.every((r) => prices[r.itemId] !== undefined);
-  const revenue = profit(0, sale * quantity, tax).profit;
-  return (
-    <section className="panel">
-      <div className="panel-title">
-        <span>
-          <Hammer size={18} /> Materialbedarf & Wirtschaft
-        </span>
-        <span className="pill">Eigene Preise</span>
-      </div>
-      <h2>{item?.name || "Wähle zuerst einen Gegenstand"}</h2>
-      <p>
-        Öffne ein Item mit Rezept in der Gegenstandssuche. Preise werden
-        ausschließlich von dir eingetragen und gelten für deinen Server.
-      </p>
-      <div className="form-grid">
-        <label>
-          Menge
-          <input
-            type="number"
-            min="1"
-            max="100000"
-            value={quantity}
-            onChange={(e) =>
-              setQuantity(
-                Math.max(
-                  1,
-                  Math.min(100000, Math.trunc(Number(e.target.value))),
-                ),
-              )
-            }
-          />
-        </label>
-        <label>
-          Server
-          <input
-            value={server}
-            onChange={(e) => setServer(e.target.value)}
-            placeholder="Server für deine Preise"
-          />
-        </label>
-        <label>
-          Verkaufspreis pro Stück
-          <input
-            type="number"
-            min="0"
-            value={sale}
-            onChange={(e) => setSale(Math.max(0, Number(e.target.value)))}
-          />
-        </label>
-        <label>
-          Gebühr (%)
-          <input
-            type="number"
-            min="0"
-            max="100"
-            value={tax}
-            onChange={(e) =>
-              setTax(Math.max(0, Math.min(100, Number(e.target.value))))
-            }
-          />
-        </label>
-      </div>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Material-ID</th>
-              <th>Bedarf</th>
-              <th>Bestand</th>
-              <th>Fehlend</th>
-              <th>Preis/Stück (Kamas)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {recipe.map((r) => (
-              <tr key={r.itemId}>
-                <td>#{r.itemId}</td>
-                <td>{r.quantity * quantity}</td>
-                <td>
-                  <input
-                    aria-label={`Bestand ${r.itemId}`}
-                    type="number"
-                    min="0"
-                    value={stock[r.itemId] ?? 0}
-                    onChange={(e) =>
-                      setStock({
-                        ...stock,
-                        [r.itemId]: Math.max(0, Number(e.target.value)),
-                      })
-                    }
-                  />
-                </td>
-                <td>
-                  {Math.max(0, r.quantity * quantity - (stock[r.itemId] ?? 0))}
-                </td>
-                <td>
-                  <input
-                    aria-label={`Preis ${r.itemId}`}
-                    type="number"
-                    min="0"
-                    value={prices[r.itemId] ?? ""}
-                    placeholder="Unbekannt"
-                    onChange={(e) => {
-                      const next = { ...prices };
-                      if (e.target.value === "") delete next[r.itemId];
-                      else next[r.itemId] = Math.max(0, Number(e.target.value));
-                      setPrices(next);
-                    }}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {!recipe.length && (
-        <Empty
-          icon={<Hammer />}
-          title="Noch kein Rezept ausgewählt"
-          text="Ohne Rezept werden keine Materialmengen oder Gewinne behauptet."
-        />
-      )}
-      <div className="stats">
-        <Stat
-          icon={<Hammer />}
-          label="ZUKAUFKOSTEN"
-          value={
-            complete
-              ? `${total.toLocaleString("de-DE")} K`
-              : "Preise unvollständig"
-          }
-          sub="Vorhandene Materialien ausgenommen"
-        />
-        <Stat
-          icon={<Star />}
-          label="ERLÖS ABZÜGLICH ZUKAUF"
-          value={
-            complete
-              ? `${Math.round(revenue - total).toLocaleString("de-DE")} K`
-              : "Nicht berechenbar"
-          }
-          sub="Keine Vollkostenrechnung des Bestands"
-        />
-      </div>
-      <button
-        onClick={() => {
-          const savedAt = new Date().toISOString();
-          void write("craft", { prices, stock, server, savedAt }).then(() => {
-            setSavedAt(savedAt);
-            notify("Preise und Materialbestand lokal gespeichert.");
-          });
-        }}
-      >
-        Preise & Bestand speichern
-      </button>
-      <Source>
-        Quelle: manuelle Eingabe · Server: {server || "noch nicht angegeben"} ·
-        Stand: {savedAt || "noch nicht gespeichert"} · Keine Live-Marktpreise
-      </Source>
     </section>
   );
 }

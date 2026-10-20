@@ -1,1 +1,27 @@
-{"name":"@dofus/discord-bot","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"tsx --env-file=../../.env src/index.ts","start":"tsx src/index.ts","register":"tsx --env-file=../../.env src/register.ts","typecheck":"tsc --noEmit","build":"tsc --noEmit","test":"tsx --test test/*.test.ts"},"dependencies":{"@dofus/core":"workspace:*","@dofus/game-data":"workspace:*","discord.js":"14.27.0"},"devDependencies":{"@types/node":"^22.15.0","tsx":"^4.20.0","typescript":"^5.8.0"},"engines":{"node":">=22.13.0"}}
+{
+  "name": "@dofus/discord-bot",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx --env-file=../../.env src/index.ts",
+    "start": "tsx src/index.ts",
+    "register": "tsx --env-file=../../.env src/register.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@dofus/core": "workspace:*",
+    "@dofus/game-data": "workspace:*",
+    "discord.js": "14.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}

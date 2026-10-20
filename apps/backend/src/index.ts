@@ -24,6 +24,10 @@ if (!existsSync(tokenPath) || readFileSync(tokenPath, "utf8").trim() !== token)
   writeFileSync(tokenPath, token, { mode: 0o600 });
 const personal = new PersonalStore(resolve(dataDir, "personal.sqlite"));
 const game = new GameDataStore(resolve(dataDir, "game-data.sqlite"));
+if (process.env.COMPANION_CATALOG_SEED) {
+  try { game.installBundledCatalog(resolve(process.env.COMPANION_CATALOG_SEED)); }
+  catch (error) { console.error("Gebündelter Katalog konnte nicht aktiviert werden; Datenimport bleibt verfügbar.", error instanceof Error ? error.message : "Unbekannter Fehler"); }
+}
 const app = await createApp({ personal, game, token, logger: true });
 const port = Number(process.env.PORT ?? 4310);
 const host = process.env.HOST ?? "127.0.0.1";

@@ -1,0 +1,206 @@
+{
+  "testedAt": "2026-10-20T17:38:33.067Z",
+  "scope": "4 original-ID image samples per category; not a full HTTP availability audit",
+  "results": [
+    {
+      "id": 44,
+      "name": "Hölzernes Schwert",
+      "category": "equipment",
+      "iconId": 6007,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/6007-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 5230
+    },
+    {
+      "id": 49,
+      "name": "Eisernes Schwert",
+      "category": "equipment",
+      "iconId": 6002,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/6002-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 3419
+    },
+    {
+      "id": 55,
+      "name": "Schwert Ragen",
+      "category": "equipment",
+      "iconId": 6001,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/6001-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 4181
+    },
+    {
+      "id": 58,
+      "name": "Traurikling",
+      "category": "equipment",
+      "iconId": 6005,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/6005-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 3654
+    },
+    {
+      "id": 274,
+      "name": "Stück des Klauenpuzzles",
+      "category": "resources",
+      "iconId": 51267,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/51267-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 3712
+    },
+    {
+      "id": 276,
+      "name": "Münze des Schatzes von Badoul",
+      "category": "resources",
+      "iconId": 15268,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/15268-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 4763
+    },
+    {
+      "id": 286,
+      "name": "Bäckerhefe",
+      "category": "resources",
+      "iconId": 48137,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/48137-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 5207
+    },
+    {
+      "id": 287,
+      "name": "Handvoll Sesamkörner",
+      "category": "resources",
+      "iconId": 58003,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/58003-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 6523
+    },
+    {
+      "id": 281,
+      "name": "Apfel",
+      "category": "consumables",
+      "iconId": 42001,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/42001-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 3630
+    },
+    {
+      "id": 282,
+      "name": "Verbesserter Heilungstrank",
+      "category": "consumables",
+      "iconId": 12039,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/12039-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 3587
+    },
+    {
+      "id": 283,
+      "name": "Heilungstrank",
+      "category": "consumables",
+      "iconId": 12003,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/12003-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 3512
+    },
+    {
+      "id": 351,
+      "name": "Bier von Amakna",
+      "category": "consumables",
+      "iconId": 37004,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/37004-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 4035
+    },
+    {
+      "id": 818,
+      "name": "Felsenschlüssel von Ded Aléïcar",
+      "category": "quest",
+      "iconId": 12014,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/12014-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 4091
+    },
+    {
+      "id": 930,
+      "name": "Schatzkarte des Schattenbergmannes",
+      "category": "quest",
+      "iconId": 24006,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/24006-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 6058
+    },
+    {
+      "id": 931,
+      "name": "Schatzkarte des Schattenbäckers",
+      "category": "quest",
+      "iconId": 24010,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/24010-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 6023
+    },
+    {
+      "id": 939,
+      "name": "Bwork Schatzkarte",
+      "category": "quest",
+      "iconId": 24007,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/24007-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 6112
+    },
+    {
+      "id": 1090,
+      "name": "Astrohaube",
+      "category": "cosmetics",
+      "iconId": 16027,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/16027-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 3540
+    },
+    {
+      "id": 1710,
+      "name": "Mondsichel",
+      "category": "cosmetics",
+      "iconId": 1019,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/1019-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 7000
+    },
+    {
+      "id": 1722,
+      "name": "Astaknydale Verwandlung",
+      "category": "cosmetics",
+      "iconId": 27001,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/27001-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 6994
+    },
+    {
+      "id": 1723,
+      "name": "Geschmack des Übermächtigen roten Bonbons",
+      "category": "cosmetics",
+      "iconId": 42136,
+      "url": "https://api.dofusdu.de/dofus3/v1/img/item/42136-64.png",
+      "status": 200,
+      "png": true,
+      "bytes": 3799
+    }
+  ]
+}

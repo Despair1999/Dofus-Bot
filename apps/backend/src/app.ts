@@ -51,14 +51,22 @@ export async function createApp(options: AppOptions) {
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   });
-  await app.register(rateLimit, { max: 120, timeWindow: "1 minute" });
+  await app.register(rateLimit, {
+    max: (request) =>
+      ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(request.ip)
+        ? 1200
+        : 120,
+    timeWindow: "1 minute",
+  });
   app.addHook("onRequest", async (request, reply) => {
     if (request.method === "OPTIONS") return;
     const url = request.url.split("?")[0] ?? "";
     const privateRoute =
       url.startsWith("/api/characters") ||
       url.startsWith("/api/account") ||
-      request.method !== "GET";
+      request.method !== "GET" ||
+      (url === "/api/quests" &&
+        !!(request.query as { characterId?: string }).characterId);
     if (!privateRoute) return;
     const supplied =
       request.headers.authorization?.replace(/^Bearer /, "") ?? "";
@@ -76,15 +84,13 @@ export async function createApp(options: AppOptions) {
   });
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof ZodError)
-      return reply
-        .code(400)
-        .send({
-          error: "Ungültige Eingabe",
-          details: error.issues.map((i) => ({
-            path: i.path.join("."),
-            message: i.message,
-          })),
-        });
+      return reply.code(400).send({
+        error: "Ungültige Eingabe",
+        details: error.issues.map((i) => ({
+          path: i.path.join("."),
+          message: i.message,
+        })),
+      });
     if (error instanceof ConflictError)
       return reply
         .code(409)
@@ -93,58 +99,97 @@ export async function createApp(options: AppOptions) {
       return reply.code(error.statusCode).send({ error: error.message });
     const status = (error as { statusCode?: number }).statusCode;
     if (status && status < 500)
-      return reply
-        .code(status)
-        .send({
-          error: error instanceof Error ? error.message : "Ungültige Anfrage",
-        });
+      return reply.code(status).send({
+        error: error instanceof Error ? error.message : "Ungültige Anfrage",
+      });
     app.log.error(error);
     return reply
       .code(500)
       .send({ error: "Interner Fehler. Details im Backend-Protokoll." });
   });
-  app.get("/health", () => ({ status: "ok", version: "0.1.0" }));
+  app.get("/health", () => ({ status: "ok", version: "0.2.0" }));
   app.get("/api/status", () => ({
     data: {
-      version: "0.1.0",
+      version: "0.2.0",
       mode: "local-single-owner",
       database: "sqlite",
       sources: [api.status()],
       gameData: game.status(),
     },
   }));
+  const pageFields = {
+    page: z.coerce.number().int().min(1).max(100000).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(30),
+  };
   app.get("/api/items", async (request) => {
-    const { q, lang, category } = querySchema
+    const filters = querySchema
       .extend({
-        category: z
-          .enum(["equipment", "resources", "consumables", "quest", "cosmetics"])
-          .optional(),
+        ...pageFields,
+        category: categorySchema.removeDefault().optional(),
+        mainGroup: z.enum(["equipment", "resources"]).optional(),
+        typeId: z.coerce.number().int().positive().optional(),
+        minLevel: z.coerce.number().int().min(0).max(200).optional(),
+        maxLevel: z.coerce.number().int().min(0).max(200).optional(),
+        sort: z
+          .enum(["name", "level", "level-asc", "level-desc"])
+          .default("name"),
       })
       .parse(request.query);
-    if (q.length < 2)
-      return { data: [], source: "dofusdude", cached: false, stale: false };
-    return api.search(q, lang, category);
+    if (game.status().itemCount > 0) return game.searchItems(filters);
+    if (filters.q.length < 2)
+      return {
+        data: [],
+        total: 0,
+        page: filters.page,
+        pageSize: filters.pageSize,
+        source: "Katalog noch nicht importiert",
+      };
+    const result = await api.search(filters.q, filters.lang, filters.category);
+    return {
+      ...result,
+      total: result.data.length,
+      page: 1,
+      pageSize: 30,
+      limited: true,
+    };
   });
-  app.get("/api/items/:id", async (request) => {
+  app.get("/api/items/:id", async (request, reply) => {
     const id = idSchema.parse((request.params as { id: string }).id);
-    const { category, lang } = z
-      .object({ category: categorySchema, lang: languageSchema })
+    const local = game.getItem(id);
+    const query = z
+      .object({ category: categorySchema.optional(), lang: languageSchema })
       .parse(request.query);
-    return api.itemDetail(id, category, lang);
+    if (local)
+      return { data: local, source: local.source, version: local.version };
+    if (query.category) return api.itemDetail(id, query.category, query.lang);
+    return reply.code(404).send({
+      error:
+        "Gegenstand noch nicht im lokalen Katalog. Bitte Spieldaten importieren.",
+    });
+  });
+  app.get("/api/item-types", () => ({ data: game.itemTypes() }));
+  app.get("/api/classes", () => ({ data: game.classes() }));
+  app.get("/api/quest-categories", () => ({ data: game.questCategories() }));
+  app.post("/api/recognize", (request) => {
+    const body = z
+      .object({
+        text: z.string().min(1).max(15000),
+        kind: z.enum(["items", "quests"]),
+      })
+      .parse(request.body);
+    return { data: game.recognize(body.text, body.kind) };
   });
   app.get("/api/almanax", (request) => {
     const { date, lang } = z
       .object({
-        date: z.iso
-          .date()
-          .default(
-            new Intl.DateTimeFormat("en-CA", {
-              timeZone: "Europe/Paris",
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-            }).format(new Date()),
-          ),
+        date: z.iso.date().default(
+          new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Europe/Paris",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(new Date()),
+        ),
         lang: languageSchema,
       })
       .parse(request.query);
@@ -152,8 +197,34 @@ export async function createApp(options: AppOptions) {
   });
   app.get("/api/game/version", () => api.version());
   app.get("/api/quests", (request) => {
-    const { q, lang } = querySchema.parse(request.query);
-    return { data: game.searchQuests(q, lang), ...game.status() };
+    const filters = querySchema
+      .extend({
+        ...pageFields,
+        categoryId: z.string().max(100).optional(),
+        minLevel: z.coerce.number().int().min(0).max(200).optional(),
+        maxLevel: z.coerce.number().int().min(0).max(200).optional(),
+        characterId: z.uuid().optional(),
+        status: z.enum(["open", "active", "paused", "completed"]).optional(),
+      })
+      .parse(request.query);
+    const progress = filters.characterId
+      ? personal.progress(filters.characterId)
+      : [];
+    const ids =
+      filters.characterId && filters.status && filters.status !== "open"
+        ? progress
+            .filter((p) => p.status === filters.status)
+            .map((p) => p.questId)
+        : undefined;
+    const excludeIds =
+      filters.status === "open"
+        ? progress.filter((p) => p.status === "completed").map((p) => p.questId)
+        : undefined;
+    return {
+      ...game.searchQuestPage({ ...filters, ids, excludeIds }),
+      source: game.status().source,
+      version: game.status().version,
+    };
   });
   app.get("/api/quests/:id", (request, reply) => {
     const quest = game.getQuest(
@@ -161,12 +232,10 @@ export async function createApp(options: AppOptions) {
     );
     return quest
       ? { data: quest }
-      : reply
-          .code(404)
-          .send({
-            error:
-              "Quest nicht im lokalen Datenbestand. Spieldaten zuerst importieren.",
-          });
+      : reply.code(404).send({
+          error:
+            "Quest nicht im lokalen Datenbestand. Spieldaten zuerst importieren.",
+        });
   });
   app.get("/api/data/status", () => ({
     data: { ...game.status(), import: importState },
@@ -189,19 +258,65 @@ export async function createApp(options: AppOptions) {
         };
         app.log.error(error);
       });
+    return reply.code(202).send({
+      data: { message: "Import gestartet. Status unter /api/data/status." },
+    });
+  });
+  app.get("/api/catalog/status", () => ({
+    data: { ...game.status(), import: importState },
+  }));
+  app.post("/api/catalog/update", async (_request, reply) => {
+    if (importState.running)
+      return reply.code(409).send({ error: "Spieldatenimport läuft bereits." });
+    importState = { running: true, lastResult: null, error: null };
+    void game
+      .updateLatest()
+      .then((lastResult) => {
+        personal.migrateClasses(game.classes());
+        importState = { running: false, lastResult, error: null };
+      })
+      .catch((error) => {
+        importState = {
+          running: false,
+          lastResult: null,
+          error:
+            error instanceof Error ? error.message : "Import fehlgeschlagen",
+        };
+        app.log.error(error);
+      });
     return reply
       .code(202)
-      .send({
-        data: { message: "Import gestartet. Status unter /api/data/status." },
-      });
+      .send({ data: { message: "Vollständiger Katalogimport gestartet." } });
   });
-  app.get("/api/characters", () => ({ data: personal.characters() }));
+  function characterData(raw: unknown) {
+    const input = characterInput.parse(raw);
+    const classes = game.classes();
+    if (input.classId != null) {
+      const selected = classes.find((c) => c.id === input.classId);
+      if (!selected)
+        throw Object.assign(
+          new Error("Unbekannte Klassen-ID. Katalog zuerst importieren."),
+          { statusCode: 400 },
+        );
+      return { ...input, className: selected.nameDe };
+    }
+    const normalized = (v: string) =>
+      v.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase();
+    const found = classes.filter((c) =>
+      c.aliases.some(
+        (a: string) => normalized(a) === normalized(input.className),
+      ),
+    );
+    return { ...input, classId: found.length === 1 ? found[0].id : null };
+  }
+  app.get("/api/characters", () => {
+    personal.migrateClasses(game.classes());
+    return { data: personal.characters() };
+  });
   app.post("/api/characters", (request, reply) =>
-    reply
-      .code(201)
-      .send({
-        data: personal.createCharacter(characterInput.parse(request.body)),
-      }),
+    reply.code(201).send({
+      data: personal.createCharacter(characterData(request.body)),
+    }),
   );
   app.put("/api/characters/:id", (request, reply) => {
     const id = z.uuid().parse((request.params as { id: string }).id);
@@ -210,7 +325,13 @@ export async function createApp(options: AppOptions) {
     const body = characterInput
       .extend({ expectedVersion: z.number().int().positive() })
       .parse(request.body);
-    return { data: personal.updateCharacter(id, body, body.expectedVersion) };
+    return {
+      data: personal.updateCharacter(
+        id,
+        characterData(body),
+        body.expectedVersion,
+      ),
+    };
   });
   app.delete("/api/characters/:id", (request, reply) => {
     const id = z.uuid().parse((request.params as { id: string }).id);
