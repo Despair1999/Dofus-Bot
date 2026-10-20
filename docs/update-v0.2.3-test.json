@@ -11,6 +11,9 @@
   },
   "publishedRuntime": "Node 22.15.0",
   "releaseSignatureVerified": true,
-  "updaterOffered": false,
-  "tamperedInstallerRejected": true
+  "updaterOffered": true,
+  "tamperedInstallerRejected": true,
+  "updaterFrom": "0.2.2",
+  "release": "https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.2.3",
+  "published": true
 }

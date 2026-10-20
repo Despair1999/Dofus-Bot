@@ -47,7 +47,7 @@ Die eigene Testaufgabe wurde entfernt und die isolierte Testinstallation deinsta
 
 ### Hotfix v0.2.3
 
-Windows-Installer und Portable-Paket wurden mit Node 22.15.0 neu gebaut. Typprüfung, Lint, alle 41 Workspace-Tests und sechs native Rust-Tests bestehen. Die echte native v0.2.3 startet mit der zuvor betroffenen Node-Version 22.23.3 erfolgreich; Backend und App melden 0.2.3, die Oberfläche zeigt „Backend erreichbar“. Die Signatur des neuen Installers wird mit dem ursprünglichen öffentlichen Schlüssel akzeptiert; manipulierte Installerbytes werden abgelehnt. [Hotfix-Prüfnachweis](docs/update-v0.2.3-test.json). Die neue Veröffentlichung verwendet den bestehenden GitHub-Updatekanal.
+Windows-Installer und Portable-Paket wurden mit Node 22.15.0 neu gebaut. Typprüfung, Lint, alle 41 Workspace-Tests und sechs native Rust-Tests bestehen. Die echte native v0.2.3 startet mit der zuvor betroffenen Node-Version 22.23.3 erfolgreich; Backend und App melden 0.2.3, die Oberfläche zeigt „Backend erreichbar“. Die Signatur des neuen Installers wird mit dem ursprünglichen öffentlichen Schlüssel akzeptiert; manipulierte Installerbytes werden abgelehnt. [Hotfix-Prüfnachweis](docs/update-v0.2.3-test.json). v0.2.3 ist veröffentlicht, alle sieben hochgeladenen Dateien wurden anhand ihrer SHA256-Prüfsummen abgeglichen. Die echte v0.2.2-Oberfläche bietet nach „Nach Updates suchen“ Version 0.2.3 an. Die Installation dieses Hotfixes wurde dem Anwender überlassen; die vollständige frühere NSIS-Upgrade-Abnahme ist oben dokumentiert.
 
 ### Nachprüfung: Offline-Start der späteren CI-Dateien
 
