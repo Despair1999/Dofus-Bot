@@ -1,0 +1,19 @@
+{
+  "version": "0.1.0",
+  "platform": "windows-x64",
+  "authenticodeSigned": false,
+  "tauriDetachedSignature": true,
+  "publishedRelease": false,
+  "artifacts": [
+    {
+      "bytes": 25943667,
+      "sha256": "C966EFB8C840D023355E9954FD2AA1F040A4FA6B0CBE2C53C4328BFEC1E94D89",
+      "file": "DOFUS-Companion-0.1.0-setup.exe"
+    },
+    {
+      "bytes": 39285561,
+      "sha256": "6A12A7C7302C11CC394DE900B2CF0846729E7D6C5AF8A510E4A92DC9FE73D373",
+      "file": "Dofus-Companion-0.1.0-portable.zip"
+    }
+  ]
+}

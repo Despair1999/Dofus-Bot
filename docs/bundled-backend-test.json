@@ -1,7 +1,7 @@
 {
   "test": "standalone-bundled-backend",
   "passed": true,
-  "time": "2026-10-20T14:44:23.912Z",
+  "time": "2026-10-20T14:58:49.026Z",
   "node": "v22.15.0",
   "cwdOutsideRepository": true,
   "health": true,

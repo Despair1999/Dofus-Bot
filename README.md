@@ -15,6 +15,8 @@ Anschließend http://127.0.0.1:1420 öffnen. Das Setup installiert pnpm/Dependen
 
 Die native Entwicklung starten mit `start.ps1 -Mode Desktop`; dafür werden Rust, Microsoft Visual Studio C++ Build Tools und WebView2 benötigt. Der native Build startet sein mitgeliefertes Backend automatisch und übernimmt den lokalen Schlüssel. Die installierte Anwendung benötigt keine separate Node-Installation. Details: [Installation](docs/INSTALLATION.md).
 
+Ein lokaler Windows-Installer und ein Portable-ZIP wurden tatsächlich gebaut und getestet. Paketnamen, Prüfsummen und Grenzen: [Windows-Build](docs/BUILD.md).
+
 ## Bereits nutzbar
 
 - Gegenstände suchen, Werte/Rezept anzeigen, Namen kopieren und Favoriten speichern; echte Dofusdude-Daten, Cache mit Ausfallanzeige.

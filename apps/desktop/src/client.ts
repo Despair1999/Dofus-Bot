@@ -1,37 +1,8 @@
 import { read, write } from "./storage";
 export type { Character, Envelope } from "@dofus/core";
 import type { Envelope } from "@dofus/core";
-export type Item = {
-  id: number;
-  name: string;
-  level?: number;
-  type: string;
-  category: string;
-  imageUrl?: string;
-  description?: string;
-  effects?: string[];
-  recipe?: { itemId: number; quantity: number; category: string }[];
-  source?: string;
-};
-export type Quest = {
-  id: number;
-  name: string;
-  nameFr?: string;
-  level?: number;
-  steps: {
-    id: number;
-    name: string;
-    description?: string;
-    objectives: {
-      id: number;
-      description?: string;
-      mapId?: number;
-      parameters?: unknown;
-    }[];
-  }[];
-  source?: string;
-  version?: string;
-};
+export type { ItemDetail as Item } from "@dofus/core";
+export type { Quest } from "@dofus/game-data";
 
 export class ApiError extends Error {
   constructor(

@@ -5,7 +5,9 @@ import {
   readFile,
   writeFile,
   readdir,
+  realpath,
 } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -86,8 +88,39 @@ for (const input of Object.keys(result.metafile.inputs)) {
     folder = dirname(folder);
   }
 }
+// Preserve notices for frontend runtime dependencies too, including bundled fonts.
+const visited = new Set();
+async function collectFrontend(manifestPath) {
+  const owner = JSON.parse(await readFile(manifestPath, "utf8"));
+  const require = createRequire(manifestPath);
+  for (const name of Object.keys(owner.dependencies ?? {})) {
+    if (name.startsWith("@dofus/")) continue;
+    let folder, manifest;
+    for (const base of require.resolve.paths(name) ?? []) {
+      try {
+        folder = await realpath(resolve(base, name));
+        manifest = JSON.parse(
+          await readFile(resolve(folder, "package.json"), "utf8"),
+        );
+        break;
+      } catch {
+        /* Try the next ordinary Node resolution directory. */
+      }
+    }
+    if (!folder || !manifest)
+      throw new Error(
+        `Lizenzprüfung: Laufzeitpaket ${name} konnte nicht aufgelöst werden.`,
+      );
+    const id = `${manifest.name}@${manifest.version}`;
+    if (visited.has(id)) continue;
+    visited.add(id);
+    packages.set(id, { folder, manifest });
+    await collectFrontend(resolve(folder, "package.json"));
+  }
+}
+await collectFrontend(resolve(root, "apps/desktop/package.json"));
 const notices = [
-  "Dofus Companion Backend – gebündelte Drittanbieter-Lizenzen\n",
+  "Dofus Companion – Backend- und Frontend-Laufzeitlizenzen einschließlich Schriftarten\n",
 ];
 for (const [name, { folder, manifest }] of [...packages].sort(([a], [b]) =>
   a.localeCompare(b),

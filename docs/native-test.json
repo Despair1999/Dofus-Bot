@@ -1,5 +1,5 @@
 {
-  "testedAt": "2026-10-20T14:52:28.419Z",
+  "testedAt": "2026-10-20T15:07:32.530Z",
   "runtime": "Windows x64 Tauri release EXE / WebView2",
   "url": "http://tauri.localhost/",
   "passed": [
@@ -10,6 +10,8 @@
     "native SQLite favorite",
     "global hotkey registration and removal",
     "overlay enter and leave",
+    "compact enter and leave",
+    "mini hotbar enter and leave",
     "actual local screenshot OCR in production WebView2"
   ],
   "pageErrors": []

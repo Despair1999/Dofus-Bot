@@ -47,6 +47,12 @@ await expect(
   page.getByText("DOFUS Companion · Quest", { exact: true }),
 ).toBeVisible();
 await page.getByTitle("Hauptfenster öffnen").click();
+await page.getByRole("button", { name: "compact", exact: true }).click();
+await expect(page.locator(".app.compact")).toBeVisible();
+await page.keyboard.press("Escape");
+await page.getByRole("button", { name: "hotbar", exact: true }).click();
+await expect(page.locator(".mini")).toBeVisible();
+await page.getByTitle("Hauptfenster", { exact: true }).click();
 await expect(
   page.getByRole("heading", { name: "Einstellungen", exact: true }),
 ).toBeVisible();
@@ -80,6 +86,8 @@ await writeFile(
         "native SQLite favorite",
         "global hotkey registration and removal",
         "overlay enter and leave",
+      "compact enter and leave",
+      "mini hotbar enter and leave",
         "actual local screenshot OCR in production WebView2",
       ],
       pageErrors: errors,

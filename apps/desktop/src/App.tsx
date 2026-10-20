@@ -45,6 +45,7 @@ import { read, write, erase } from "./storage";
 import { windowMode, openExternal, shortcut, type Mode } from "./native";
 import Scanner from "./Scanner";
 import CharacterEditor from "./CharacterEditor";
+import { createSerialQueue } from "./serial";
 type Tab =
   | "dashboard"
   | "items"
@@ -114,6 +115,7 @@ export default function App() {
     [opacity, setOpacity] = useState(94),
     [onboarding, setOnboarding] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const modeQueue = useRef(createSerialQueue());
   const character = characters.find((c) => c.id === active);
   const current = progress.find((p) => p.questId === quest?.id);
   const currentStep = quest?.steps[current?.step ?? 0];
@@ -221,10 +223,12 @@ export default function App() {
     }
   }
   async function changeMode(next: Mode) {
-    await action(async () => {
-      await windowMode(next);
-      setMode(next);
-    });
+    await modeQueue.current(() =>
+      action(async () => {
+        await windowMode(next);
+        setMode(next);
+      }),
+    );
   }
   async function sync() {
     await action(async () => {

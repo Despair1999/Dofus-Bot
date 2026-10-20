@@ -12,7 +12,7 @@
 | OCR-Textzuordnung | Implementiert und getestet | Abgleich-/Unsicherheitstests; kein Nachweis aller Spieljournal-Screenshots/DPI-Fälle |
 | Lokale Screenshot-OCR Deutsch/Französisch | Implementiert und getestet | Synthetische DE/FR-Bilder und Offline-Modellcache; echte Browser- und native WebView2-OCR ausgeführt. Tatsächliche Spielbilder/DPI noch ungetestet |
 | Bildschirmfreigabe | Implementiert, Live-Test ausstehend | Manuelles getDisplayMedia, browserabhängig; native Windows Graphics Capture nicht implementiert |
-| Windows Tauri, Overlay/Compact/Hotbar, Scanner-Hotkey | Implementiert und getestet | Windows-x64-EXE und NSIS gebaut; native Start-/SQLite-/Hotkey-/Overlay-Smokeprüfung erfolgreich. Compact/Hotbar und Mehrmonitor/DPI nicht vollständig geprüft, Click-through fehlt |
+| Windows Tauri, Overlay/Compact/Hotbar, Scanner-Hotkey | Implementiert und getestet | Windows-x64-EXE und NSIS gebaut; native Start-/SQLite-/Hotkey-/Overlay-/Compact-/Hotbar-Smokeprüfung erfolgreich, auch aus Portable-Verzeichnis. Mehrmonitor/DPI ungetestet, Click-through fehlt |
 | Crafting-Mengen, eigene Preise/Bestand, Rechner | Implementiert und getestet | Gemeinsame Rechenlogik, UI speichert eigene Eingaben; keine Live-Marktpreise |
 | Almanax | Implementiert und getestet | Adapter/Fehlerbehandlung; aktuelle Live-Erreichbarkeit siehe Quellen-/Testbericht |
 | Discord-Commands, Modals, Selects, Embeds | Implementiert, benötigt Zugangsdaten | Botmodul TypeScript und 9 Offline-/Loopback-Tests erfolgreich; keine Anmeldung an Discord |

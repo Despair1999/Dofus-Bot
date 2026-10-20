@@ -1,5 +1,5 @@
 {
-  "executedAt": "2026-10-20T14:45:07.658Z",
+  "executedAt": "2026-10-20T14:58:02.261Z",
   "engine": "tesseract.js 6, local WASM",
   "offline": true,
   "results": [
@@ -12,7 +12,7 @@
       "matchedId": 1,
       "similarity": 1,
       "blankText": "",
-      "elapsedMs": 578
+      "elapsedMs": 424
     },
     {
       "fixture": "fr.png",
@@ -23,7 +23,7 @@
       "matchedId": 1,
       "similarity": 1,
       "blankText": "",
-      "elapsedMs": 475
+      "elapsedMs": 363
     }
   ]
 }

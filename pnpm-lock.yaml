@@ -68,6 +68,9 @@ importers:
       '@dofus/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@dofus/game-data':
+        specifier: workspace:*
+        version: link:../../packages/game-data
       '@fontsource/dm-sans':
         specifier: ^5.3.0
         version: 5.3.0
