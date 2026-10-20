@@ -39,7 +39,9 @@ Windows-x64-NSIS-Installer, Setup-ZIP und Portable-ZIP wurden gebaut. v0.2.0 und
 
 Der vollständige NSIS-Lauf mit einem kontrollierten, dateisperrenden v0.1-Dienst liefert Exitcode 0 und Windows-Registryversion 0.2.2. [Installerbericht](docs/installer-transition-v2-test.json). Die installierte App startet anschließend mit Dienstversion 0.2.2. Native Aufgaben, Favoriten und Overlay-Einstellungen wurden erhalten. Im tatsächlichen nativen Benutzerbestand lagen keine Charaktere vor; der Erhalt von Profilen und pausiertem Questfortschritt wurde deshalb mit beiden echten Dienstpaketen in einer **getrennten Testdatenbank** geprüft. [Dienstmigration](docs/service-upgrade-v2-test.json).
 
-Der finale GitHub-Updaterlauf wird nach Veröffentlichung im [Upgradebericht](docs/update-v2-test.json) ergänzt. Es wird kein vollständiges Upgrade allein aus einer ersetzten EXE abgeleitet: Registryversion, Backendversion und Benutzerzustand werden getrennt geprüft.
+v0.2.2 ist auf GitHub veröffentlicht; die SHA256-Prüfsummen aller sieben Release-Dateien stimmen mit den lokalen Artefakten überein. Der tatsächlich installierte v0.1.0-Client hat über „Nach Updates suchen“ den signierten GitHub-Download und die NSIS-Installation erfolgreich abgeschlossen. Windows-Registry, native App und Backend melden anschließend 0.2.2. Vorhandene SQL-Aufgaben, Favoriten und Overlay-Einstellungen blieben erhalten. Die anschließende Updatesuche bestätigt die aktuelle freigegebene Version. [Upgradebericht](docs/update-v2-test.json).
+
+Die eigene Testaufgabe wurde entfernt und die isolierte Testinstallation deinstalliert. Die Benutzerdatenbank blieb erhalten. Der getrennte Profil-/Fortschrittsnachweis ist im oben verlinkten Dienstmigrationsbericht dokumentiert.
 
 ## Bekannte Grenzen
 
