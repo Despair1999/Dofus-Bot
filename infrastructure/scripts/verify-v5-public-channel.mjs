@@ -1,0 +1,27 @@
+import assert from "node:assert/strict";
+import { readFile, writeFile } from "node:fs/promises";
+import { githubRequest, repository } from "./github-client.mjs";
+
+const version = JSON.parse(await readFile("package.json", "utf8")).version;
+const config = JSON.parse(await readFile("apps/desktop/src-tauri/tauri.conf.json", "utf8"));
+const endpoint = config.plugins.updater.endpoints[0];
+const release = await githubRequest("GET", `/repos/${repository}/releases/latest`);
+assert.equal(release.tag_name, "v" + version);
+assert.equal(release.draft, false);
+const response = await fetch(endpoint, {signal:AbortSignal.timeout(30000)});
+assert.ok(response.ok, `Public updater HTTP ${response.status}`);
+const manifest = await response.json();
+assert.equal(manifest.version, version);
+const target = manifest.platforms["windows-x86_64"];
+assert.equal(target.signature, (await readFile(`artifacts/DOFUS-Companion-${version}-setup.exe.sig`, "utf8")).trim());
+const asset = release.assets.find(a => a.name === `DOFUS-Companion-${version}-setup.exe`);
+assert.ok(asset);
+assert.equal(target.url, asset.browser_download_url);
+const signatureReport = JSON.parse(await readFile("docs/release-v5-signature-test.json", "utf8"));
+assert.equal(asset.digest, "sha256:" + signatureReport.sha256);
+const availability = await fetch(target.url, {method:"HEAD", signal:AbortSignal.timeout(30000)});
+assert.ok(availability.ok, `Public installer HTTP ${availability.status}`);
+assert.equal(Number(availability.headers.get("content-length")), asset.size);
+const report = {version, checkedAt:new Date().toISOString(), endpoint, release:release.html_url, publicLatestManifestVerified:true, signatureMatchesVerifiedInstaller:true, installerAccessible:true, installerSha256:signatureReport.sha256, scope:"Actual configured public updater endpoint and published asset metadata; no installation over the running user's app"};
+await writeFile("docs/public-updater-v5-test.json",JSON.stringify(report,null,2)+"\n");
+console.log(JSON.stringify(report));

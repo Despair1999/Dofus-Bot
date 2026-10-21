@@ -32,3 +32,10 @@ Praktische Grenzen
 Der zusätzliche native WebView-/Overlaytest wird bei bereits laufender Anwendung ausdrücklich übersprungen, um diese Instanz nicht zu schließen oder ihr Profil umzuschalten; siehe `docs/native-v5-test.json`. Es fand keine automatische Installation über die laufende Benutzerinstallation statt. `run-native-v5-smoke.mjs` enthält die reproduzierbare Prüfung für einen freien Testlauf einschließlich Originalkarten, Farbpersistenz und AP/BP/LP sowie der bisherigen echten Übersetzungs-/Overlayprüfungen.
 
 20 Kurzleitfäden sind keine vollständige redaktionelle Patchprüfung aller 187 Katalogpositionen. Vollständige fremde Guideartikel werden verlinkt. Der Arachnas-Katalogeintrag enthält keine eindeutige Bossreferenz und behält einen Platzhalter. Bilder stammen aus 3.7.12.12, historische Werte bleiben ausdrücklich getrennt. Exakte Ressourcenfundorte, Raumgruppen und unbekannte Graphkanten werden weiterhin nicht erfunden; Farmwege bleiben vom belegten Übergangsgraph und bestätigten persönlichen Fundorten abhängig.
+
+Veröffentlichung
+----------------
+
+[Version 0.5.0](https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.5.0) ist veröffentlicht und als neueste Version gesetzt. Der tatsächlich konfigurierte öffentliche Update-Endpunkt liefert 0.5.0; seine Signatur stimmt mit dem unabhängig geprüften Installer überein. Der Installer ist öffentlich erreichbar. Bericht: `docs/public-updater-v5-test.json`.
+
+Installer: 134.838.908 Bytes, SHA-256 `f4bde0e90b569dde348a056dda4ff8c09f8f16b5759a87c70654babda0704ca9`. Die vollständigen Paketprüfsummen stehen in `docs/BUILD_v0.5.0_SHA256.json`. Setup- und Portable-ZIP haben ihre vollständige CRC- und Payloadprüfung bestanden. Die produktive Anwendung wurde nicht automatisch aktualisiert.
