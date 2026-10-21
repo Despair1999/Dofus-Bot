@@ -37,10 +37,19 @@ const upgrade = JSON.parse(await readFile("docs/service-upgrade-v5-test.json", "
 assert.equal(upgrade.serviceUpgradePassed, true);
 const native = JSON.parse(await readFile("docs/native-v5-test.json", "utf8"));
 assert.ok(native.skipped || native.passed.length >= 7);
+const packages = JSON.parse(await readFile("docs/packages-v5-test.json", "utf8"));
+assert.equal(packages.exactExecutableAndServicePayloadVerified, true);
+assert.equal(packages.setupContainsExactSignedInstaller, true);
+const productionUi = JSON.parse(await readFile("docs/production-ui-v5-test.json", "utf8"));
+assert.equal(productionUi.version, version);
+assert.equal(productionUi.externalRequestsBlocked, true);
+assert.ok(productionUi.passed.length >= 5 && !productionUi.errors.length && !productionUi.missingAssets.length);
 const report = {
   version, testedAt: new Date().toISOString(), unitTests, browserTests:e2e.stats.expected,
   typecheckPassed:true, lintPassed:true, windowsInstallerBuilt:true,
   productionArtworkMatchesSource:true, installerSha256:signature.sha256,
+  releasePackagesVerified:true,
+  productionUiPassed:true,
   existingUpdaterKeyPreserved:signature.existingUpdaterKeyPreserved,
   serviceUpgradePassed:true, nativeUi: native.skipped ? {skipped:true, reason:native.reason} : {passed:native.passed},
   limitations:["20 sourced short guides; no fully patch-verified complete strategy catalog", "Arachnas catalog entry has no explicit boss illustration", "No automatic installation over the user's running app"],

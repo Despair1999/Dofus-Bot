@@ -1,0 +1,15 @@
+{
+  "version": "0.5.0",
+  "testedAt": "2026-10-21T22:01:55.206Z",
+  "runtime": "Chromium / exact Vite production frontend / real isolated loopback backend",
+  "externalRequestsBlocked": true,
+  "passed": [
+    "built frontend loads original world artwork and resolves an interior quest target with external requests blocked",
+    "boss artwork and original-grade combat plan load from the production bundle",
+    "all six profession quest illustrations load while external image hosts are blocked",
+    "all four production themes work and the chosen theme survives reload",
+    "AP BP LP retain their semantic colors in the production builder"
+  ],
+  "errors": [],
+  "missingAssets": []
+}

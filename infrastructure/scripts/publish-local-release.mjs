@@ -47,7 +47,7 @@ if (version === "0.5.0") {
   if (acceptance.version !== version || nativeReport.version !== version ||
       acceptance.unitTests < 105 || acceptance.browserTests < 37 ||
       !acceptance.typecheckPassed || !acceptance.lintPassed ||
-      !acceptance.productionArtworkMatchesSource || !acceptance.windowsInstallerBuilt ||
+      !acceptance.productionArtworkMatchesSource || !acceptance.windowsInstallerBuilt || !acceptance.releasePackagesVerified || !acceptance.productionUiPassed ||
       !signatureCheck.releaseSignatureVerified || !signatureCheck.tamperedInstallerRejected ||
       signatureCheck.version !== version || upgrade.version !== version || !upgrade.serviceUpgradePassed ||
       (!nativeReport.skipped && nativeReport.passed.length < 7))
