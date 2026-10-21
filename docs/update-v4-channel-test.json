@@ -1,0 +1,9 @@
+{
+  "testedAt": "2026-10-21T19:36:47.615Z",
+  "fromVersion": "0.3.0",
+  "toVersion": "0.4.0",
+  "actualInstalledUpdaterRecognizesRelease": true,
+  "installerExecuted": false,
+  "release": "https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.4.0",
+  "scope": "Read-only check by actual installed Tauri v0.3 against configured published HTTPS update channel; no automatic installation"
+}

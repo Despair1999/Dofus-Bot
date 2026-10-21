@@ -68,3 +68,5 @@ $env:PYTHONUTF8 = '1'
 ```
 
 Ein vollständiger physischer Overlaytest über laufendem DOFUS, echte Zwischenablageberechtigungen im installierten WebView und mehrere Monitore/DPI-Stufen sind durch die Modell-/REST-Tests nicht nachgewiesen. Dafür: beide Karten im installierten Overlay aktivieren, Netzwerk extern blockieren, alle Sprachpaare wechseln, Nachrichten einfügen und kopieren, die Karten verschieben/minimieren, Companion neu starten und Konfiguration kontrollieren. Keine Nachricht wird automatisch in DOFUS eingefügt oder abgesendet.
+
+Ergänzende native Abnahme: Die endgültige Windows-Portable-Ausgabe hat mit ihrer gebündelten Runtime beide Übersetzerkarten, alle sechs echten Sprachrichtungen und beide Overlaymodule bestanden. Nach dem Schließen bleiben weder Backend noch Pythonworker zurück. [Native Prüfungen](native-v4-test.json), [Prozessbeendigung](native-v4-lifecycle.json). Der separate Test bei blockierter Socket-Erzeugung belegt die lokale Inferenz; diese native UI-Prüfung beansprucht keinen physischen Test über einem laufenden DOFUS-Fenster.
