@@ -19,6 +19,7 @@ import ItemSummaryCard from "../items/ItemSummaryCard";
 import type { CatalogDetail, CatalogItem } from "../items/types";
 import "../items/items.css";
 import "./craft.css";
+import { navigatePath } from "../routing";
 type Prices = Record<number, number>;
 interface Project {
   id: string;
@@ -446,6 +447,18 @@ export default function CraftingPage({
                             </>
                           )}
                         </span>
+                        {r.missing > 0 && (
+                          <button
+                            className="text-button"
+                            onClick={() =>
+                              navigatePath(
+                                `/farming?itemId=${r.itemId}&quantity=${r.missing}`,
+                              )
+                            }
+                          >
+                            Fehlende Ressourcen farmen
+                          </button>
+                        )}
                       </td>
                       <td>
                         <input

@@ -1,4 +1,6 @@
-# Umsetzungsstand v0.3.0
+# Umsetzungsstand
+
+Der aktuelle Entwicklungsstand v0.4.0 ist in [V4_IMPLEMENTATION_STATUS.md](V4_IMPLEMENTATION_STATUS.md) dokumentiert. Die folgenden Abschnitte halten den vorherigen v0.3.0-/v0.2.x-Stand fest; insbesondere die früher fehlenden Karten-, Dungeon- und Übersetzungsoberflächen wurden inzwischen ergänzt.
 
 Builder und Charakter-Update: [BUILDER_IMPLEMENTATION_STATUS.md](BUILDER_IMPLEMENTATION_STATUS.md), Prüfungen und Grenzen: [BUILDER_TEST_REPORT.md](BUILDER_TEST_REPORT.md). Enthalten sind der gemeinsame Filter-/Berechnungskern, zwei getrennte Spielversionen, historische Item-/Seteffekte, alle 19 Klassenbilder, Charakter-Sets, direkte Schadensstrategien und der deterministische Hintergrund-Optimierer. Komplexe Kampfzustände bleiben ausdrücklich begrenzt.
 

@@ -1,0 +1,1501 @@
+{
+  "report": {
+    "checkedAt": "2026-10-21T18:45:34.518Z",
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/donjons.html",
+        "status": 200,
+        "dungeonRows": 151,
+        "removedRows": 9,
+        "matchedRows": 124
+      },
+      {
+        "url": "https://dofus-portals.fr/donjons/",
+        "status": 200,
+        "dungeonRows": 150,
+        "removedRows": 8,
+        "matchedRows": 122
+      }
+    ],
+    "uniqueMappedDungeons": 121,
+    "note": "Directory presence does not verify activity or mechanics for a game version."
+  },
+  "links": [
+    {
+      "dungeonId": 73,
+      "url": "https://www.dofuspourlesnoobs.com/aquadocircme-de-merkator.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 61,
+      "url": "https://www.dofuspourlesnoobs.com/antichambre-des-gloursons.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 89,
+      "url": "https://www.dofuspourlesnoobs.com/antre-de-la-reine-nyeacutee.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 49,
+      "url": "https://www.dofuspourlesnoobs.com/antre-du-blop-multicolore-royal.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 6,
+      "url": "https://www.dofuspourlesnoobs.com/antre-du-dragon-cochon.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 59,
+      "url": "https://www.dofuspourlesnoobs.com/antre-du-korriandre.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 31,
+      "url": "https://www.dofuspourlesnoobs.com/antre-du-kralamoure-geacuteant.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 39,
+      "url": "https://www.dofuspourlesnoobs.com/arche-dotomaiuml.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 3,
+      "url": "https://www.dofuspourlesnoobs.com/bibliotheque-du-maitre-corbac.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 1,
+      "url": "https://www.dofuspourlesnoobs.com/cour-du-bouftou-royal.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 14,
+      "url": "https://www.dofuspourlesnoobs.com/grotte-du-bworker.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 13,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-bworks.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 88,
+      "url": "https://www.dofuspourlesnoobs.com/cache-de-kankreblath.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 15,
+      "url": "https://www.dofuspourlesnoobs.com/taniere-du-meulou.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 28,
+      "url": "https://www.dofuspourlesnoobs.com/canopeacutee-du-kimbo.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 82,
+      "url": "https://www.dofuspourlesnoobs.com/cave-du-toxoliath.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 37,
+      "url": "https://www.dofuspourlesnoobs.com/caverne-de-nowel.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 30,
+      "url": "https://www.dofuspourlesnoobs.com/caverne-du-koulosse.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 60,
+      "url": "https://www.dofuspourlesnoobs.com/cavernes-du-kolosso.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 8,
+      "url": "https://www.dofuspourlesnoobs.com/grange-du-tournesol-affame.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 52,
+      "url": "https://www.dofuspourlesnoobs.com/chateau-du-wa-wabbit.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 91,
+      "url": "https://www.dofuspourlesnoobs.com/bateau-du-chouque.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 10,
+      "url": "https://www.dofuspourlesnoobs.com/clairiegravere-du-checircne-mou.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 11,
+      "url": "https://www.dofuspourlesnoobs.com/clos-des-blops.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 71,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-du-comte-harebourg.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 90,
+      "url": "https://www.dofuspourlesnoobs.com/crypte-de-kardorim.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 9,
+      "url": "https://www.dofuspourlesnoobs.com/domaine-ancestral.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 19,
+      "url": "https://www.dofuspourlesnoobs.com/chateau-ensable.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 56,
+      "url": "https://www.dofuspourlesnoobs.com/epave-du-grolandais-violent.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 55,
+      "url": "https://www.dofuspourlesnoobs.com/excavation-du-mansot-royal.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 77,
+      "url": "https://www.dofuspourlesnoobs.com/fabrique-mallefisk.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 69,
+      "url": "https://www.dofuspourlesnoobs.com/forgefroide-de-missiz-frizz.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 21,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-forgerons.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 22,
+      "url": "https://www.dofuspourlesnoobs.com/temple-du-grand-ougah.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 79,
+      "url": "https://www.dofuspourlesnoobs.com/galerie-du-phossile.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 24,
+      "url": "https://www.dofuspourlesnoobs.com/gelaxieme-dimension.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 75,
+      "url": "https://www.dofuspourlesnoobs.com/grotte-de-kanigroula.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 41,
+      "url": "https://www.dofuspourlesnoobs.com/goulet-du-rasboul.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 25,
+      "url": "https://www.dofuspourlesnoobs.com/grotte-hesque.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 86,
+      "url": "https://www.dofuspourlesnoobs.com/horologium-de-xlii.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 57,
+      "url": "https://www.dofuspourlesnoobs.com/hypogeacutee-de-lobsidiantre.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 27,
+      "url": "https://www.dofuspourlesnoobs.com/village-kanniboul.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 126,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-kitsounes.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": true
+    },
+    {
+      "dungeonId": 35,
+      "url": "https://www.dofuspourlesnoobs.com/laboratoire-de-brumen-tinctorias.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 70,
+      "url": "https://www.dofuspourlesnoobs.com/laboratoire-de-nileza.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 51,
+      "url": "https://www.dofuspourlesnoobs.com/laboratoire-du-tynril.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 33,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-larves.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 38,
+      "url": "https://www.dofuspourlesnoobs.com/maison-du-papa-nowel.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 34,
+      "url": "https://www.dofuspourlesnoobs.com/maison-fantome.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 85,
+      "url": "https://www.dofuspourlesnoobs.com/meacutegalithe-de-fraktale.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 62,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-de-la-mine-de-sakaiuml.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 4,
+      "url": "https://www.dofuspourlesnoobs.com/centre-du-labyrinthe-du-minotoror.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 53,
+      "url": "https://www.dofuspourlesnoobs.com/minotot.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 92,
+      "url": "https://www.dofuspourlesnoobs.com/arbre-de-moon.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 32,
+      "url": "https://www.dofuspourlesnoobs.com/nid-du-kwakwa.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 36,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-de-nowel.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 87,
+      "url": "https://www.dofuspourlesnoobs.com/oeil-de-vortex.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 76,
+      "url": "https://www.dofuspourlesnoobs.com/palais-du-roi-nidas.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 66,
+      "url": "https://www.dofuspourlesnoobs.com/potager-dhalouine.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 74,
+      "url": "https://www.dofuspourlesnoobs.com/pyramide-dombre.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 42,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-rats-de-bonta.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": true
+    },
+    {
+      "dungeonId": 43,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-rats-de-brakmar.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": true
+    },
+    {
+      "dungeonId": 44,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-rats-du-chacircteau-damakna.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 46,
+      "url": "https://www.dofuspourlesnoobs.com/repaire-de-skeunk.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 81,
+      "url": "https://www.dofuspourlesnoobs.com/ring-du-capitaine-ekarlatte.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 68,
+      "url": "https://www.dofuspourlesnoobs.com/salons-priveacutes-de-klime.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 7,
+      "url": "https://www.dofuspourlesnoobs.com/antre-de-crocabulia.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 45,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-scarafeuilles.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 54,
+      "url": "https://www.dofuspourlesnoobs.com/serre-du-royalmouth.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 47,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-squelettes.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 58,
+      "url": "https://www.dofuspourlesnoobs.com/taniegravere-givrefoux.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 17,
+      "url": "https://www.dofuspourlesnoobs.com/terrier-du-wa-wabbit.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 72,
+      "url": "https://www.dofuspourlesnoobs.com/theacuteacirctre-de-dramak.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 50,
+      "url": "https://www.dofuspourlesnoobs.com/tofulailler-royal.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 48,
+      "url": "https://www.dofuspourlesnoobs.com/donjon-des-tofus.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 67,
+      "url": "https://www.dofuspourlesnoobs.com/transporteur-de-sylargh.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 83,
+      "url": "https://www.dofuspourlesnoobs.com/trone-de-la-cour-sombre.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 84,
+      "url": "https://www.dofuspourlesnoobs.com/ventre-de-la-baleine.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 80,
+      "url": "https://www.dofuspourlesnoobs.com/voliegravere-de-la-haute-truche.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 93,
+      "url": "https://www.dofuspourlesnoobs.com/miausoleacutee-du-pounicheur.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 18,
+      "url": "https://www.dofuspourlesnoobs.com/pitons-rocheux-des-craqueleurs.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 94,
+      "url": "https://www.dofuspourlesnoobs.com/plateau-de-ush.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 98,
+      "url": "https://www.dofuspourlesnoobs.com/temple-de-koutoulou.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 97,
+      "url": "https://www.dofuspourlesnoobs.com/vaisseau-du-capitaine-meno.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 99,
+      "url": "https://www.dofuspourlesnoobs.com/palais-de-dantineacutea.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 109,
+      "url": "https://www.dofuspourlesnoobs.com/tour-de-solar.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 108,
+      "url": "https://www.dofuspourlesnoobs.com/tour-de-bethel.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 110,
+      "url": "https://www.dofuspourlesnoobs.com/brasserie-du-roi-dazak.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 103,
+      "url": "https://www.dofuspourlesnoobs.com/chambre-de-tal-kasha.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 113,
+      "url": "https://www.dofuspourlesnoobs.com/fonderie-des-waddicts.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 112,
+      "url": "https://www.dofuspourlesnoobs.com/croquanterie.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 111,
+      "url": "https://www.dofuspourlesnoobs.com/temple-du-dieu-kao.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 107,
+      "url": "https://www.dofuspourlesnoobs.com/belvedere-d-ilyzaelle.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 102,
+      "url": "https://www.dofuspourlesnoobs.com/boyau-du-pere-ver.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 104,
+      "url": "https://www.dofuspourlesnoobs.com/camp-du-comte-razof.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 101,
+      "url": "https://www.dofuspourlesnoobs.com/caverne-d-el-piko.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 105,
+      "url": "https://www.dofuspourlesnoobs.com/chapiteau-des-magik-riktus.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 100,
+      "url": "https://www.dofuspourlesnoobs.com/cimetiere-des-mastodontes.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 106,
+      "url": "https://www.dofuspourlesnoobs.com/manoir-des-katrepat.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 116,
+      "url": "https://www.dofuspourlesnoobs.com/epreuve-de-draegnerys.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 115,
+      "url": "https://www.dofuspourlesnoobs.com/repaire-du-kharnozor.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 114,
+      "url": "https://www.dofuspourlesnoobs.com/sanctuaire-de-torkelonia.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 125,
+      "url": "https://www.dofuspourlesnoobs.com/bambusaie-de-damadrya.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 126,
+      "url": "https://www.dofuspourlesnoobs.com/atelier-du-tanukoui-san.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 123,
+      "url": "https://www.dofuspourlesnoobs.com/vallee-de-la-dame-des-eaux.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 124,
+      "url": "https://www.dofuspourlesnoobs.com/fabrique-de-foux-d-artifice.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 122,
+      "url": "https://www.dofuspourlesnoobs.com/dojo-du-vent.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 132,
+      "url": "https://www.dofuspourlesnoobs.com/tombe-du-shogun-tofugawa.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 131,
+      "url": "https://www.dofuspourlesnoobs.com/demeure-des-esprits.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 134,
+      "url": "https://www.dofuspourlesnoobs.com/souvenir-d-imagiro.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 133,
+      "url": "https://www.dofuspourlesnoobs.com/memoire-d-orukam.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 135,
+      "url": "https://www.dofuspourlesnoobs.com/rituel-de-kabahal.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 42,
+      "url": "https://www.dofuspourlesnoobs.com/garde-manger-du-rat-blanc.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 43,
+      "url": "https://www.dofuspourlesnoobs.com/sousouriciere-du-rat-noir.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 136,
+      "url": "https://www.dofuspourlesnoobs.com/bataille-de-l-aurore-pourpre.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 138,
+      "url": "https://www.dofuspourlesnoobs.com/akademie-des-gobs.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 139,
+      "url": "https://www.dofuspourlesnoobs.com/tertre-du-long-sommeil.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 142,
+      "url": "https://www.dofuspourlesnoobs.com/refuge-sylvestre.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 141,
+      "url": "https://www.dofuspourlesnoobs.com/bastion-des-marteaux-aigris.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 140,
+      "url": "https://www.dofuspourlesnoobs.com/chambre-des-malefices.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 121,
+      "url": "https://www.dofuspourlesnoobs.com/tempete-de-l-eliocalypse.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 163,
+      "url": "https://www.dofuspourlesnoobs.com/poste-de-controle-du-supervizoeuf.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 164,
+      "url": "https://www.dofuspourlesnoobs.com/breuil-du-venerable.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 165,
+      "url": "https://www.dofuspourlesnoobs.com/autel-de-la-dechireuse.html",
+      "source": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 73,
+      "url": "https://dofus-portals.fr/donjons/aquadome-de-merkator/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 165,
+      "url": "https://dofus-portals.fr/donjons/autel-de-la-dechireuse/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 107,
+      "url": "https://dofus-portals.fr/donjons/belvedere-d-ilyzaelle/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 110,
+      "url": "https://dofus-portals.fr/donjons/brasserie-du-roi-dazak/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 164,
+      "url": "https://dofus-portals.fr/donjons/breuil-du-venerable/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 103,
+      "url": "https://dofus-portals.fr/donjons/chambre-de-tal-kasha/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 140,
+      "url": "https://dofus-portals.fr/donjons/chambre-des-malefices/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 71,
+      "url": "https://dofus-portals.fr/donjons/donjon-du-comte-harebourg/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 69,
+      "url": "https://dofus-portals.fr/donjons/forgefroide-de-missiz-frizz/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 70,
+      "url": "https://dofus-portals.fr/donjons/laboratoire-de-nileza/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 106,
+      "url": "https://dofus-portals.fr/donjons/manoir-des-katrepat/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 133,
+      "url": "https://dofus-portals.fr/donjons/memoire-d-orukam/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 99,
+      "url": "https://dofus-portals.fr/donjons/palais-de-dantinea/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 76,
+      "url": "https://dofus-portals.fr/donjons/palais-du-roi-nidas/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 135,
+      "url": "https://dofus-portals.fr/donjons/rituel-de-kabahal/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 68,
+      "url": "https://dofus-portals.fr/donjons/salons-prives-de-klime/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 114,
+      "url": "https://dofus-portals.fr/donjons/sanctuaire-de-torkelonia/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 134,
+      "url": "https://dofus-portals.fr/donjons/souvenir-d-imagiro/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 98,
+      "url": "https://dofus-portals.fr/donjons/temple-de-koutoulou/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 111,
+      "url": "https://dofus-portals.fr/donjons/temple-du-dieu-kao/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 108,
+      "url": "https://dofus-portals.fr/donjons/tour-de-bethel/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 109,
+      "url": "https://dofus-portals.fr/donjons/tour-de-solar/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 67,
+      "url": "https://dofus-portals.fr/donjons/transporteur-de-sylargh/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 83,
+      "url": "https://dofus-portals.fr/donjons/trone-de-la-cour-sombre/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 97,
+      "url": "https://dofus-portals.fr/donjons/vaisseau-du-capitaine-meno/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 84,
+      "url": "https://dofus-portals.fr/donjons/ventre-de-la-baleine/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 87,
+      "url": "https://dofus-portals.fr/donjons/ail-de-vortex/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 61,
+      "url": "https://dofus-portals.fr/donjons/antichambre-des-gloursons/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 141,
+      "url": "https://dofus-portals.fr/donjons/bastion-des-marteaux-aigris/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 104,
+      "url": "https://dofus-portals.fr/donjons/camp-du-comte-razof/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 60,
+      "url": "https://dofus-portals.fr/donjons/cavernes-du-kolosso/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 62,
+      "url": "https://dofus-portals.fr/donjons/mine-de-sakai/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 74,
+      "url": "https://dofus-portals.fr/donjons/pyramide-d-ombre/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 59,
+      "url": "https://dofus-portals.fr/donjons/antre-du-korriandre/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 31,
+      "url": "https://dofus-portals.fr/donjons/antre-du-kralamoure-geant/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 82,
+      "url": "https://dofus-portals.fr/donjons/cave-du-toxoliath/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 14,
+      "url": "https://dofus-portals.fr/donjons/grotte-du-bworker/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 38,
+      "url": "https://dofus-portals.fr/donjons/maison-du-papa-nowel/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 22,
+      "url": "https://dofus-portals.fr/donjons/temple-du-grand-ougah/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 102,
+      "url": "https://dofus-portals.fr/donjons/boyau-du-pere-ver/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 131,
+      "url": "https://dofus-portals.fr/donjons/demeure-des-esprits/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 86,
+      "url": "https://dofus-portals.fr/donjons/horologium-de-xlii/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 163,
+      "url": "https://dofus-portals.fr/donjons/poste-de-controle-du-supervizuf/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 58,
+      "url": "https://dofus-portals.fr/donjons/taniere-givrefoux/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 28,
+      "url": "https://dofus-portals.fr/donjons/canopee-du-kimbo/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 75,
+      "url": "https://dofus-portals.fr/donjons/grotte-de-kanigroula/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 57,
+      "url": "https://dofus-portals.fr/donjons/hypogee-de-l-obsidiantre/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 53,
+      "url": "https://dofus-portals.fr/donjons/minotot/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 94,
+      "url": "https://dofus-portals.fr/donjons/plateau-de-ush/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 132,
+      "url": "https://dofus-portals.fr/donjons/tombe-du-shogun-tofugawa/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 56,
+      "url": "https://dofus-portals.fr/donjons/epave-du-grolandais-violent/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 79,
+      "url": "https://dofus-portals.fr/donjons/galerie-du-phossile/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 126,
+      "url": "https://dofus-portals.fr/donjons/kitsounes/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": true
+    },
+    {
+      "dungeonId": 44,
+      "url": "https://dofus-portals.fr/donjons/repaire-de-sphincter-cell/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 139,
+      "url": "https://dofus-portals.fr/donjons/tertre-du-long-sommeil/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 10,
+      "url": "https://dofus-portals.fr/donjons/clairiere-du-chene-mou/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 122,
+      "url": "https://dofus-portals.fr/donjons/dojo-du-vent/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 55,
+      "url": "https://dofus-portals.fr/donjons/excavation-du-mansot-royal/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 124,
+      "url": "https://dofus-portals.fr/donjons/fabrique-de-foux-d-artifice/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 51,
+      "url": "https://dofus-portals.fr/donjons/laboratoire-du-tynril/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 126,
+      "url": "https://dofus-portals.fr/donjons/atelier-du-tanukoui-san/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 101,
+      "url": "https://dofus-portals.fr/donjons/caverne-d-el-piko/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 112,
+      "url": "https://dofus-portals.fr/donjons/croquanterie/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 81,
+      "url": "https://dofus-portals.fr/donjons/ring-du-capitaine-ekarlatte/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 123,
+      "url": "https://dofus-portals.fr/donjons/vallee-de-la-dame-des-eaux/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 80,
+      "url": "https://dofus-portals.fr/donjons/voliere-de-la-haute-truche/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 7,
+      "url": "https://dofus-portals.fr/donjons/antre-de-crocabulia/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 49,
+      "url": "https://dofus-portals.fr/donjons/antre-du-blop-multicolore-royal/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 4,
+      "url": "https://dofus-portals.fr/donjons/centre-du-labyrinthe-du-minotoror/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 85,
+      "url": "https://dofus-portals.fr/donjons/megalithe-de-fraktale/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 46,
+      "url": "https://dofus-portals.fr/donjons/repaire-de-skeunk/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 54,
+      "url": "https://dofus-portals.fr/donjons/serre-du-royalmouth/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 50,
+      "url": "https://dofus-portals.fr/donjons/tofulailler-royal/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 125,
+      "url": "https://dofus-portals.fr/donjons/bambusaie-de-damadrya/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 3,
+      "url": "https://dofus-portals.fr/donjons/bibliotheque-du-maitre-corbac/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 37,
+      "url": "https://dofus-portals.fr/donjons/caverne-de-nowel/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 42,
+      "url": "https://dofus-portals.fr/donjons/garde-manger-du-rat-blanc/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 41,
+      "url": "https://dofus-portals.fr/donjons/goulet-du-rasboul/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 93,
+      "url": "https://dofus-portals.fr/donjons/miausolee-du-pounicheur/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 42,
+      "url": "https://dofus-portals.fr/donjons/rats-de-bonta/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": true
+    },
+    {
+      "dungeonId": 43,
+      "url": "https://dofus-portals.fr/donjons/rats-de-brakmar/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": true
+    },
+    {
+      "dungeonId": 43,
+      "url": "https://dofus-portals.fr/donjons/sousouriciere-du-rat-noir/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 6,
+      "url": "https://dofus-portals.fr/donjons/antre-du-dragon-cochon/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 92,
+      "url": "https://dofus-portals.fr/donjons/arbre-de-moon/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 30,
+      "url": "https://dofus-portals.fr/donjons/caverne-du-koulosse/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 77,
+      "url": "https://dofus-portals.fr/donjons/fabrique-de-mallefisk/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 66,
+      "url": "https://dofus-portals.fr/donjons/potager-d-halouine/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 115,
+      "url": "https://dofus-portals.fr/donjons/repaire-du-kharnozor/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 15,
+      "url": "https://dofus-portals.fr/donjons/taniere-du-meulou/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 72,
+      "url": "https://dofus-portals.fr/donjons/theatre-de-dramak/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 89,
+      "url": "https://dofus-portals.fr/donjons/antre-de-la-reine-nyee/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 91,
+      "url": "https://dofus-portals.fr/donjons/bateau-du-chouque/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 105,
+      "url": "https://dofus-portals.fr/donjons/chapiteau-des-magik-riktus/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 9,
+      "url": "https://dofus-portals.fr/donjons/domaine-ancestral/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 100,
+      "url": "https://dofus-portals.fr/donjons/cimetiere-des-mastodontes/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 17,
+      "url": "https://dofus-portals.fr/donjons/terrier-du-wa-wabbit/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 39,
+      "url": "https://dofus-portals.fr/donjons/cale-de-l-arche-d-otomai/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 35,
+      "url": "https://dofus-portals.fr/donjons/laboratoire-de-brumen-tinctorias/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 18,
+      "url": "https://dofus-portals.fr/donjons/pitons-rocheux-des-craqueleurs/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 116,
+      "url": "https://dofus-portals.fr/donjons/epreuve-de-draegnerys/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 52,
+      "url": "https://dofus-portals.fr/donjons/chateau-du-wa-wabbit/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 11,
+      "url": "https://dofus-portals.fr/donjons/clos-des-blops/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 113,
+      "url": "https://dofus-portals.fr/donjons/fonderie-des-waddicts/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 24,
+      "url": "https://dofus-portals.fr/donjons/gelaxieme-dimension/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 27,
+      "url": "https://dofus-portals.fr/donjons/village-kanniboul/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 13,
+      "url": "https://dofus-portals.fr/donjons/bworks/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 21,
+      "url": "https://dofus-portals.fr/donjons/forgerons/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 25,
+      "url": "https://dofus-portals.fr/donjons/grotte-hesque/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 33,
+      "url": "https://dofus-portals.fr/donjons/larves/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 32,
+      "url": "https://dofus-portals.fr/donjons/nid-du-kwakwa/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 36,
+      "url": "https://dofus-portals.fr/donjons/nowel/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 142,
+      "url": "https://dofus-portals.fr/donjons/refuge-sylvestre/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 138,
+      "url": "https://dofus-portals.fr/donjons/akademie-des-gobs/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 88,
+      "url": "https://dofus-portals.fr/donjons/cache-de-kankreblath/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 34,
+      "url": "https://dofus-portals.fr/donjons/maison-fantome/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 45,
+      "url": "https://dofus-portals.fr/donjons/scarafeuilles/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 47,
+      "url": "https://dofus-portals.fr/donjons/squelettes/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 48,
+      "url": "https://dofus-portals.fr/donjons/tofus/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 1,
+      "url": "https://dofus-portals.fr/donjons/cour-du-bouftou-royal/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 19,
+      "url": "https://dofus-portals.fr/donjons/chateau-ensable/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 8,
+      "url": "https://dofus-portals.fr/donjons/grange-du-tournesol-affame/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    },
+    {
+      "dungeonId": 90,
+      "url": "https://dofus-portals.fr/donjons/crypte-de-kardorim/",
+      "source": "https://dofus-portals.fr/donjons/",
+      "removedReference": false
+    }
+  ]
+}

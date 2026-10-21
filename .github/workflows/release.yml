@@ -56,6 +56,10 @@ jobs:
         with:
           workspaces: apps/desktop/src-tauri -> target
       - run: pnpm install --frozen-lockfile
+      - uses: astral-sh/setup-uv@v6
+      - name: Prepare bundled offline translator runtime
+        shell: pwsh
+        run: ./infrastructure/scripts/setup-translator.ps1
       - name: Verify update signing configuration
         shell: pwsh
         env:

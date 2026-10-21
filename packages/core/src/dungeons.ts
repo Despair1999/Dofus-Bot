@@ -1,0 +1,138 @@
+export type DungeonPosition = {
+  mapId: number;
+  x: number;
+  y: number;
+  worldId: number;
+  subAreaId: number;
+  areaId: number;
+  areaName: string;
+  subAreaName: string;
+};
+export type DungeonGrade = {
+  grade: number;
+  level: number;
+  lifePoints: number;
+  actionPoints: number;
+  movementPoints: number;
+  resistances: Record<string, number>;
+};
+export type DungeonSpell = {
+  id: number;
+  name: string;
+  description: string;
+  iconId: number;
+  ranks: {
+    grade: number;
+    apCost: number;
+    minRange: number;
+    range: number;
+    maxCastPerTurn: number;
+    maxCastPerTarget: number;
+    minCastInterval: number;
+    effects: unknown[];
+  }[];
+};
+export type DungeonDrop = {
+  itemId: number;
+  name: string;
+  iconId: number;
+  rates: number[];
+  conditions: string;
+  count: number;
+  recipes: number[];
+};
+export type DungeonMonster = {
+  id: number;
+  name: string;
+  nameFr: string;
+  nameEn: string;
+  gfxId: number;
+  image: string | null;
+  imageStatus: string;
+  grades: DungeonGrade[];
+  spells: DungeonSpell[];
+  drops: DungeonDrop[];
+  subAreaIds: number[];
+};
+export type DungeonSummary = {
+  id: number;
+  name: string;
+  nameFr: string;
+  nameEn: string;
+  level: number;
+  minLevel: number;
+  difficulty: number;
+  status: string;
+  guideUrls?: string[];
+  bossIds: number[];
+  bossNames: string[];
+  entrance: DungeonPosition | null;
+  region: string;
+  mapIds: number[];
+  monsterIds: number[];
+  keys: { id: number; name: string; quantity: number }[];
+  achievements: {
+    id: number;
+    name: string;
+    description: string;
+    points: number;
+  }[];
+  source: string;
+  roomStatus: string;
+  strategyStatus: string;
+};
+export type ProfessionQuest = {
+  id: number;
+  name: string;
+  nameFr: string;
+  jobId: number;
+  jobName: string;
+  minJobLevel: number;
+  minCharacterLevel: number;
+  repeatType: number;
+  repeatLimit: number;
+  start: DungeonPosition | null;
+  npc: string;
+  itemId: number;
+  itemName: string;
+  quantity: number;
+  source: string;
+  guide: string;
+  regionAreaIds: number[];
+  gatheringItemId: number | null;
+  evidence: string;
+  warnings: string[];
+};
+export type DungeonVersion = {
+  source: string;
+  importedAt: string;
+  sourceSha256: string;
+  dungeons: DungeonSummary[];
+  monsters: DungeonMonster[];
+  professions: { id: number; name: string }[];
+  professionQuests: ProfessionQuest[];
+  editorial?: DungeonEditorial[];
+  report: Record<string, number>;
+};
+export type DungeonDataset = {
+  schema: 1;
+  versions: Record<string, DungeonVersion>;
+};
+export type DungeonEditorial = {
+  version: string;
+  dungeonId: number;
+  status: "draft" | "partial" | "verified";
+  mechanics: string[];
+  strategy: string[];
+  sources: { url: string; version: string; checkedAt: string }[];
+  rooms: {
+    mapId: number;
+    order: number;
+    type: "room" | "boss" | "wave";
+    players: number;
+    monsters: { id: number; count: number }[];
+  }[];
+  versionNote?: string;
+  mechanicsVerified?: boolean;
+  reviewedAt: string | null;
+};

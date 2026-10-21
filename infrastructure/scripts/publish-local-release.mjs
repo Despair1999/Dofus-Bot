@@ -16,7 +16,9 @@ const assets = [
   `game-catalog-v${version}.sqlite`,
 ];
 const notes =
-  "Neuer Ausrüstungs-Builder mit echten Items, gemeinsamen Attributfiltern, Setboni, individuellen Rolls und Exomagie, Charakter-Sets, Vergleichen und Hintergrund-Optimierer. Klassenbilder aus der bereitgestellten ZIP. Getrennte Zauberkataloge für DOFUS 3.6.12.16 und 3.7.12.12 mit lokalen Icons. Schadensvorschau für unterstützte direkte Effekte; komplexe Mechaniken werden ausdrücklich markiert. Offline-Entwürfe und Synchronisierung, JSON-Austausch und private Discord-Builder-Funktionen. Bestehende Daten und der signierte Updatekanal bleiben erhalten. Details und Grenzen: BUILDER_TEST_REPORT.md und DAMAGE_ENGINE_SPEC.md.";
+  version === "0.4.0"
+    ? await readFile("docs/RELEASE_v0.4.0.md", "utf8")
+    : "Neuer Ausrüstungs-Builder mit echten Items, gemeinsamen Attributfiltern, Setboni, individuellen Rolls und Exomagie, Charakter-Sets, Vergleichen und Hintergrund-Optimierer. Klassenbilder aus der bereitgestellten ZIP. Getrennte Zauberkataloge für DOFUS 3.6.12.16 und 3.7.12.12 mit lokalen Icons. Schadensvorschau für unterstützte direkte Effekte; komplexe Mechaniken werden ausdrücklich markiert. Offline-Entwürfe und Synchronisierung, JSON-Austausch und private Discord-Builder-Funktionen. Bestehende Daten und der signierte Updatekanal bleiben erhalten. Details und Grenzen: BUILDER_TEST_REPORT.md und DAMAGE_ENGINE_SPEC.md.";
 const signature = (
   await readFile(resolve("artifacts", installer + ".sig"), "utf8")
 ).trim();
@@ -27,10 +29,40 @@ if (
 )
   throw new Error("Missing Minisign signature");
 const nativeReport = JSON.parse(
-  await readFile("docs/native-v2-test.json", "utf8"),
+  await readFile(
+    version === "0.4.0"
+      ? "docs/native-v4-test.json"
+      : "docs/native-v2-test.json",
+    "utf8",
+  ),
 );
-if (nativeReport.passed.length < 7)
+if (nativeReport.passed.length < (version === "0.4.0" ? 4 : 7))
   throw new Error("Native release validation is incomplete");
+if (version === "0.4.0") {
+  const [signatureCheck, upgrade, guard, lifecycle] = await Promise.all(
+    [
+      "release-v4-signature-test",
+      "service-upgrade-v4-test",
+      "install-guard-v4-test",
+      "native-v4-lifecycle",
+    ].map(async (name) =>
+      JSON.parse(await readFile(`docs/${name}.json`, "utf8")),
+    ),
+  );
+  if (
+    nativeReport.version !== version ||
+    signatureCheck.version !== version ||
+    upgrade.version !== version ||
+    !signatureCheck.releaseSignatureVerified ||
+    !signatureCheck.tamperedInstallerRejected ||
+    !upgrade.serviceUpgradePassed ||
+    !guard.legacyServiceReleased ||
+    !guard.nodeExecutableReplaced ||
+    !lifecycle.backendStopped ||
+    lifecycle.workerProcessesRemaining !== 0
+  )
+    throw Error("World/translator release acceptance is incomplete");
+}
 if (version === "0.2.3") {
   const regression = JSON.parse(
     await readFile("docs/update-v0.2.3-test.json", "utf8"),

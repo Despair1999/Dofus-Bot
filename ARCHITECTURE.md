@@ -1,5 +1,13 @@
 # Architekturentscheidungen
 
+## Erweiterungen v0.4
+
+`packages/core` enthält gemeinsame Typen für Karten, Ressourcen und Dungeons sowie Dijkstra, eine Tourenheuristik und den Farmwertrechner. `world-data.json` und `dungeon-data.json` sind getrennte öffentliche Datenpakete mit Version, Herkunft und Prüfsummen; Importskripte prüfen die Originaldaten und aktivieren ihre Ausgaben atomar. Das Backend lädt sie offline, indexiert die Kartenpositionen mit SQLite-Koordinatenindizes und liefert begrenzte Viewportabfragen. Der Canvasrenderer in `WorldPage` wird unverändert im Desktop und in der Discord Activity verwendet. Kartenkoordinaten erzeugen keine impliziten Graphverbindungen.
+
+Persönliche Markierungen, gespeicherte Routen, Berufslevel, Questfortschritt und Dungeonchecklisten liegen additiv in `personal.sqlite`. Alle persönlichen GET-Endpunkte und alle Schreibzugriffe benötigen den vorhandenen Bearer-Schlüssel. Discord-Activity-Sitzungen haben davon getrennte, gehashte, ablaufende Tokens; OAuth-App und Instanzteilnahme werden serverseitig bei Discord geprüft. Eine Activity kann öffentliche Routen berechnen und ausdrücklich geteilte Kartenziele synchronisieren, aber keine privaten Companion-Profile oder Fundorte lesen. Synchronisierung nutzt versionierte Abfragen im Drei-Sekunden-Takt mit Konfliktprüfung und Wiederverbindung.
+
+Der Übersetzer verwendet einen gemeinsamen Python-JSON-Lines-Prozess mit CTranslate2/SentencePiece, begrenzter Warteschlange und Modell-LRU. Nur der ausdrückliche Installationsbefehl lädt Modelle. Übersetzungen erfolgen lokal mit zwei CPU-Threads ohne Cloudanfrage und ohne persistente Chattexte. Die Runtime wird im bestehenden Service-Verzeichnis mitgeliefert und fällt unter dessen Windows-Job-Prozessverwaltung. Modellverzeichnis und persönliche AppData bleiben außerhalb des Installationsverzeichnisses erhalten.
+
 ## Laufzeit und Grenzen
 
 pnpm-Monorepo mit TypeScript und Node.js 22.15+. React/Vite rendert dieselbe Oberfläche im Browser-Entwicklungsmodus oder im Tauri-2-Fenster. Rust stellt native Fenster-/Plugin-Funktionen bereit. Der Release-Build bündelt Node und Backend als Service-Ressourcen und startet/stoppt den Hintergrunddienst mit der Anwendung. Daten liegen im lokalen AppData-Verzeichnis; die native Oberfläche liest den lokalen Verbindungsschlüssel über einen begrenzten Rust-Befehl. Im Entwicklungsmodus liegen Backend-Daten unter `.data`. Fastify auf Port 4310 stellt eine REST-API bereit; Discord und Desktop verwenden dieselben Charakter-/Fortschrittsendpunkte und Spieldatenadapter.

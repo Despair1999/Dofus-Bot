@@ -1,0 +1,220 @@
+[
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 87,
+    "status": "partial",
+    "mechanicsVerified": true,
+    "mechanics": [
+      "Änderung in 3.7: Bereits korrumpierte Gegner werden von Vortex nicht erneut wiederbelebt. Gemeint sind Gegner, die zweimal zur gleichen Uhrzeit besiegt wurden.",
+      "Uhrzeitabhängige Vortex-Boni werden seit 3.7 beim Tod des Gegners angewendet."
+    ],
+    "strategy": [
+      "Plane die zweite Tötung eines Gegners zur gleichen Uhrzeit. Der daraus entstehende korrumpierte Gegner wird nicht wiederbelebt. Diese Notiz deckt nur die dokumentierte Änderung ab; Wellen, Uhrsteuerung und Erfolge benötigen weitere Belege."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/mise-a-jour-307.html",
+        "version": "3.7.12.12",
+        "checkedAt": "2026-10-21T18:45:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T18:45:00Z"
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 97,
+    "status": "partial",
+    "mechanicsVerified": true,
+    "mechanics": [
+      "Seit 3.7 markieren Glyphen die kommenden Monsterpositionen; beim Überfahren ist der kommende Gegnertyp sichtbar."
+    ],
+    "strategy": [
+      "Prüfe die markierten Erscheinungsfelder vor der Positionierung. Die Notiz beschreibt nur diese neue Planungshilfe und ersetzt keine vollständige Wellenstrategie."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/mise-a-jour-307.html",
+        "version": "3.7.12.12",
+        "checkedAt": "2026-10-21T18:45:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T18:45:00Z"
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 98,
+    "status": "partial",
+    "mechanicsVerified": true,
+    "mechanics": [
+      "Seit 3.7 lässt sich der Wahnsinn eines Verbündeten durch einen Treffer auf diesen Verbündeten verringern."
+    ],
+    "strategy": [
+      "Berücksichtige bei der Wahnsinnskontrolle auch einen Treffer auf den betroffenen Verbündeten. Schaden und verbleibende Lebenspunkte müssen eingeplant werden; die vollständige Bossstrategie ist noch offen."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/mise-a-jour-307.html",
+        "version": "3.7.12.12",
+        "checkedAt": "2026-10-21T18:45:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T18:45:00Z"
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 1,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "versionNote": "Quelle am 21.10.2026 gelesen; Guide ohne eindeutig belegte Patchversion. Diese Notizen sind nicht als aktuelle 3.7-Mechaniken verifiziert. Vor Nutzung mit dem In-Game-Bestiarium abgleichen.",
+    "mechanics": [
+      "Der aktuelle Guide beschreibt Heilung verbündeter Monster und einen Nahkampfbiss. Der 3.7-Datensatz enthält passende Heilungs- und Bisszauber; das beweist noch nicht sämtliche KI-Regeln."
+    ],
+    "strategy": [
+      "Halte Abstand zum Boss und konzentriere Schaden auf einzelne Begleiter, damit seine Heilung deinen Fortschritt weniger verteilt. Zahlenwerte und erreichbare Reichweiten anhand des gewählten Originalgrades prüfen."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/cour-du-bouftou-royal.html",
+        "version": "undated-guide",
+        "checkedAt": "2026-10-21T19:10:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": null
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 59,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "versionNote": "Quelle am 21.10.2026 gelesen; Guide ohne eindeutig belegte Patchversion. Diese Notizen sind nicht als aktuelle 3.7-Mechaniken verifiziert. Vor Nutzung mit dem In-Game-Bestiarium abgleichen.",
+    "mechanics": [
+      "Der verlinkte Guide beschreibt tödliche Felder auf den Startpositionen der Spieler. Korriandres Unverwundbarkeit soll verschwinden, wenn eine Sporakne ihren Zug auf einem solchen Feld beendet."
+    ],
+    "strategy": [
+      "Plane die Sporakne-Positionierung und sichere gleichzeitig freie Start- und Endfelder für Spieler. Keine ältere Anleitung ungeprüft verwenden: Der Guide beschreibt ausdrücklich eine Unverwundbarkeitsphase."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/antre-du-korriandre.html",
+        "version": "undated-guide",
+        "checkedAt": "2026-10-21T19:10:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": null
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 71,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "versionNote": "Quelle am 21.10.2026 gelesen; Guide ohne eindeutig belegte Patchversion. Diese Notizen sind nicht als aktuelle 3.7-Mechaniken verifiziert. Vor Nutzung mit dem In-Game-Bestiarium abgleichen.",
+    "mechanics": [
+      "Verwirrung lenkt Zielzauber nach einer Drehung um; der Guide unterscheidet dabei unter anderem 90 und 180 Grad. Er warnt seit Version 3.5 auch vor dem mittleren Feld der tödlichen Kreuzglyphe."
+    ],
+    "strategy": [
+      "Prüfe zu Beginn jedes Zuges die angezeigte Verwirrung und daraus folgende Zielposition. Plane Endpositionen außerhalb der künftigen Startzug-Glyphe. Die frühere Tank-Tragestrategie gilt laut Guide seit 3.5 nicht mehr."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/donjon-du-comte-harebourg.html",
+        "version": "undated-guide",
+        "checkedAt": "2026-10-21T19:10:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": null
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 69,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "versionNote": "Quelle am 21.10.2026 gelesen; Guide ohne eindeutig belegte Patchversion. Diese Notizen sind nicht als aktuelle 3.7-Mechaniken verifiziert. Vor Nutzung mit dem In-Game-Bestiarium abgleichen.",
+    "mechanics": [
+      "Laut Guide entfernt ein durch Schneeverwehung ausgelöstes Wegstoßen gegnerische Unverwundbarkeit vorübergehend. Wegstoßschaden ist zusätzlich gefährlich; eigene Bewegungen können Kettenreaktionen auslösen."
+    ],
+    "strategy": [
+      "Berechne vor jedem Schritt die verschobenen Einheiten und Hindernisse. Öffne gezielt ein Schadensfenster statt gleichzeitig mehrere unkontrollierte Stoßketten auszulösen. Die genauen Flächen und Zustandsdauern im Spiel abgleichen."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/forgefroide-de-missiz-frizz.html",
+        "version": "undated-guide",
+        "checkedAt": "2026-10-21T19:10:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": null
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 107,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "versionNote": "Quelle am 21.10.2026 gelesen; Guide ohne eindeutig belegte Patchversion. Diese Notizen sind nicht als aktuelle 3.7-Mechaniken verifiziert. Vor Nutzung mit dem In-Game-Bestiarium abgleichen.",
+    "mechanics": [
+      "Der Guide beschreibt Seitenwechsel bei 75 und 50 Prozent Lebenspunkten. Nach der zweiten verbündeten Phase endet der Kampf nach zwei überlebten Zügen. Wellen und Gruppengröße beeinflussen den Ablauf."
+    ],
+    "strategy": [
+      "Plane Schaden bis zum nächsten Schwellenwert und anschließend Schutz für die verbündete Phase. Vermeide unbeabsichtigte Heilung des Bosses. Gruppenskalierte Lebenspunkte werden hier nicht aus einem Originalgrad erfunden."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/belvedere-d-ilyzaelle.html",
+        "version": "undated-guide",
+        "checkedAt": "2026-10-21T19:10:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": null
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 76,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "versionNote": "Quelle am 21.10.2026 gelesen; Guide ohne eindeutig belegte Patchversion. Diese Notizen sind nicht als aktuelle 3.7-Mechaniken verifiziert. Vor Nutzung mit dem In-Game-Bestiarium abgleichen.",
+    "mechanics": [
+      "Der Guide beschreibt die Boubourse als eigenständigen Kämpfer: Am Schwellenwert von einem Lebenspunkt wechselt sie vorübergehend die Seite. Nidas besitzt Positionswechsel und eine verzögerte Zizanie-Flächenwirkung."
+    ],
+    "strategy": [
+      "Verfolge Boubourse-Seite und bevorstehenden Wechsel separat vom Boss. Trenne betroffene Spieler vor dem verzögerten Flächeneffekt und halte eine Ausweichposition für Positionswechsel frei."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/palais-du-roi-nidas.html",
+        "version": "undated-guide",
+        "checkedAt": "2026-10-21T19:10:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": null
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 28,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "versionNote": "Quelle am 21.10.2026 gelesen; Guide ohne eindeutig belegte Patchversion. Diese Notizen sind nicht als aktuelle 3.7-Mechaniken verifiziert. Vor Nutzung mit dem In-Game-Bestiarium abgleichen.",
+    "mechanics": [
+      "Der Guide koppelt Erde/Wasser an ungerade und Feuer/Luft an gerade Glyphenfelder relativ zum Gehilfen. Kimbo muss seinen Zug auf dem passenden Feld beginnen; Spieler können auf solchen Feldern tödlich getroffen werden."
+    ],
+    "strategy": [
+      "Einigt euch auf ein Elementpaar, bevor ihr Kimbo angreift. Prüft die Parität relativ zur tatsächlichen Gehilfenposition jedes Mal neu, weil er sich bewegen kann. Sicherheit der Spielerfelder geht vor dem nächsten Schadensfenster."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/canopeacutee-du-kimbo.html",
+        "version": "undated-guide",
+        "checkedAt": "2026-10-21T19:10:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": null
+  }
+]

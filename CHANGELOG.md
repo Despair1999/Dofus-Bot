@@ -1,5 +1,15 @@
 # Änderungen
 
+## 0.4.0 — 21.10.2026
+
+- Weltkarte mit echten Kartenpositionen, Ressourcenregionen, privaten Wegpunkten, Berufsfiltern und gespeicherten Filterauswahlen. Schematische Darstellung ohne fremde Kartenkacheln.
+- Gerichteter lokaler Routing-Teilgraph, Tourenheuristik, persönliche Farmbeobachtungen, transparente Ertragsannahmen, gespeicherte Routen und kompakte Overlaynavigation. Piocher-Routen erzwingen Bronze in Amakna.
+- Versionierte Dungeon-/Bossdaten für 3.6 und 3.7, Monstergrade, Resistenzen, Zauber, Drops, Erfolge, persönliche Vorbereitung und redaktioneller Ergänzungsworkflow. Fehlende Raumbelegungen und unbestätigte Mechaniken bleiben gekennzeichnet.
+- Alle sechs Berufsquests und pro Charakter gespeicherte Berufslevel/Fortschritte. Direkte Verknüpfungen aus Quest- und Crafting-Ansichten.
+- Zwei unabhängige lokale Übersetzerkarten mit DE/EN/FR, Clipboard, automatischer Übersetzung, Modellinstallation und mitgelieferter Windows-Inferenzruntime. Kein externer Übersetzungsdienst.
+- Discord-Karten-/Farm-/Dungeonbefehle, begrenzte PNG-Vorschauen und vorbereitete Discord Activity mit OAuth, serverseitiger Instanzprüfung und explizitem Sitzungsteilen. Hosting/Developer-Portal-Einrichtung bleiben erforderlich.
+- Bestehende Speicherdaten und Update-Verifikationsschlüssel bleiben erhalten. Umfang, echte Prüfungen und Datenlücken: V4_IMPLEMENTATION_STATUS.md und V4_TEST_REPORT.md.
+
 ## 0.3.0 — 21.10.2026
 
 - Neuer Builder mit 16 kompatiblen Ausrüstungsslots, eigener Gegenstandsauswahl, gemeinsamen numerischen Effektfiltern, dynamischen Werten und Setboni.

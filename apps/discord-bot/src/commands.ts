@@ -1,5 +1,10 @@
-import { SlashCommandBuilder } from "discord.js";
+import {
+  SlashCommandBuilder,
+  type SlashCommandSubcommandsOnlyBuilder,
+} from "discord.js";
+import { intelligenceCommands, extendDungeonCommand } from "./intelligence.js";
 export const commands = [
+  ...intelligenceCommands,
   new SlashCommandBuilder()
     .setName("builder")
     .setDescription("Persönliche Builds und Charakter-Sets")
@@ -304,4 +309,9 @@ export const commands = [
             .setRequired(true),
         ),
     ),
-].map((x) => x.toJSON());
+].map((x) =>
+  (x.name === "dungeon"
+    ? extendDungeonCommand(x as SlashCommandSubcommandsOnlyBuilder)
+    : x
+  ).toJSON(),
+);

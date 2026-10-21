@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-21T18:45:34.518Z",
+  "sources": [
+    {
+      "url": "https://www.dofuspourlesnoobs.com/donjons.html",
+      "status": 200,
+      "dungeonRows": 151,
+      "removedRows": 9,
+      "matchedRows": 124
+    },
+    {
+      "url": "https://dofus-portals.fr/donjons/",
+      "status": 200,
+      "dungeonRows": 150,
+      "removedRows": 8,
+      "matchedRows": 122
+    }
+  ],
+  "uniqueMappedDungeons": 121,
+  "note": "Directory presence does not verify activity or mechanics for a game version."
+}

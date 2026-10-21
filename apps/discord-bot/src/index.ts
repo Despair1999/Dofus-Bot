@@ -24,6 +24,8 @@ import {
 import { materials, profit } from "@dofus/core";
 import type { Quest } from "@dofus/game-data";
 import { canAccess } from "./permissions.js";
+import { intelligenceButton, intelligenceCommand } from "./intelligence.js";
+import { dungeonGroupModal } from "./dungeon-group.js";
 import {
   buildEmbed,
   buildAttachment,
@@ -70,6 +72,75 @@ const shareTimer = setInterval(() => {
 shareTimer.unref();
 client.on(Events.InteractionCreate, async (i) => {
   try {
+    if (
+      (i.isButton() && i.customId.startsWith("intel-group:")) ||
+      (i.isChatInputCommand() &&
+        i.commandName === "dungeon" &&
+        i.options.getSubcommand(false) === "gruppe")
+    ) {
+      if (
+        !i.guildId ||
+        !i.memberPermissions?.has(PermissionFlagsBits.ManageEvents)
+      )
+        throw Error(
+          "Für eine Dungeongruppe im Server benötigst du „Events verwalten“.",
+        );
+      const button = i.isButton() ? i.customId.split(":") : null;
+      const id = button
+        ? Number(button[1])
+        : i.isChatInputCommand()
+          ? i.options.getInteger("id", true)
+          : 0;
+      const version = button
+        ? button[2]
+        : i.isChatInputCommand()
+          ? (i.options.getString("version") ?? "3.7.12.12")
+          : "";
+      await i.showModal(dungeonGroupModal(id, version));
+      return;
+    }
+    if (i.isModalSubmit() && i.customId.startsWith("intel-group:")) {
+      if (
+        !i.guildId ||
+        !i.channelId ||
+        !i.channel?.isTextBased() ||
+        !("send" in i.channel) ||
+        !i.memberPermissions?.has(PermissionFlagsBits.ManageEvents)
+      )
+        throw Error(
+          "Keine Berechtigung für eine Gruppe in diesem Serverkanal.",
+        );
+      const [, id, version] = i.customId.split(":");
+      dungeonGroupModal(Number(id), version);
+      const date = i.fields.getTextInputValue("start"),
+        capacity = Number(i.fields.getTextInputValue("capacity"));
+      if (
+        !/(Z|[+-]\d{2}:\d{2})$/.test(date) ||
+        !Number.isInteger(capacity) ||
+        capacity < 1 ||
+        capacity > 8
+      )
+        throw Error("Startzeit mit Zeitzone und Spielerzahl 1–8 angeben.");
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      const dungeon = (
+        await api.request<{ data: { name: string } }>(
+          `/api/dungeons/${id}?version=${version}`,
+        )
+      ).data;
+      const group = groups.create({
+        guildId: i.guildId,
+        channelId: i.channelId,
+        ownerId: i.user.id,
+        title: `${dungeon.name} · ${version}`.slice(0, 100),
+        capacity,
+        startsAt: Date.parse(date),
+      });
+      const posted = await i.channel.send(groupMessage(group));
+      groups.attach(group.id, posted.id);
+      await i.editReply(`Gruppe erstellt: ${posted.url}`);
+      return;
+    }
+    if (i.isButton() && (await intelligenceButton(i, api))) return;
     if (i.isAutocomplete()) {
       if (i.user.id !== ownerId) {
         await i.respond([]);
@@ -217,6 +288,7 @@ client.on(Events.InteractionCreate, async (i) => {
       return;
     }
     await i.deferReply({ flags: MessageFlags.Ephemeral });
+    if (await intelligenceCommand(i, api)) return;
     if (i.commandName === "hilfe") {
       await i.editReply({
         embeds: [

@@ -1,0 +1,70 @@
+.activity-app {
+  min-height: 100vh;
+  background: #0c1712;
+  color: #dbe7de;
+  padding: 16px;
+  box-sizing: border-box;
+}
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 10px 16px;
+  border-bottom: 1px solid #31483a;
+}
+.activity-header > div,
+.activity-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.activity-header strong,
+.activity-header small {
+  display: block;
+}
+.activity-header small,
+.activity-privacy {
+  color: #a6b7aa;
+  font-size: 12px;
+}
+.activity-header svg {
+  color: #b4dd78;
+}
+.activity-identity {
+  font-size: 12px;
+}
+.activity-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #885b38;
+  border-radius: 10px;
+  background: #34291d;
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.activity-loading {
+  padding: 60px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.activity-app .world-page {
+  height: calc(100vh - 150px);
+}
+@media (max-width: 700px) {
+  .activity-app {
+    padding: 8px;
+  }
+  .activity-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .activity-error {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const resources = resolve(root, "apps/desktop/src-tauri/resources");
+await import("./bundle-translator.mjs");
 if (process.platform !== "win32" || process.arch !== "x64") {
   throw new Error(
     "Das Windows-x64-Paket benötigt einen Windows-x64-Node-Prozess. Für CI windows-latest verwenden.",
@@ -44,6 +45,12 @@ await copyFile(
   resolve(root, "packages/game-data/assets/builder-data.json"),
   resolve(resources, "builder-data.json"),
 );
+for (const file of ["world-data.json", "dungeon-data.json"]) {
+  await copyFile(
+    resolve(root, "packages/game-data/assets", file),
+    resolve(resources, file),
+  );
+}
 // Optional public catalog snapshot. It contains no account tables or credentials.
 const catalogPath = process.env.COMPANION_CATALOG_PATH;
 if (catalogPath) {

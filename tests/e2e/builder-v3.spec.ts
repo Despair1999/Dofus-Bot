@@ -1,6 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-const server = "http://127.0.0.1:4312";
-const token = "builder-e2e-only-token-000000000000000000";
+import { backend as server, token } from "./environment";
 const headers = { authorization: "Bearer " + token };
 async function setup(page: Page, path = "/builder") {
   await page.goto("/");

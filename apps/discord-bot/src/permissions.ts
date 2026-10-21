@@ -7,6 +7,11 @@ export function canAccess(
 ): boolean {
   if (command === "charakter" || command === "builder")
     return userId === ownerId;
+  if (
+    command === "farm" &&
+    ["route", "projekt", "teilen"].includes(subcommand ?? "")
+  )
+    return userId === ownerId;
   if (command === "quest" && subcommand !== "suchen" && subcommand !== "info")
     return userId === ownerId;
   return true;
