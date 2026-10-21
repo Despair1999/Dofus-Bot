@@ -55,6 +55,8 @@ export type DungeonMonster = {
   subAreaIds: number[];
 };
 export type DungeonSummary = {
+  variantOf?: number;
+  illustrationMonsterId?: number;
   id: number;
   name: string;
   nameFr: string;

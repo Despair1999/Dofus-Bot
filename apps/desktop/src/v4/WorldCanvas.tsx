@@ -4,12 +4,15 @@ import type {
   WorldMarker,
 } from "../../../../packages/core/src/world";
 
+import type { WorldArtwork } from "../gameAssets";
+
 export interface Camera {
   x: number;
   y: number;
   scale: number;
 }
 export default function WorldCanvas({
+  artwork,
   maps,
   markers,
   selected,
@@ -18,8 +21,10 @@ export default function WorldCanvas({
   camera,
   onCamera,
   onSelect,
+  onCoordinate,
   onViewport,
 }: {
+  artwork?: WorldArtwork;
   maps: WorldPosition[];
   markers: WorldMarker[];
   selected?: number;
@@ -28,6 +33,7 @@ export default function WorldCanvas({
   camera: Camera;
   onCamera: (value: Camera) => void;
   onSelect: (values: WorldPosition[]) => void;
+  onCoordinate?: (x: number, y: number) => void;
   onViewport: (bounds: {
     minX: number;
     maxX: number;
@@ -36,6 +42,29 @@ export default function WorldCanvas({
   }) => void;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const [background, setBackground] = useState<HTMLImageElement | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const aspect = artwork?.aspect ?? 1;
+  const [showGrid, setShowGrid] = useState(false);
+  useEffect(() => {
+    setBackground(null);
+    setImageError(false);
+    if (!artwork) return;
+    let active = true;
+    const img = new Image();
+    img.onload = () => {
+      if (active) setBackground(img);
+    };
+    img.onerror = () => {
+      if (active) setImageError(true);
+    };
+    img.src = artwork.url;
+    return () => {
+      active = false;
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [artwork]);
   const drag = useRef<{
     x: number;
     y: number;
@@ -58,15 +87,23 @@ export default function WorldCanvas({
     const timeout = setTimeout(
       () =>
         onViewport({
-          minX: Math.floor(camera.x - size.width / camera.scale / 2 - 1),
-          maxX: Math.ceil(camera.x + size.width / camera.scale / 2 + 1),
-          minY: Math.floor(camera.y - size.height / camera.scale / 2 - 1),
-          maxY: Math.ceil(camera.y + size.height / camera.scale / 2 + 1),
+          minX: Math.floor(
+            camera.x - size.width / (camera.scale * aspect) / 2 - 1,
+          ),
+          maxX: Math.ceil(
+            camera.x + size.width / (camera.scale * aspect) / 2 + 1,
+          ),
+          minY: Math.floor(
+            camera.y - size.height / (camera.scale * aspect) / 2 - 1,
+          ),
+          maxY: Math.ceil(
+            camera.y + size.height / (camera.scale * aspect) / 2 + 1,
+          ),
         }),
       160,
     );
     return () => clearTimeout(timeout);
-  }, [camera, size, onViewport]);
+  }, [camera, size, aspect, onViewport]);
   useEffect(() => {
     const node = canvas.current;
     if (!node) return;
@@ -79,7 +116,7 @@ export default function WorldCanvas({
     const { width: w, height: h } = size;
     const project = (x: number, y: number) => [
       (x - camera.x) * camera.scale + w / 2,
-      (y - camera.y) * camera.scale + h / 2,
+      (y - camera.y) * camera.scale * aspect + h / 2,
     ];
     ctx.fillStyle = "#101f1b";
     ctx.fillRect(0, 0, w, h);
@@ -95,36 +132,50 @@ export default function WorldCanvas({
     gradient.addColorStop(1, "#0c1815");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
+    if (background && artwork) {
+      const [left, top] = project(artwork.x, artwork.y);
+      ctx.drawImage(
+        background,
+        left,
+        top,
+        artwork.width * camera.scale,
+        artwork.height * camera.scale * aspect,
+      );
+    }
     const grid = camera.scale < 10 ? 10 : camera.scale < 20 ? 5 : 1;
     ctx.font = "10px system-ui";
-    for (
-      let x = Math.floor((camera.x - w / camera.scale / 2) / grid) * grid;
-      x <= camera.x + w / camera.scale / 2;
-      x += grid
-    ) {
-      const [px] = project(x, 0);
-      ctx.strokeStyle = "#84ae7a15";
-      ctx.beginPath();
-      ctx.moveTo(px, 0);
-      ctx.lineTo(px, h);
-      ctx.stroke();
-      ctx.fillStyle = "#94ad9370";
-      ctx.fillText(String(x), px + 4, 18);
-    }
-    for (
-      let y = Math.floor((camera.y - h / camera.scale / 2) / grid) * grid;
-      y <= camera.y + h / camera.scale / 2;
-      y += grid
-    ) {
-      const [, py] = project(0, y);
-      ctx.strokeStyle = "#84ae7a15";
-      ctx.beginPath();
-      ctx.moveTo(0, py);
-      ctx.lineTo(w, py);
-      ctx.stroke();
-      ctx.fillStyle = "#94ad9370";
-      ctx.fillText(String(y), 7, py - 4);
-    }
+    if (showGrid)
+      for (
+        let x = Math.floor((camera.x - w / camera.scale / 2) / grid) * grid;
+        x <= camera.x + w / camera.scale / 2;
+        x += grid
+      ) {
+        const [px] = project(x, 0);
+        ctx.strokeStyle = background ? "#15281733" : "#84ae7a15";
+        ctx.beginPath();
+        ctx.moveTo(px, 0);
+        ctx.lineTo(px, h);
+        ctx.stroke();
+        ctx.fillStyle = background ? "#182b20cc" : "#94ad9370";
+        ctx.fillText(String(x), px + 4, 18);
+      }
+    if (showGrid)
+      for (
+        let y =
+          Math.floor((camera.y - h / (camera.scale * aspect) / 2) / grid) *
+          grid;
+        y <= camera.y + h / (camera.scale * aspect) / 2;
+        y += grid
+      ) {
+        const [, py] = project(0, y);
+        ctx.strokeStyle = background ? "#15281733" : "#84ae7a15";
+        ctx.beginPath();
+        ctx.moveTo(0, py);
+        ctx.lineTo(w, py);
+        ctx.stroke();
+        ctx.fillStyle = background ? "#182b20cc" : "#94ad9370";
+        ctx.fillText(String(y), 7, py - 4);
+      }
     const regions = new Set(highlightedRegions),
       cells = new Map<
         string,
@@ -147,10 +198,14 @@ export default function WorldCanvas({
         });
     }
     for (const cell of cells.values()) {
-      ctx.fillStyle = cell.highlighted ? "#9cc65b48" : "#6585752c";
+      ctx.fillStyle = cell.highlighted
+        ? "#9cc65b48"
+        : background
+          ? "#ffffff00"
+          : "#6585752c";
       const side = Math.max(4, Math.min(22, camera.scale * 0.8));
       ctx.fillRect(cell.x - side / 2, cell.y - side / 2, side, side);
-      if (camera.scale > 16) {
+      if (camera.scale > 32 && !background) {
         ctx.fillStyle = cell.highlighted ? "#bce779" : "#91ab8f80";
         ctx.beginPath();
         ctx.arc(cell.x, cell.y, 1.5, 0, Math.PI * 2);
@@ -186,24 +241,50 @@ export default function WorldCanvas({
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-    if (selected) {
+    if (selected !== undefined) {
       const map = byId.get(selected);
       if (map) {
         const [x, y] = project(map.x, map.y);
-        ctx.strokeStyle = "#e4f7b1";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x - 11, y - 11, 22, 22);
-        ctx.fillStyle = "#ecf6d1";
-        ctx.font = "bold 12px system-ui";
-        ctx.fillText(`[${map.x}, ${map.y}]`, x + 18, y - 12);
+        ctx.fillStyle = "#13201b";
+        ctx.beginPath();
+        ctx.arc(x, y, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = "#ef7869";
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        const label = `[${map.x}, ${map.y}]`;
+        ctx.font = "bold 13px system-ui";
+        const textWidth = ctx.measureText(label).width;
+        ctx.fillStyle = "#13201bf0";
+        ctx.fillRect(x + 16, y - 27, textWidth + 14, 25);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(label, x + 23, y - 10);
       }
     }
-  }, [maps, markers, selected, routeIds, highlightedRegions, camera, size]);
+  }, [
+    maps,
+    markers,
+    selected,
+    routeIds,
+    highlightedRegions,
+    camera,
+    size,
+    background,
+    showGrid,
+    artwork,
+    aspect,
+  ]);
   function position(clientX: number, clientY: number) {
     const rect = canvas.current!.getBoundingClientRect();
     return {
       x: (clientX - rect.left - size.width / 2) / camera.scale + camera.x,
-      y: (clientY - rect.top - size.height / 2) / camera.scale + camera.y,
+      y:
+        (clientY - rect.top - size.height / 2) / (camera.scale * aspect) +
+        camera.y,
     };
   }
   function zoom(factor: number, px?: number, py?: number) {
@@ -216,7 +297,7 @@ export default function WorldCanvas({
       rect = canvas.current!.getBoundingClientRect();
     onCamera({
       x: old.x - (px - rect.left - size.width / 2) / scale,
-      y: old.y - (py - rect.top - size.height / 2) / scale,
+      y: old.y - (py - rect.top - size.height / 2) / (scale * aspect),
       scale,
     });
   }
@@ -224,7 +305,10 @@ export default function WorldCanvas({
     <div className="world-stage">
       <canvas
         ref={canvas}
-        aria-label="Interaktive schematische DOFUS-Weltkarte"
+        aria-label="Interaktive DOFUS-Weltkarte mit Originalkarten"
+        data-background={
+          background ? "loaded" : imageError ? "error" : "loading"
+        }
         tabIndex={0}
         onKeyDown={(e) => {
           const step = 100 / camera.scale;
@@ -277,7 +361,7 @@ export default function WorldCanvas({
             onCamera({
               ...d.original,
               x: d.original.x - (e.clientX - d.x) / d.original.scale,
-              y: d.original.y - (e.clientY - d.y) / d.original.scale,
+              y: d.original.y - (e.clientY - d.y) / (d.original.scale * aspect),
             });
         }}
         onPointerCancel={() => {
@@ -291,7 +375,8 @@ export default function WorldCanvas({
                 Math.abs(m.x - p.x) < Math.max(0.5, 8 / camera.scale) &&
                 Math.abs(m.y - p.y) < Math.max(0.5, 8 / camera.scale),
             );
-            if (found.length) onSelect(found);
+            if (onCoordinate) onCoordinate(Math.round(p.x), Math.round(p.y));
+            else if (found.length) onSelect(found);
           }
           drag.current = null;
         }}
@@ -299,9 +384,24 @@ export default function WorldCanvas({
       <div className="world-map-label">
         <span className="eyebrow">ATLAS DER ZWÖLF</span>
         <strong>Jede Karte. Ein neues Ziel.</strong>
-        <small>Schematische Ansicht · echte Kartenpositionen</small>
+        <small>
+          {background
+            ? "Originalkarte · lokal verfügbar"
+            : imageError
+              ? "Kartenbild konnte nicht geladen werden"
+              : artwork
+                ? "Originalkarte wird geladen …"
+                : "Für diese Ebene liegt kein Kartenbild vor"}
+        </small>
       </div>
       <div className="world-map-controls">
+        <button
+          aria-label="Koordinatenraster"
+          aria-pressed={showGrid}
+          onClick={() => setShowGrid((v) => !v)}
+        >
+          ▦
+        </button>
         <button aria-label="Vergrößern" onClick={() => zoom(1.4)}>
           ＋
         </button>
@@ -310,7 +410,23 @@ export default function WorldCanvas({
         </button>
         <button
           aria-label="Ansicht zurücksetzen"
-          onClick={() => onCamera({ x: 0, y: 0, scale: 20 })}
+          onClick={() =>
+            onCamera(
+              artwork
+                ? {
+                    x: artwork.x + artwork.width / 2,
+                    y: artwork.y + artwork.height / 2,
+                    scale: Math.max(
+                      3,
+                      Math.min(
+                        size.width / artwork.width,
+                        size.height / (artwork.height * aspect),
+                      ) * 0.92,
+                    ),
+                  }
+                : { x: 0, y: 0, scale: 20 },
+            )
+          }
         >
           ⌖
         </button>

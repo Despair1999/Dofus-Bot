@@ -7,7 +7,6 @@ import {
   Search,
   Shield,
   Star,
-  Swords,
 } from "lucide-react";
 import type {
   Character,
@@ -20,6 +19,9 @@ import { api, type Config } from "../client";
 import { request, message } from "../v2/shared/request";
 import { navigatePath, useRoute } from "../v2/routing";
 import "./dungeons.css";
+import CombatBriefing from "./CombatBriefing";
+import ItemImage from "../v2/shared/ItemImage";
+import { useGameAssets } from "../gameAssets";
 
 type Detail = DungeonSummary & {
   version: string;
@@ -66,14 +68,33 @@ const tabs = [
   "Drops",
   "Quellen",
 ];
+function MonsterImage({
+  id,
+  name,
+  size = 64,
+}: {
+  id?: number;
+  name: string;
+  size?: number;
+}) {
+  const assets = useGameAssets();
+  return (
+    <ItemImage
+      url={id ? assets?.monsters[String(id)] : undefined}
+      name={name}
+      size={size}
+    />
+  );
+}
 function MonsterCard({ monster }: { monster: DungeonMonster }) {
+  const assets = useGameAssets();
   const [grade, setGrade] = useState(0),
     g = monster.grades[grade];
   return (
     <article className="dungeon-monster">
       <header>
         <span className="dungeon-emblem">
-          <Swords size={23} />
+          <MonsterImage id={monster.id} name={monster.name} size={80} />
         </span>
         <div>
           <h3>{monster.name}</h3>
@@ -113,6 +134,11 @@ function MonsterCard({ monster }: { monster: DungeonMonster }) {
         <summary>{monster.spells.length} zugeordnete Zauber</summary>
         {monster.spells.map((s) => (
           <div className="dungeon-spell" key={s.id}>
+            <ItemImage
+              url={assets?.spells?.[String(s.iconId)]}
+              name={s.name}
+              size={36}
+            />
             <b>{s.name}</b>
             <p>
               {s.description || "Kein übersetzter Beschreibungstext vorhanden."}
@@ -129,7 +155,7 @@ function MonsterCard({ monster }: { monster: DungeonMonster }) {
       </details>
       <small>
         Originalgrade sind keine verifizierten Skalierungen nach Gruppengröße.
-        Bild noch nicht lokal freigegeben.
+        Illustration aus dem Bildarchiv 3.7.12.12.
       </small>
     </article>
   );
@@ -143,6 +169,7 @@ export default function DungeonsPage({
   onNavigate?: (path: string) => void;
 }) {
   const route = useRoute();
+  const [category, setCategory] = useState("classic");
   const [version, setVersion] = useState("3.7.12.12"),
     [q, setQ] = useState(""),
     [min, setMin] = useState(0),
@@ -172,7 +199,7 @@ export default function DungeonsPage({
     const timer = setTimeout(() => {
       setLoading(true);
       request<DungeonSummary[]>(
-        `/api/dungeons?version=${version}&q=${encodeURIComponent(q)}&minLevel=${min}&maxLevel=${max}&page=${page}&pageSize=30`,
+        `/api/dungeons?version=${version}&q=${encodeURIComponent(q)}&minLevel=${min}&maxLevel=${max}&page=${page}&pageSize=30&category=${category}`,
         config,
         controller.signal,
       )
@@ -192,7 +219,7 @@ export default function DungeonsPage({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [config, version, q, min, max, page]);
+  }, [config, version, q, min, max, page, category]);
   useEffect(() => {
     const c = new AbortController();
     request<Record<string, number | string>>(
@@ -349,7 +376,7 @@ export default function DungeonsPage({
           ["Katalogeinträge", report.catalogDungeons],
           ["Bossmonster", report.uniqueBosses],
           ["Monster", report.monsters],
-          ["Geprüfte Strategien", report.verifiedStrategies],
+          ["Leitfäden mit Quellen", report.sourcedStrategies],
         ].map(([label, value]) => (
           <div key={label}>
             <b>{value ?? "–"}</b>
@@ -359,6 +386,21 @@ export default function DungeonsPage({
       </div>
       <div className="dungeon-layout">
         <aside className="dungeon-list">
+          <label>
+            Dungeon-Kategorie
+            <select
+              aria-label="Dungeon-Kategorie"
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="classic">Klassische Dungeons</option>
+              <option value="expedition">Expeditionen</option>
+              <option value="all">Alle Katalogeinträge</option>
+            </select>
+          </label>
           <label className="dungeon-search">
             <Search size={17} />
             <input
@@ -416,7 +458,11 @@ export default function DungeonsPage({
               }}
             >
               <span className="dungeon-emblem">
-                <Castle size={22} />
+                <MonsterImage
+                  id={d.illustrationMonsterId ?? d.bossIds[0]}
+                  name={d.bossNames[0] || d.name}
+                  size={56}
+                />
               </span>
               <span>
                 <b>{d.name}</b>
@@ -469,7 +515,11 @@ export default function DungeonsPage({
             <>
               <header className="dungeon-detail-heading">
                 <span className="dungeon-emblem large">
-                  <Castle size={42} />
+                  <MonsterImage
+                    id={detail.illustrationMonsterId ?? detail.bossIds[0]}
+                    name={detail.bossNames[0] || detail.name}
+                    size={112}
+                  />
                 </span>
                 <div>
                   <span className="eyebrow">
@@ -488,6 +538,13 @@ export default function DungeonsPage({
                   </small>
                 </div>
               </header>
+              {detail.variantOf && (
+                <p className="dungeon-notice">
+                  Expeditionsvariante · Illustration und verlinkte Basisguides
+                  stammen vom klassischen Dungeon. Zusätzliche Expeditionsregeln
+                  im Spiel prüfen.
+                </p>
+              )}
               <div className="dungeon-actions">
                 <button
                   disabled={!detail.entrance}
@@ -538,6 +595,16 @@ export default function DungeonsPage({
                       <h3>Zugang</h3>
                       <p>Mindeststufe laut Katalog: {detail.minLevel}</p>
                       <p>{detail.entrance?.subAreaName || detail.region}</p>
+                      <div className="dungeon-key-images">
+                        {detail.keys.map((key) => (
+                          <ItemImage
+                            key={key.id}
+                            itemId={key.id}
+                            name={key.name}
+                            size={40}
+                          />
+                        ))}
+                      </div>
                       <p>
                         {detail.keys.length
                           ? detail.keys
@@ -648,6 +715,18 @@ export default function DungeonsPage({
               )}
               {(tab === "Bossmechaniken" || tab === "Strategie") && (
                 <div>
+                  {tab === "Strategie" && (
+                    <CombatBriefing
+                      monsters={detail.monsters.filter((m) =>
+                        detail.bossIds.includes(m.id),
+                      )}
+                    />
+                  )}
+                  <h3>
+                    {tab === "Bossmechaniken"
+                      ? "Besondere Mechaniken"
+                      : "Leitfaden & Vorgehen"}
+                  </h3>
                   {detail.editorial.versionNote && (
                     <p className="dungeon-notice">
                       {detail.editorial.versionNote}
@@ -655,10 +734,8 @@ export default function DungeonsPage({
                   )}
                   {detail.editorial.status !== "verified" && (
                     <p className="dungeon-notice">
-                      Dieser Leitfaden ist noch unvollständig. Einzelne belegte
-                      Mechaniken sind im Quellenreiter dokumentiert. Automatisch
-                      importierte Zauberwerte ersetzen keine geprüfte
-                      Bossmechanik.
+                      Quellenbasierte Hinweise sind mit Prüfdatum dokumentiert.
+                      Eine vollständige Prüfung für diesen Patch steht noch aus.
                     </p>
                   )}
                   {(tab === "Bossmechaniken"
@@ -675,11 +752,21 @@ export default function DungeonsPage({
                     </ol>
                   ) : (
                     <p>
-                      Für diesen Boss liegt noch kein belegter deutschsprachiger
-                      Eintrag vor. Nutze das verlinkte Guideverzeichnis und
-                      prüfe dessen Spielversion.
+                      Der Kampfplan oben zeigt die Originalwerte dieses
+                      Datenstands. Für spezielle Zustandsauslöser und
+                      Erfolgswege nutze den verlinkten Detailguide.
                     </p>
                   )}
+                  <div className="dungeon-guide-links">
+                    {detail.guideUrls?.map((url) => (
+                      <a key={url} href={url} target="_blank" rel="noreferrer">
+                        {url.includes("dofuspourlesnoobs")
+                          ? "Dofus pour les Noobs – vollständiger Guide"
+                          : "Weiterer Detailguide"}{" "}
+                        ↗
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
               {tab === "Vorbereitung" && (
@@ -838,6 +925,7 @@ export default function DungeonsPage({
                         <div className="dungeon-drop-list">
                           {m.drops.map((d, i) => (
                             <article key={`${d.itemId}-${i}`}>
+                              <ItemImage iconId={d.iconId} name={d.name} />
                               <a
                                 onClick={(e) => {
                                   e.preventDefault();

@@ -25,6 +25,7 @@ import { read, write } from "../storage";
 import WorldCanvas, { type Camera } from "./WorldCanvas";
 import ItemImage from "../v2/shared/ItemImage";
 import "./world.css";
+import { useGameAssets } from "../gameAssets";
 const finiteNumber = (value: unknown, fallback = 0) =>
   Number.isFinite(Number(value)) ? Number(value) : fallback;
 
@@ -49,9 +50,10 @@ export default function WorldPage({
   onShare?: (state: ShareState) => Promise<void>;
   characterId?: string;
 }) {
+  const assets = useGameAssets();
   const params = new URLSearchParams(location.hash.split("?")[1] ?? "");
   const [worlds, setWorlds] = useState<WorldMap[]>([]),
-    [worldId, setWorldId] = useState(33);
+    [worldId, setWorldId] = useState(1);
   const [maps, setMaps] = useState<WorldPosition[]>([]),
     [routeMaps, setRouteMaps] = useState<WorldPosition[]>([]),
     [resources, setResources] = useState<GatherableResource[]>([]);
@@ -112,6 +114,24 @@ export default function WorldPage({
     [presetName, setPresetName] = useState("");
   const [viewportTotal, setViewportTotal] = useState(0);
   const root = useRef<HTMLDivElement>(null);
+  function fitWorld(id: number) {
+    const art = assets?.worlds[String(id)];
+    if (!art) return { x: 0, y: 0, scale: 15 };
+    const width = root.current?.querySelector("canvas")?.clientWidth || 700;
+    return {
+      x: art.x + art.width / 2,
+      y: art.y + art.height / 2,
+      scale: Math.max(
+        3,
+        Math.min(width / art.width, 650 / (art.height * art.aspect)) * 0.92,
+      ),
+    };
+  }
+  useEffect(() => {
+    if (assets && !params.has("mapId") && !params.has("x") && !sharedState)
+      setCamera(fitWorld(worldId));
+    // The initial atlas view is fitted only when the artwork first becomes available.
+  }, [assets]);
   const onViewport = useCallback(
     (value: typeof bounds) => setBounds(value),
     [],
@@ -186,8 +206,9 @@ export default function WorldPage({
               .map((resource) => resource.id),
           );
         setVersion(w.version ?? r.version ?? "");
-        if (w.data.length && !w.data.some((v) => v.id === worldId))
-          setWorldId(w.data[0].id);
+        setWorldId((current) =>
+          w.data.some((v) => v.id === current) ? current : (w.data[0]?.id ?? 1),
+        );
       })
       .catch((e) => {
         if (!c.signal.aborted) setError(message(e));
@@ -276,13 +297,27 @@ export default function WorldPage({
   }, [query, config]);
   useEffect(() => {
     const id = params.get("mapId");
-    if (!id || !/^\d+$/.test(id)) return;
+    const coordinates = params.has("x") && params.has("y");
+    if ((!id || !/^\d+$/.test(id)) && !coordinates) return;
     const c = new AbortController();
-    void request<WorldPosition>(`/api/world/maps/${id}`, config, c.signal)
+    const path =
+      id && /^\d+$/.test(id)
+        ? `/api/world/maps/${id}`
+        : `/api/world/maps?worldId=${params.get("worldId") || 1}&minX=${finiteNumber(params.get("x"))}&maxX=${finiteNumber(params.get("x"))}&minY=${finiteNumber(params.get("y"))}&maxY=${finiteNumber(params.get("y"))}&limit=200`;
+    void request<WorldPosition | WorldPosition[]>(path, config, c.signal)
       .then((r) => {
-        setSelected(r.data);
-        setWorldId(r.data.worldId);
-        setCamera({ x: r.data.x, y: r.data.y, scale: 28 });
+        const values = Array.isArray(r.data) ? r.data : [r.data];
+        const map = values.find((m) => !m.interior) ?? values[0];
+        if (!map) {
+          setNotice(
+            "Für diese Koordinate ist keine Karte im Datenstand vorhanden.",
+          );
+          return;
+        }
+        setChoices(values);
+        setSelected(map);
+        setWorldId(map.worldId);
+        setCamera({ x: map.x, y: map.y, scale: 40 });
       })
       .catch((e) => {
         if (!c.signal.aborted) setError(message(e));
@@ -473,7 +508,8 @@ export default function WorldPage({
             onChange={(e) => {
               setWorldId(Number(e.target.value));
               setSelected(null);
-              setCamera({ x: 0, y: 0, scale: 15 });
+              setChoices([]);
+              setCamera(fitWorld(Number(e.target.value)));
             }}
           >
             {worlds.map((w) => (
@@ -776,6 +812,22 @@ export default function WorldPage({
           </aside>
         )}
         <WorldCanvas
+          onCoordinate={(x, y) => {
+            void run(async () => {
+              const result = await request<WorldPosition[]>(
+                `/api/world/maps?worldId=${worldId}&minX=${x}&maxX=${x}&minY=${y}&maxY=${y}&limit=5000`,
+                config,
+              );
+              setChoices(result.data);
+              if (result.data.length)
+                choose(result.data.find((m) => !m.interior) ?? result.data[0]);
+              else
+                setNotice(
+                  `Für [${x}, ${y}] ist keine Karte im Datenstand vorhanden.`,
+                );
+            });
+          }}
+          artwork={assets?.worlds[String(worldId)]}
           maps={displayedMaps}
           markers={showMarkers ? markers : []}
           selected={selected?.id}
@@ -802,7 +854,8 @@ export default function WorldPage({
                 {selected.areaName}
               </p>
               <small>
-                Map-ID {selected.id} · Welt {selected.worldId}
+                Map-ID {selected.id} {selected.interior ? "· Innenkarte" : ""} ·
+                Welt {selected.worldId}
               </small>
               {choices.length > 1 && (
                 <label>

@@ -7,6 +7,8 @@ export interface WorldMap {
   maxScale: number;
 }
 export interface WorldPosition {
+  sourceWorldId?: number;
+  interior?: boolean;
   id: number;
   x: number;
   y: number;

@@ -15,14 +15,14 @@ test("world map searches real coordinates, distinguishes duplicate map IDs and s
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await setup(page);
-  await expect(page.getByLabel("Weltkarte", { exact: true })).toHaveValue("33");
+  await expect(page.getByLabel("Weltkarte", { exact: true })).toHaveValue("1");
   await page.getByLabel("Weltkarte", { exact: true }).selectOption("1");
   await page.getByLabel("Karten suchen").fill("[7,-5]");
   await expect
     .poll(() => page.locator(".world-results button").count())
     .toBeGreaterThanOrEqual(2);
   await page.locator(".world-results button").first().click();
-  const canvas = page.getByLabel("Interaktive schematische DOFUS-Weltkarte");
+  const canvas = page.getByLabel("Interaktive DOFUS-Weltkarte mit Originalkarten");
   await expect(canvas).toBeVisible();
   const bounds = await canvas.boundingBox();
   await canvas.click({

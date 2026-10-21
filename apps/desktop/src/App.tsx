@@ -75,6 +75,7 @@ import DungeonsPage from "./v4/DungeonsPage";
 import ProfessionsPage from "./v4/ProfessionsPage";
 import TranslatorPanel from "./v4/translator/TranslatorPanel";
 import { useRoute, navigatePath, type View } from "./v2/routing";
+import { AppearanceSettings } from "./appearance";
 import appPackage from "../package.json";
 import type { OverlaySnapshot } from "./v2/overlay/model";
 import "./v2/v2.css";
@@ -108,6 +109,10 @@ export default function App() {
   return isOverlayWindow() ? <OverlayView /> : <MainApp />;
 }
 function MainApp() {
+  const [toolsOpen, setToolsOpen] = useState(false);
+  useEffect(() => {
+    void read("navigation:tools-open", false).then(setToolsOpen);
+  }, []);
   const [navigation, setNavigation] = useState<OverlaySnapshot["navigation"]>();
   useEffect(() => {
     let mounted = true;
@@ -731,18 +736,77 @@ function MainApp() {
           <div className="workspace">
             <span className="status-dot" /> DEIN ABENTEUER. DEIN COMPANION.
           </div>
-          <nav>
-            {tabs.map((entry) => (
-              <button
-                key={entry.id}
-                className={`nav ${tab === entry.id ? "active" : ""}`}
-                onClick={() => navigate(entry.id)}
-              >
-                <entry.icon size={19} />
-                {entry.label}
-                {entry.id === "scanner" && <span className="nav-tag">OCR</span>}
-              </button>
-            ))}
+          <nav aria-label="Hauptnavigation">
+            {tabs
+              .filter((e) => e.id === "dashboard")
+              .map((entry) => (
+                <button
+                  key={entry.id}
+                  className={`nav ${tab === entry.id ? "active" : ""}`}
+                  onClick={() => navigate(entry.id)}
+                >
+                  <entry.icon size={19} />
+                  {entry.label}
+                </button>
+              ))}
+            <button
+              className={`nav tools-toggle ${!["dashboard", "characters", "almanax", "favorites", "settings"].includes(tab) ? "active" : ""}`}
+              aria-expanded={toolsOpen}
+              aria-controls="tools-navigation"
+              onClick={() => {
+                const next = !toolsOpen;
+                setToolsOpen(next);
+                void write("navigation:tools-open", next);
+              }}
+            >
+              <Layers size={19} />
+              Tools
+              <ChevronRight size={16} />
+            </button>
+            {toolsOpen && (
+              <div id="tools-navigation" className="tools-links">
+                {tabs
+                  .filter(
+                    (e) =>
+                      ![
+                        "dashboard",
+                        "characters",
+                        "almanax",
+                        "favorites",
+                        "settings",
+                      ].includes(e.id),
+                  )
+                  .map((entry) => (
+                    <button
+                      key={entry.id}
+                      className={`nav ${tab === entry.id ? "active" : ""}`}
+                      onClick={() => navigate(entry.id)}
+                    >
+                      <entry.icon size={17} />
+                      {entry.label}
+                      {entry.id === "scanner" && (
+                        <span className="nav-tag">OCR</span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            )}
+            {tabs
+              .filter((e) =>
+                ["characters", "almanax", "favorites", "settings"].includes(
+                  e.id,
+                ),
+              )
+              .map((entry) => (
+                <button
+                  key={entry.id}
+                  className={`nav ${tab === entry.id ? "active" : ""}`}
+                  onClick={() => navigate(entry.id)}
+                >
+                  <entry.icon size={19} />
+                  {entry.label}
+                </button>
+              ))}
           </nav>
           <div className="sidebar-bottom">
             <div className="safe">
@@ -835,7 +899,7 @@ function MainApp() {
               ))}
             </div>
           )}
-          {tab !== "builder" && (
+          {!["builder", "dungeons", "professions"].includes(tab) && (
             <div className="page-heading">
               <div>
                 <span className="eyebrow">
@@ -1351,6 +1415,7 @@ function MainApp() {
           )}
           {tab === "settings" && (
             <>
+              <AppearanceSettings />
               <UpdatePanel />
               <CatalogPanel
                 config={config}

@@ -1,0 +1,30 @@
+{
+  "tag_name": "v6.0_3.7.12.12",
+  "html_url": "https://github.com/ledouxm/dofus-sqlite/releases/tag/v6.0_3.7.12.12",
+  "assets": [
+    {
+      "name": "images-item.zip",
+      "size": 234665373,
+      "digest": "sha256:44c380df2765a2c99d2969ea5d7964a63b0aef4ef1a430214f7e0579bd854886",
+      "browser_download_url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.7.12.12/images-item.zip"
+    },
+    {
+      "name": "images-monster.zip",
+      "size": 42738610,
+      "digest": "sha256:0498686137b53dfd14bd1534adf7392d3e7ec721724c2f4d64548eb07454cf54",
+      "browser_download_url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.7.12.12/images-monster.zip"
+    },
+    {
+      "name": "images-spell.zip",
+      "size": 49728771,
+      "digest": "sha256:385f79e8e30d431631dd78820d3da0ea885d9edd013d153bffc3b57ac342711b",
+      "browser_download_url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.7.12.12/images-spell.zip"
+    },
+    {
+      "name": "images-worldmap.zip",
+      "size": 75734890,
+      "digest": "sha256:adea08bb9d615a528c30559efc0e11fadec6573545a302804879bfd46db32e55",
+      "browser_download_url": "https://github.com/ledouxm/dofus-sqlite/releases/download/v6.0_3.7.12.12/images-worldmap.zip"
+    }
+  ]
+}

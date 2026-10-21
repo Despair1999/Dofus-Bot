@@ -28,7 +28,7 @@
   flex-direction: row;
   gap: 9px;
   font-size: 12px;
-  color: #a7bc99;
+  color: var(--muted);
 }
 .v2-craft-toolbar select {
   font-size: 11px;
@@ -42,7 +42,7 @@
 .v2-craft-table th {
   white-space: nowrap;
   font-size: 10px;
-  color: #9cb38a;
+  color: var(--muted);
   letter-spacing: 0.4px;
   padding: 15px 10px;
 }
@@ -56,7 +56,7 @@
 }
 .v2-material-link {
   background: transparent;
-  color: #cddfc1;
+  color: var(--green);
   padding: 0;
   text-align: left;
   justify-content: flex-start;
@@ -78,13 +78,13 @@
   margin-top: 5px;
 }
 .v2-material-link > svg {
-  color: #93b076;
+  color: var(--green);
 }
 .v2-missing {
   color: #e5cf9b;
 }
 .v2-complete {
-  color: #b0d48a;
+  color: var(--green);
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -101,8 +101,8 @@
   margin: 27px 0;
 }
 .v2-craft-metric {
-  border: 1px solid #3a4e34;
-  background: #1c2d22;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
   padding: 18px;
   border-radius: 9px;
 }
@@ -111,7 +111,7 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: #a8bf95;
+  color: var(--muted);
 }
 .v2-craft-metric strong {
   display: block;
@@ -123,14 +123,14 @@
 .v2-craft-metric span {
   font-size: 10px;
   line-height: 1.6;
-  color: #859c7c;
+  color: var(--muted);
   display: block;
 }
 .v2-project-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #33432f;
+  border-bottom: 1px solid var(--border);
   padding: 13px 0;
   gap: 15px;
 }
@@ -139,7 +139,7 @@
   align-items: flex-start;
   flex-direction: column;
   background: transparent;
-  color: #c6dcb6;
+  color: var(--green);
   padding: 0;
   text-align: left;
   font-size: 13px;

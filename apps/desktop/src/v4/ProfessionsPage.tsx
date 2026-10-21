@@ -9,6 +9,7 @@ import { api, type Config } from "../client";
 import { request, message } from "../v2/shared/request";
 import { navigatePath } from "../v2/routing";
 import "./dungeons.css";
+import ItemImage from "../v2/shared/ItemImage";
 type Personal = {
   levels: { jobId: number; level: number }[];
   quests: {
@@ -50,7 +51,9 @@ export default function ProfessionsPage({
       config,
       c.signal,
     )
-      .then((r) => setAvailable(r.data))
+      .then((r) =>
+        setAvailable([...new Map(r.data.map((v) => [v.itemId, v])).values()]),
+      )
       .catch((e) => {
         if (!c.signal.aborted) setError(message(e));
       });
@@ -233,7 +236,10 @@ export default function ProfessionsPage({
         <div className="dungeon-drop-list">
           {available.map((r) => (
             <article key={r.id}>
-              <b>{r.name}</b>
+              <div className="resource-title">
+                <ItemImage iconId={r.iconId} name={r.name} size={52} />
+                <h3>{r.name}</h3>
+              </div>
               <small>
                 Ab Stufe {r.level} · {r.regions.length} bekannte Untergebiete
               </small>
@@ -262,7 +268,10 @@ export default function ProfessionsPage({
               <span className="eyebrow">
                 {q.jobName.toUpperCase()} · QUEST #{q.id}
               </span>
-              <h3>{q.name}</h3>
+              <div className="resource-title">
+                <ItemImage itemId={q.itemId} name={q.itemName} size={56} />
+                <h3>{q.name}</h3>
+              </div>
               <small>{q.nameFr}</small>
               <p>
                 <strong>

@@ -1,7 +1,7 @@
 .activity-app {
   min-height: 100vh;
-  background: #0c1712;
-  color: #dbe7de;
+  background: var(--surface-0);
+  color: var(--text);
   padding: 16px;
   box-sizing: border-box;
 }
@@ -11,7 +11,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 10px 10px 16px;
-  border-bottom: 1px solid #31483a;
+  border-bottom: 1px solid var(--border);
 }
 .activity-header > div,
 .activity-identity {
@@ -25,11 +25,11 @@
 }
 .activity-header small,
 .activity-privacy {
-  color: #a6b7aa;
+  color: var(--muted);
   font-size: 12px;
 }
 .activity-header svg {
-  color: #b4dd78;
+  color: var(--green);
 }
 .activity-identity {
   font-size: 12px;

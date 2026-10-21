@@ -9,6 +9,7 @@ async function setup(page: Page, path = "/builder") {
       sessionStorage.setItem("companion-token", token);
       await write("config", { url, token: "" });
       await write("onboarded", true);
+      await write("navigation:tools-open", true);
     },
     { url: server, token },
   );

@@ -16,8 +16,8 @@ const assets = [
   `game-catalog-v${version}.sqlite`,
 ];
 const notes =
-  version === "0.4.0"
-    ? await readFile("docs/RELEASE_v0.4.0.md", "utf8")
+  ["0.4.0", "0.5.0"].includes(version)
+    ? await readFile(`docs/RELEASE_v${version}.md`, "utf8")
     : "Neuer Ausrüstungs-Builder mit echten Items, gemeinsamen Attributfiltern, Setboni, individuellen Rolls und Exomagie, Charakter-Sets, Vergleichen und Hintergrund-Optimierer. Klassenbilder aus der bereitgestellten ZIP. Getrennte Zauberkataloge für DOFUS 3.6.12.16 und 3.7.12.12 mit lokalen Icons. Schadensvorschau für unterstützte direkte Effekte; komplexe Mechaniken werden ausdrücklich markiert. Offline-Entwürfe und Synchronisierung, JSON-Austausch und private Discord-Builder-Funktionen. Bestehende Daten und der signierte Updatekanal bleiben erhalten. Details und Grenzen: BUILDER_TEST_REPORT.md und DAMAGE_ENGINE_SPEC.md.";
 const signature = (
   await readFile(resolve("artifacts", installer + ".sig"), "utf8")
@@ -30,14 +30,29 @@ if (
   throw new Error("Missing Minisign signature");
 const nativeReport = JSON.parse(
   await readFile(
-    version === "0.4.0"
+    version === "0.5.0"
+      ? "docs/native-v5-test.json"
+      : version === "0.4.0"
       ? "docs/native-v4-test.json"
       : "docs/native-v2-test.json",
     "utf8",
   ),
 );
-if (nativeReport.passed.length < (version === "0.4.0" ? 4 : 7))
+if (version !== "0.5.0" && nativeReport.passed.length < (version === "0.4.0" ? 4 : 7))
   throw new Error("Native release validation is incomplete");
+if (version === "0.5.0") {
+  const acceptance = JSON.parse(await readFile("docs/release-v5-acceptance.json", "utf8"));
+  const signatureCheck = JSON.parse(await readFile("docs/release-v5-signature-test.json", "utf8"));
+  const upgrade = JSON.parse(await readFile("docs/service-upgrade-v5-test.json", "utf8"));
+  if (acceptance.version !== version || nativeReport.version !== version ||
+      acceptance.unitTests < 105 || acceptance.browserTests < 37 ||
+      !acceptance.typecheckPassed || !acceptance.lintPassed ||
+      !acceptance.productionArtworkMatchesSource || !acceptance.windowsInstallerBuilt ||
+      !signatureCheck.releaseSignatureVerified || !signatureCheck.tamperedInstallerRejected ||
+      signatureCheck.version !== version || upgrade.version !== version || !upgrade.serviceUpgradePassed ||
+      (!nativeReport.skipped && nativeReport.passed.length < 7))
+    throw Error("Appearance/atlas release acceptance is incomplete");
+}
 if (version === "0.4.0") {
   const [signatureCheck, upgrade, guard, lifecycle] = await Promise.all(
     [

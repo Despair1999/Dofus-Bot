@@ -34,20 +34,20 @@
   overflow: auto;
   max-height: 850px;
   padding: 12px;
-  border: 1px dashed #455d45;
+  border: 1px dashed var(--border);
   border-radius: 10px;
   background: repeating-linear-gradient(
     45deg,
-    #14201c,
-    #14201c 12px,
-    #18261f 12px,
-    #18261f 24px
+    var(--surface-0),
+    var(--surface-0) 12px,
+    var(--surface-0) 12px,
+    var(--surface-0) 24px
   );
 }
 .overlay-preview {
   min-width: 300px;
   overflow: auto;
-  border: 1px solid #53744a;
+  border: 1px solid var(--accent-border);
   box-shadow: 0 12px 40px #0007;
   border-radius: 10px;
 }
@@ -60,22 +60,22 @@
 }
 .overlay-module {
   position: absolute;
-  border: 1px solid #4a6844;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #1a2c22e8;
+  background: color-mix(in srgb, var(--surface-1) 91%, transparent);
   overflow: hidden;
   box-shadow: 0 3px 14px #0003;
 }
 .overlay-module > header {
   height: 30px;
   padding: 6px 9px;
-  background: #293d2bdd;
+  background: color-mix(in srgb, var(--surface-2) 87%, transparent);
   border: 0;
   font-size: 0.7em;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #c4df9d;
+  color: var(--green);
 }
 .overlay-module > header > span {
   display: flex;
@@ -96,7 +96,7 @@
   gap: 7px;
 }
 .overlay-module-body strong {
-  color: #e2edda;
+  color: var(--text);
   font-size: 1em;
 }
 .overlay-module-body p {
@@ -133,7 +133,7 @@
   width: 13px;
   border-radius: 6px 0 0 0;
   padding: 0;
-  background: #93b576;
+  background: var(--green);
   cursor: nwse-resize;
   touch-action: none;
 }
@@ -160,7 +160,7 @@
   margin: 24px 0;
 }
 .binding-row {
-  border: 1px solid #354b3c;
+  border: 1px solid var(--border);
   border-radius: 9px;
   padding: 14px;
   display: flex;
@@ -169,7 +169,7 @@
 }
 .hotkey-recorder > span {
   display: block;
-  color: #bacdb1;
+  color: var(--muted);
   font-size: 12px;
   margin-bottom: 8px;
 }
@@ -185,10 +185,10 @@
   font-size: 12px !important;
 }
 .hotkey-field.recording {
-  border: 1px solid #d2ed93;
-  background: #354b2c;
-  color: #d8efba;
-  box-shadow: 0 0 0 3px #acd77922;
+  border: 1px solid var(--accent-border);
+  background: var(--surface-2);
+  color: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 13%, transparent);
 }
 .overlay-error {
   color: #edb28a;
@@ -206,13 +206,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #22382bdd;
-  color: #c5dfac;
+  background: color-mix(in srgb, var(--surface-1) 87%, transparent);
+  color: var(--green);
   font:
     11px "DM Sans",
     sans-serif;
   padding: 7px 10px;
-  border: 1px solid #4d7046;
+  border: 1px solid var(--accent-border);
   border-radius: 9px 9px 0 0;
   cursor: move;
 }
@@ -222,14 +222,14 @@
 }
 .overlay-window-bar button {
   background: transparent;
-  color: #d2e1c1;
+  color: var(--green);
   padding: 2px;
 }
 .overlay-window-status {
   position: fixed;
   bottom: 5px;
   left: 15px;
-  background: #22382b;
+  background: var(--surface-1);
   padding: 3px 7px;
   border-radius: 5px;
 }
@@ -260,5 +260,5 @@
 .overlay-document {
   color-scheme: dark;
   scrollbar-width: thin;
-  scrollbar-color: #4a6844 #14221b;
+  scrollbar-color: var(--surface-active) var(--surface-0);
 }

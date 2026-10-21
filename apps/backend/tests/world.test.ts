@@ -4,6 +4,46 @@ import Fastify from "fastify";
 import { PersonalStore } from "../src/store.js";
 import { registerWorld, WorldStore } from "../src/world.js";
 
+test("interior quest targets inherit their documented parent atlas without merging map identity", async () => {
+  const personal = new PersonalStore(":memory:"),
+    app = Fastify();
+  const store = registerWorld(app, personal);
+  try {
+    const response = await app.inject({ url: "/api/world/maps/99353610" });
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(
+      Object.fromEntries(
+        ["id", "x", "y", "worldId", "sourceWorldId", "interior"].map((k) => [
+          k,
+          response.json().data[k],
+        ]),
+      ),
+      {
+        id: 99353610,
+        x: -1,
+        y: 2,
+        worldId: 1,
+        sourceWorldId: -1,
+        interior: true,
+      },
+    );
+    const sameCell = (
+      await app.inject({
+        url: "/api/world/maps?worldId=1&minX=-1&maxX=-1&minY=2&maxY=2&limit=5000",
+      })
+    ).json().data;
+    assert.ok(sameCell.some((m: { id: number }) => m.id === 99353610));
+    assert.equal(
+      new Set(sameCell.map((m: { id: number }) => m.id)).size,
+      sameCell.length,
+    );
+    assert.equal(store.dataset.report.missingWorldImages, 0);
+  } finally {
+    await app.close();
+    personal.close();
+  }
+});
+
 test("Piocher farm routes enforce Amakna and Bronze on the server", async () => {
   const personal = new PersonalStore(":memory:"),
     app = Fastify(),

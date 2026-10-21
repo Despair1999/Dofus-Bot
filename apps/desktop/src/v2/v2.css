@@ -62,18 +62,18 @@
   margin: 20px 0;
 }
 .v2-data-counts > div {
-  border: 1px solid #3c503d;
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 17px;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 9px;
-  color: #bad297;
+  color: var(--green);
 }
 .v2-data-counts strong {
   font-family: Manrope;
   font-size: 23px;
-  color: #dae7d0;
+  color: var(--text);
 }
 .v2-data-counts small {
   grid-column: 2;
@@ -85,25 +85,25 @@
   margin-bottom: 15px;
 }
 .v2-category-counts > span {
-  border: 1px solid #3d503c;
+  border: 1px solid var(--border);
   border-radius: 7px;
   padding: 8px 10px;
   font-size: 11px;
-  color: #9eb797;
+  color: var(--muted);
   display: flex;
   gap: 14px;
 }
 .v2-category-counts b {
-  color: #d1e0c1;
+  color: var(--green);
 }
 .v2-catalog-status details {
-  border-top: 1px solid #344536;
+  border-top: 1px solid var(--border);
   padding-top: 15px;
   margin-bottom: 15px;
 }
 .v2-catalog-status summary {
   font-size: 12px;
-  color: #b8ccaa;
+  color: var(--green);
   cursor: pointer;
 }
 .v2-catalog-status details p {
@@ -112,7 +112,7 @@
 .v2-import-progress > progress {
   width: 100%;
   height: 8px;
-  accent-color: #b6dc81;
+  accent-color: var(--green);
 }
 .v2-import-progress p {
   font-size: 11px;
@@ -126,8 +126,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #1c2d25;
-  border: 1px solid #3d5039;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px;
 }
@@ -135,7 +135,7 @@
   flex: 1;
   justify-content: flex-start;
   background: transparent;
-  color: #c5dab7;
+  color: var(--green);
   text-align: left;
 }
 .v2-favorite small {
@@ -148,10 +148,10 @@
   display: flex;
   gap: 14px;
   font-size: 11px;
-  color: #91aa87;
+  color: var(--muted);
 }
 .v2-small-stats > b {
-  color: #d0dfbd;
+  color: var(--green);
 }
 .v2-mobile-menu {
   display: none;
@@ -168,7 +168,7 @@
 .v2-task-empty {
   padding: 20px 0 5px;
   font-size: 12px;
-  color: #82977d;
+  color: var(--muted);
 }
 .v2-shell.compact main {
   margin-left: 0;

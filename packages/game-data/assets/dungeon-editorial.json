@@ -216,5 +216,252 @@
     ],
     "rooms": [],
     "reviewedAt": null
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 54,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Zur Öffnung des Schadensfensters den Royalmouth schieben, ohne dabei Rückstoßschaden auszulösen. Das Fenster gilt bis zum nächsten Zug des auslösenden Charakters; der Boss erhält zusätzliche BP.",
+      "Rückstoßschaden am Boss kann Figuren in seiner Linie sofort töten. Auch einen Verbündeten gegen den Boss zu schieben ist gefährlich.",
+      "Beschworene Monster geben ihm Boni. Nach ihrem Tod verschwinden diese und werden zu entsprechenden Abzügen."
+    ],
+    "strategy": [
+      "Freie Schiebefelder vorbereiten und Verbündete aus gefährlichen Linien nehmen. Einen Positionierer vor den Schadensklassen einplanen.",
+      "Beschwörungen kontrollieren, dann das Schadensfenster öffnen und mit den folgenden Figuren konzentriert angreifen. Für den Spezialerfolg trennt die verschiebende Figur ihren Zug von weiterem Schaden am verschobenen Ziel."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/serre-du-royalmouth.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 55,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Einen Spieler direkt neben dem Mansot Royal heilen, um seine Unverwundbarkeit für sechs Runden zu entfernen. Eine geheilte Beschwörung löst dies nicht aus.",
+      "Heilungen treffen benachbarte Verbündete mit Wasserschaden. Der Heiler darf nicht unbedacht direkt neben dem geheilten Spieler stehen.",
+      "Jeder besiegte ursprüngliche Verbündete des Bosses stärkt dauerhaft dessen Vitalität, Schaden und BP."
+    ],
+    "strategy": [
+      "Einen Spieler zum Boss stellen, die anderen verteilen und eine gezielte Heilung aus sicherer Position vorbereiten.",
+      "Vor dem Töten von Begleitmonstern die steigende Bossstärke berücksichtigen. Bei genug Schaden den geöffneten Boss früh fokussieren; Wiederbelebungen durch Mamansot kontrollieren."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/excavation-du-mansot-royal.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 56,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Hamrack muss den Nahkampf mit Ben erreichen und dort explodieren. Dadurch wird Ben für fünf Runden verwundbar.",
+      "Hamrack ist schwer, unverwundbar und verwurzelt. Ein Versuch, ihm BP zu entziehen, erhöht stattdessen seine BP.",
+      "Bei der Entsperrung explodieren auch die übrigen Hamracks. Ihre Wasserexplosionen können nahe Figuren treffen."
+    ],
+    "strategy": [
+      "Den Weg für Hamrack frei halten und Ben in seine Reichweite bringen. Hamrack lässt sich nicht einfach dorthin schieben.",
+      "Die Gruppe vor der Explosion aus dem betroffenen Bereich nehmen und danach den Boss fokussieren. Für den Spezialerfolg darf kein Verbündeter Hamrack-Schaden erhalten."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/epave-du-grolandais-violent.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 57,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Einen Spieler gegen den Obsidiantre schieben und dabei Rückstoßschaden verursachen: Das öffnet ein Schadensfenster von drei Runden. Beschwörungen und das Schieben des Bosses gegen einen Spieler erfüllen die Bedingung nicht.",
+      "Die Pougnette explodiert in ihrem fünften Zug und tötet Figuren, die weiter als sieben Felder von ihr entfernt stehen. Sie reflektiert erlittene Treffer."
+    ],
+    "strategy": [
+      "Einen Positionierer und einen widerstandsfähigen Spieler für den Zusammenstoß vorbereiten. Keine Monster gegen den Boss schieben, da dies ihn heilt und stärkt.",
+      "Den Pougnette-Zähler verfolgen. Vor der Explosion entweder die Beschwörung unter Beachtung der Reflexion beseitigen oder die Gruppe innerhalb von sieben Feldern sichern."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/hypogeacutee-de-lobsidiantre.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 58,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Yomi in einer geraden Linie zum Tengu mit einer Waffe treffen und Yokaï in einer Diagonale zum Tengu schieben oder ziehen. Beide Auslöser müssen in derselben Runde zusammenkommen.",
+      "Zu Beginn seines nächsten Zuges verliert Tengu die Unverwundbarkeit für vier Runden. Nur einer der beiden Zustände kann gefährliche Zusatzaktionen freischalten.",
+      "Yokaï kann Figuren das Benutzen ihrer Waffe verbieten. Yomi verteilt bei Waffentreffern Erosion in seiner Linie."
+    ],
+    "strategy": [
+      "Yomi und Yokaï bis zur Entsperrung erhalten. Den Waffenträger so stellen, dass ihn der Schwächungszustand des Yokaï nicht blockiert.",
+      "Beide Auslöser vor Tengus nächstem Zug koordinieren. Danach Yomi und Yokaï beseitigen und das Schadensfenster nutzen. Bei der Fuji-Variante gelten zusätzliche Gegnermechaniken."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/taniegravere-givrefoux.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 60,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Ein Schadenstreffer durch eine Beschwörung entfernt Kolossos Unverwundbarkeit für eine Runde.",
+      "Normale Heilungen sind im Bosskampf stark unterdrückt. Professor Xa ermöglicht während seines Buffs indirekte Heilung durch Treffer auf Monster in Reichweite der Spieler.",
+      "Nach Xas Tod wird Kolosso stärker und erhält einen zusätzlichen Fernangriff. Seine Dreiecksattacke braucht eine angrenzende Entität als Auslöser."
+    ],
+    "strategy": [
+      "Eine verlässliche Schadensbeschwörung erhalten und ihre Aktivierung vor den Schadensklassen planen.",
+      "Die Entscheidung über Xas Tötungszeitpunkt bewusst treffen: Wiederbelebungen und Heilungsmöglichkeiten gegen Kolossos anschließende Verstärkung abwägen. Nicht vor seiner Dreieckszone gruppieren."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/cavernes-du-kolosso.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 61,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Jeder Spieler muss Glourséleste selbst im Nahkampf treffen, um ihn für den eigenen Zug verwundbar zu machen. Der auslösende Treffer verursacht keinen Schaden.",
+      "Dabei werden Entitäten in seinen geraden Linien bis zu vier Felder zurückgestoßen. Kollisionen können tödlich sein.",
+      "BP-/Reichweitenentzug und Verschieben des Bosses können besiegte Begleiter wiederbeleben. Misslungene Ausweichversuche unter Taclours sind ebenfalls gefährlich."
+    ],
+    "strategy": [
+      "Vor jedem Nahkampfauslöser vier freie Rückstoßfelder für alle betroffenen Figuren prüfen. Einen günstigen Auslöser verwenden und danach den Schaden ausgeben.",
+      "Gefährliche Begleiter und ungewollte Verschiebungen kontrollieren. Beim verletzten Boss besonders auf seine mit fehlenden LP skalierenden Treffer achten."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/antichambre-des-gloursons.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 6,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Der Guide beschreibt zu Kampfbeginn ein bannbares Gift: AP-Ausgaben verursachen während seiner Laufzeit sehr hohen Schaden.",
+      "Der Boss kämpft im Nahkampf, kann BP stark reduzieren und Rückstoßschaden verursachen. Die Quelle kennzeichnet sich selbst als überarbeitungsbedürftig."
+    ],
+    "strategy": [
+      "Giftstatus im Spiel prüfen. Unter aktivem Gift keine AP ausgeben; einen sicheren Bann nur verwenden, wenn dessen Ausführung überlebt wird.",
+      "Anschließend Abstand und Bewegungsreduktion nutzen. Hindernisse im Rücken vermeiden, damit ein Stoß keinen zusätzlichen Kollisionsschaden verursacht."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/antre-du-dragon-cochon.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 51,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "Vier Tynrils haben unterschiedliche Elementarschwächen und sehr hohe Resistenzen in den anderen Elementen.",
+      "Sie verteilen massive Elementarschwächen, tauschen ihre Positionen und können sich bei direkter Nachbarschaft heilen. Ihr Nahkampf ist besonders gefährlich."
+    ],
+    "strategy": [
+      "Vor Kampfbeginn alle vier Schadenselemente abdecken. Für jedes Ziel die im Bestiarium angezeigte Schwäche wählen.",
+      "BP-Entzug und Positionierung nutzen, dabei die Positionswechsel einplanen. Der Spezialerfolg verbietet Verschieben und BP-Entzugsversuche; dafür ist ein eigener Schadensplan nötig."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/laboratoire-du-tynril.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
+  },
+  {
+    "version": "3.7.12.12",
+    "dungeonId": 41,
+    "status": "partial",
+    "mechanicsVerified": false,
+    "mechanics": [
+      "AP-Entzugsversuche geben dem Rasboul stattdessen AP. Laut Guide aktiviert er ab 14 AP Hololole.",
+      "Unter diesem Effekt senken wiederholte Treffer die Resistenz im verwendeten Element und erhöhen die anderen. Mehrere Elemente gegeneinander zu mischen verhindert den Aufbau.",
+      "Rasboul-Mineur-Beschwörungen können Gegner vollständig heilen. Die Quelle ist als überarbeitungsbedürftig markiert."
+    ],
+    "strategy": [
+      "Begleiter und heilende Beschwörungen kontrollieren, dann die AP-Schwelle gezielt herstellen.",
+      "Ein gemeinsames Schadenselement wählen. Mit günstigen Treffern zunächst die Resistenz senken und danach starke Treffer einsetzen. Zustandsdauer im Spiel prüfen."
+    ],
+    "sources": [
+      {
+        "url": "https://www.dofuspourlesnoobs.com/goulet-du-rasboul.html",
+        "version": "Guide ohne verbindliche Patchangabe",
+        "checkedAt": "2026-10-21T21:00:00Z"
+      }
+    ],
+    "rooms": [],
+    "reviewedAt": "2026-10-21T21:00:00Z",
+    "versionNote": "Quellenbasierter Kurzleitfaden. Der Guide wurde gelesen, seine vollständige Übereinstimmung mit 3.7.12.12 ist nicht belegt. Aktive Zustände im Spiel haben Vorrang."
   }
 ]

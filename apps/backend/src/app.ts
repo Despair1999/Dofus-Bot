@@ -12,6 +12,7 @@ import { registerDungeons } from "./dungeons.js";
 import { registerTranslator } from "./translator.js";
 import { registerActivity } from "./activity.js";
 import { registerMapPreview } from "./map-preview.js";
+import appPackage from "../package.json" with { type: "json" };
 import {
   Dofusdude,
   UpstreamError,
@@ -121,10 +122,10 @@ export async function createApp(options: AppOptions) {
       .code(500)
       .send({ error: "Interner Fehler. Details im Backend-Protokoll." });
   });
-  app.get("/health", () => ({ status: "ok", version: "0.4.0" }));
+  app.get("/health", () => ({ status: "ok", version: appPackage.version }));
   app.get("/api/status", () => ({
     data: {
-      version: "0.4.0",
+      version: appPackage.version,
       mode: "local-single-owner",
       database: "sqlite",
       sources: [api.status()],

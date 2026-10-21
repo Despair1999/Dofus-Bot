@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Shield,
+  Zap,
+  Footprints,
+  Heart,
   Plus,
   Save,
   Copy,
@@ -716,11 +719,11 @@ export default function BuilderPage({
                   .filter((s) => s[2] === group)
                   .map(([id, label]) => (
                     <div
-                      className="builder-stat-row"
+                      className={`builder-stat-row ${id === 12 ? "stat-ap" : id === 8 ? "stat-bp" : ""}`}
                       key={id}
                       title={`Basis ${calculated.base[id] ?? 0} · Items ${calculated.equipment[id] ?? 0} · Sets ${calculated.bonuses[id] ?? 0} · Buffs ${calculated.buffs[id] ?? 0}`}
                     >
-                      <span>{label}</span>
+                      <span>{id === 8 ? "BP" : label}</span>
                       <strong>{calculated.total[id] ?? 0}</strong>
                     </div>
                   ))}
@@ -1402,7 +1405,7 @@ export default function BuilderPage({
                       </small>
                       <p>
                         {current
-                          ? `${current.total[12]} AP · ${current.total[8]} MP · ${current.hp} LP`
+                          ? `${current.total[12]} AP · ${current.total[8]} BP · ${current.hp} LP`
                           : "Zum Berechnen Datenversion öffnen"}
                       </p>
                       <div className="saved-equipment-strip">
@@ -1575,15 +1578,18 @@ export default function BuilderPage({
         <aside className="panel builder-summary">
           <span className="eyebrow">DEIN BUILD AUF EINEN BLICK</span>
           <div className="builder-summary-metrics">
-            <div>
+            <div className="stat-ap">
+              <Zap size={18} />
               <strong>{calculated.total[12] ?? 0}</strong>
               <span>AP</span>
             </div>
-            <div>
+            <div className="stat-bp">
+              <Footprints size={18} />
               <strong>{calculated.total[8] ?? 0}</strong>
-              <span>MP</span>
+              <span>BP</span>
             </div>
-            <div>
+            <div className="stat-lp">
+              <Heart size={18} />
               <strong>{calculated.hp}</strong>
               <span>LP</span>
             </div>

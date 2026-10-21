@@ -81,6 +81,9 @@ export class DungeonStore {
     const edits = data.dungeons.map((d) => this.editorial(version, d.id));
     return {
       ...data.report,
+      sourcedStrategies: edits.filter(
+        (e) => e.sources.length && e.strategy.length,
+      ).length,
       verifiedStrategies: edits.filter(
         (e) => e.status === "verified" && e.strategy.length,
       ).length,
@@ -110,7 +113,7 @@ const sourceSchema = z.object({
 });
 const editorialSchema = z.object({
   status: z.enum(["draft", "partial", "verified"]),
-  versionNote:z.string().max(1000).optional(),
+  versionNote: z.string().max(1000).optional(),
   mechanicsVerified: z.boolean().optional(),
   mechanics: z.array(z.string().trim().min(1).max(3000)).max(100),
   strategy: z.array(z.string().trim().min(1).max(5000)).max(100),
@@ -154,6 +157,7 @@ export function registerDungeons(
       .object({
         version: versionSchema,
         q: z.string().max(150).default(""),
+        category: z.enum(["all", "classic", "expedition"]).default("all"),
         minLevel: z.coerce.number().min(0).max(200).default(0),
         maxLevel: z.coerce.number().min(0).max(200).default(200),
         page: z.coerce.number().int().min(1).default(1),
@@ -164,6 +168,10 @@ export function registerDungeons(
       .version(f.version)
       .dungeons.filter(
         (d) =>
+          (f.category === "all" ||
+            (f.category === "expedition"
+              ? d.nameFr.startsWith("Expédition")
+              : !d.nameFr.startsWith("Expédition"))) &&
           d.level >= f.minLevel &&
           d.level <= f.maxLevel &&
           normalize(

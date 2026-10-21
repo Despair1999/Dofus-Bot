@@ -41,10 +41,10 @@
   max-height: 160px;
   overflow: auto;
   padding: 8px;
-  border: 1px solid #526344;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #14241e;
-  color: #e4edd5;
+  background: var(--surface-0);
+  color: var(--text);
 }
 .translator-card textarea,
 .overlay-module-body .translator-card textarea {

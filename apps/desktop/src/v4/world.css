@@ -1,10 +1,10 @@
 .world-page {
   --world-accent: #c4d989;
-  background: #101d18;
-  border: 1px solid #334734;
+  background: var(--surface-0);
+  border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
-  color: #e0e9d7;
+  color: var(--text);
 }
 .world-page:fullscreen {
   height: 100vh;
@@ -16,8 +16,8 @@
   align-items: center;
   gap: 16px;
   padding: 20px 24px;
-  border-bottom: 1px solid #334734;
-  background: linear-gradient(110deg, #263a28, #17271e);
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(110deg, var(--surface-1), var(--surface-0));
 }
 .world-title {
   display: flex;
@@ -32,7 +32,7 @@
 }
 .world-title small {
   display: block;
-  color: #a6b49c;
+  color: var(--muted);
   margin-top: 5px;
   font-size: 11px;
 }
@@ -46,7 +46,7 @@
 }
 .world-side {
   padding: 22px 18px;
-  background: #16251dcc;
+  background: color-mix(in srgb, var(--surface-0) 80%, transparent);
   overflow: auto;
   max-height: 900px;
   font-size: 13px;
@@ -58,20 +58,20 @@
 }
 .world-side p {
   font-size: 12px;
-  color: #9eae99;
+  color: var(--muted);
   line-height: 1.7;
 }
 .world-side small {
   display: block;
-  color: #9eae99;
+  color: var(--muted);
   font-size: 11px;
   line-height: 1.6;
 }
 .world-filters {
-  border-right: 1px solid #334734;
+  border-right: 1px solid var(--border);
 }
 .world-details {
-  border-left: 1px solid #334734;
+  border-left: 1px solid var(--border);
 }
 .world-stage {
   position: relative;
@@ -96,9 +96,9 @@
   top: 24px;
   left: 24px;
   pointer-events: none;
-  background: #101f1bdc;
+  background: color-mix(in srgb, var(--surface-0) 86%, transparent);
   padding: 15px 20px;
-  border: 1px solid #53684450;
+  border: 1px solid color-mix(in srgb, var(--border) 31%, transparent);
   border-radius: 8px;
   backdrop-filter: blur(8px);
 }
@@ -108,10 +108,10 @@
   font-family: Georgia, serif;
   font-weight: 400;
   margin: 8px 0;
-  color: #e6efcf;
+  color: var(--green);
 }
 .world-map-label small {
-  color: #93a78d;
+  color: var(--muted);
   font-size: 11px;
 }
 .world-map-controls {
@@ -123,9 +123,9 @@
   gap: 5px;
 }
 .world-map-controls button {
-  background: #233c2e;
-  color: #daedb0;
-  border: 1px solid #49683d;
+  background: var(--surface-1);
+  color: var(--green);
+  border: 1px solid var(--border);
   width: 36px;
   height: 36px;
   padding: 0;
@@ -138,23 +138,23 @@
   left: 0;
   right: 0;
   padding: 12px 17px;
-  background: #102019e8;
+  background: color-mix(in srgb, var(--surface-0) 91%, transparent);
   display: flex;
   justify-content: space-between;
-  color: #9faf95;
+  color: var(--muted);
   font-size: 10px;
-  border-top: 1px solid #3a5033;
+  border-top: 1px solid var(--border);
 }
 .world-side details {
   margin-top: 22px;
-  border-top: 1px solid #32452e;
+  border-top: 1px solid var(--border);
   padding-top: 18px;
 }
 .world-side summary {
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
-  color: #d8e5c4;
+  color: var(--text);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -162,38 +162,38 @@
 }
 .world-side summary span {
   margin-left: auto;
-  color: #819a70;
+  color: var(--muted);
   font-size: 11px;
 }
 .world-side input:not([type="checkbox"]),
 .world-side select {
   width: 100%;
   min-width: 0;
-  background: #101e17;
-  border: 1px solid #3b5035;
+  background: var(--surface-0);
+  border: 1px solid var(--border);
   border-radius: 7px;
   padding: 10px;
-  color: #dce8cf;
+  color: var(--text);
   font-size: 12px;
 }
 .world-side label {
   display: block;
   margin: 10px 0;
-  color: #aebca4;
+  color: var(--muted);
   font-size: 11px;
 }
 .world-side label input:not([type="checkbox"]) {
   margin-top: 6px;
 }
 .world-side input[type="checkbox"] {
-  accent-color: #b5d274;
+  accent-color: var(--green);
 }
 .world-search {
   display: flex !important;
   flex-direction: row;
   align-items: center;
-  background: #101e17;
-  border: 1px solid #3b5035;
+  background: var(--surface-0);
+  border: 1px solid var(--border);
   border-radius: 7px;
   padding: 0 9px;
 }
@@ -219,15 +219,15 @@
 }
 .world-resource:hover,
 .world-resource.selected {
-  background: #344b2c5c;
+  background: color-mix(in srgb, var(--surface-2) 36%, transparent);
 }
 .world-resource svg {
-  color: #9ec06d;
+  color: var(--green);
   flex-shrink: 0;
 }
 .world-resource > span {
   font-size: 12px;
-  color: #dbe4d1;
+  color: var(--text);
 }
 .world-resource small {
   font-size: 10px;
@@ -244,21 +244,21 @@
   gap: 8px;
   background: transparent !important;
   border: 0;
-  color: #d9e6ca !important;
+  color: var(--text) !important;
   padding: 9px 2px;
   font-size: 11px;
 }
 .world-result:hover {
-  background: #30462b !important;
+  background: var(--surface-2) !important;
 }
 .world-legend {
   display: grid;
   gap: 13px;
-  border-top: 1px solid #32452e;
+  border-top: 1px solid var(--border);
   margin-top: 25px;
   padding-top: 24px;
   font-size: 10px;
-  color: #8da283;
+  color: var(--muted);
 }
 .world-legend span {
   display: flex;
@@ -269,13 +269,13 @@
   height: 7px;
   width: 7px;
   border-radius: 2px;
-  background: #668770;
+  background: var(--muted);
 }
 .world-legend .region {
-  background: #99bf61;
+  background: var(--green);
 }
 .world-legend .observed {
-  background: #99d9c7;
+  background: var(--green);
 }
 .world-legend .route {
   background: #e8cc77;
@@ -283,10 +283,10 @@
 .world-selection-empty {
   text-align: center;
   padding: 25px 8px;
-  color: #b6c29f;
+  color: var(--muted);
 }
 .world-selection-empty svg {
-  color: #719660;
+  color: var(--muted);
 }
 .world-selection-empty h3 {
   font-size: 15px;
@@ -307,13 +307,13 @@
 }
 .world-notice {
   padding: 10px 24px;
-  background: #344b2b;
-  color: #d5e6bd;
+  background: var(--surface-2);
+  color: var(--green);
   font-size: 12px;
 }
 .world-route {
-  border: 1px solid #4b613d;
-  background: #24381f60;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-1) 38%, transparent);
   border-radius: 8px;
   padding: 14px;
   margin-top: 15px;
@@ -325,7 +325,7 @@
 }
 .world-route li {
   margin: 10px 0;
-  color: #a6ba8b;
+  color: var(--green);
 }
 .world-route label {
   display: flex;
@@ -337,7 +337,7 @@
 }
 .world-estimate {
   margin-top: 15px;
-  background: #273c24;
+  background: var(--surface-1);
   border-radius: 7px;
   padding: 13px;
   display: grid;
@@ -345,7 +345,7 @@
 }
 .world-estimate span {
   font-size: 11px;
-  color: #b3c6a0;
+  color: var(--muted);
 }
 .world-marker-row {
   display: flex;
@@ -370,7 +370,7 @@
   font-size: 11px;
 }
 .world-stage:focus-within {
-  outline: 1px solid #b5d274;
+  outline: 1px solid var(--accent-border);
   outline-offset: -1px;
 }
 @media (min-width: 1800px) {
@@ -389,7 +389,7 @@
   .world-details {
     grid-column: 1/-1;
     max-height: initial;
-    border-top: 1px solid #334734;
+    border-top: 1px solid var(--border);
   }
   .world-hide-left .world-layout {
     grid-template-columns: 1fr;
