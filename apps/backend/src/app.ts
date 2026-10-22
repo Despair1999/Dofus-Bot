@@ -71,6 +71,10 @@ export async function createApp(options: AppOptions) {
     if (url.startsWith("/api/activity/")) return; // Activity validates its own scoped Discord sessions.
     const privateRoute =
       url.startsWith("/api/world/personal") ||
+      (url === "/api/world/gathering" &&
+        (!!(request.query as { characterId?: string }).characterId ||
+          (request.query as { includePersonal?: string }).includePersonal ===
+            "true")) ||
       url.startsWith("/api/dungeon-personal") ||
       url.startsWith("/api/profession-personal") ||
       url.startsWith("/api/translator") ||
@@ -140,7 +144,7 @@ export async function createApp(options: AppOptions) {
   registerBuilder(app, builderStore);
   const world = registerWorld(app, personal);
   registerMapPreview(app, world);
-  registerDungeons(app, personal);
+  const dungeonStore = registerDungeons(app, personal);
   await registerTranslator(app);
   registerActivity(app, personal, options.token, options.fetcher);
   app.get("/api/items", async (request) => {
@@ -208,11 +212,9 @@ export async function createApp(options: AppOptions) {
         (i) => i.id === id,
       );
       if (!item)
-        return reply
-          .code(404)
-          .send({
-            error: "Gegenstand ist in diesem Datenstand nicht enthalten.",
-          });
+        return reply.code(404).send({
+          error: "Gegenstand ist in diesem Datenstand nicht enthalten.",
+        });
       return {
         data: {
           ...item,
@@ -235,7 +237,20 @@ export async function createApp(options: AppOptions) {
         dataset?.items.find((i) => i.id === id)?.effects ??
         dataset?.catalogEffects?.find((i) => i.itemId === id)?.effects;
       return {
-        data: { ...local, ...(numericEffects ? { numericEffects } : {}) },
+        data: {
+          ...local,
+          ...(numericEffects ? { numericEffects } : {}),
+          crafting:
+            dungeonStore.dataset.versions[version ?? ""]?.craftingRecipes
+              ?.filter((r) => r.itemId === id)
+              .map((r) => ({
+                ...r,
+                jobName:
+                  dungeonStore.dataset.versions[version!].professions.find(
+                    (j) => j.id === r.jobId,
+                  )?.name ?? "Beruf",
+              })) ?? [],
+        },
         source: local.source,
         version: local.version,
       };
@@ -369,6 +384,11 @@ export async function createApp(options: AppOptions) {
   });
   function characterData(raw: unknown) {
     const input = characterInput.parse(raw);
+    if (input.omegaLevel && input.level !== 200)
+      throw Object.assign(
+        Error("Omega-Level ist erst ab Charakterstufe 200 verfügbar."),
+        { statusCode: 400 },
+      );
     const classes = game.classes();
     if (input.classId != null) {
       const selected = classes.find((c) => c.id === input.classId);
@@ -402,7 +422,7 @@ export async function createApp(options: AppOptions) {
     if (!personal.characters().some((c) => c.id === id))
       return reply.code(404).send({ error: "Charakter nicht gefunden." });
     const body = characterInput
-      .extend({ expectedVersion: z.number().int().positive() })
+      .safeExtend({ expectedVersion: z.number().int().positive() })
       .parse(request.body);
     return {
       data: personal.updateCharacter(

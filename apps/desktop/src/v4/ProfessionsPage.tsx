@@ -1,3 +1,4 @@
+import ProfessionLevels from "../ui/ProfessionLevels";
 import { useEffect, useState } from "react";
 import { Hammer, MapPin, Sprout } from "lucide-react";
 import type {
@@ -46,6 +47,9 @@ export default function ProfessionsPage({
     [resourceJob, setResourceJob] = useState(24),
     [available, setAvailable] = useState<GatherableResource[]>([]),
     [quantities, setQuantities] = useState<Record<number, number>>({});
+  useEffect(() => {
+    setCharacterId(activeCharacterId ?? "");
+  }, [activeCharacterId]);
   useEffect(() => {
     const c = new AbortController();
     const savedLevel = personal.levels.find(
@@ -104,26 +108,6 @@ export default function ProfessionsPage({
       });
     return () => c.abort();
   }, [characterId, config]);
-  async function level(jobId: number, value: number) {
-    setBusy(true);
-    try {
-      const r = await api<{ jobId: number; level: number }>(
-        `/api/profession-personal/${characterId}/levels`,
-        config,
-        { jobId, level: value },
-        "PUT",
-      );
-      setPersonal((p) => ({
-        ...p,
-        levels: [...p.levels.filter((l) => l.jobId !== jobId), r.data],
-      }));
-      setError("");
-    } catch (e) {
-      setError(message(e));
-    } finally {
-      setBusy(false);
-    }
-  }
   async function progress(
     quest: ProfessionQuest,
     completed: boolean,
@@ -185,33 +169,18 @@ export default function ProfessionsPage({
           {error}
         </p>
       )}
-      <div className="profession-levels">
-        {jobs.map((j) => (
-          <label key={j.id}>
-            {j.name}
-            <input
-              key={`${characterId}-${j.id}-${personal.levels.find((l) => l.jobId === j.id)?.level}`}
-              aria-label={`${j.name} Berufslevel`}
-              type="number"
-              min={1}
-              max={200}
-              placeholder="?"
-              disabled={!characterId || busy}
-              defaultValue={
-                personal.levels.find((l) => l.jobId === j.id)?.level ?? ""
-              }
-              onBlur={(e) => {
-                if (
-                  e.target.value &&
-                  +e.target.value !==
-                    personal.levels.find((l) => l.jobId === j.id)?.level
-                )
-                  void level(j.id, +e.target.value);
-              }}
-            />
-          </label>
-        ))}
-      </div>
+      {characterId && (
+        <ProfessionLevels
+          config={config}
+          characterId={characterId}
+          onChange={() =>
+            void request<Personal>(
+              `/api/profession-personal/${characterId}`,
+              config,
+            ).then((r) => setPersonal(r.data))
+          }
+        />
+      )}
       {!characterId && (
         <p className="dungeon-notice">
           Wähle einen Charakter, um Berufslevel und persönliche Fortschritte zu
@@ -226,11 +195,13 @@ export default function ProfessionsPage({
             value={resourceJob}
             onChange={(e) => setResourceJob(+e.target.value)}
           >
-            {jobs.map((j) => (
-              <option key={j.id} value={j.id}>
-                {j.name}
-              </option>
-            ))}
+            {jobs
+              .filter((j) => [2, 24, 26, 28, 36, 41].includes(j.id))
+              .map((j) => (
+                <option key={j.id} value={j.id}>
+                  {j.name}
+                </option>
+              ))}
           </select>
         </label>
         <p>

@@ -1,3 +1,5 @@
+import OmegaBadge from "../../ui/OmegaBadge";
+import ProfessionLevels from "../../ui/ProfessionLevels";
 import { useEffect, useState } from "react";
 import type {
   Build,
@@ -39,6 +41,7 @@ export default function CharacterProfile({
   onSelect: (id: string) => void;
   onEdit: (c: Character) => void;
 }) {
+  const [professionRevision, setProfessionRevision] = useState(0);
   const [tab, setTab] = useState("Allgemein"),
     [summary, setSummary] = useState<Summary | null>(null),
     [progress, setProgress] = useState<Progress[] | null>(null),
@@ -85,7 +88,7 @@ export default function CharacterProfile({
         setError("Einige Fortschrittsdaten sind derzeit nicht verfügbar.");
     });
     return () => c.abort();
-  }, [character.id, config]);
+  }, [character.id, config, professionRevision]);
   useEffect(() => {
     setSummary(null);
     if (!selectedBuild) return;
@@ -113,7 +116,9 @@ export default function CharacterProfile({
       <div className="profile-heading">
         <div>
           <span className="eyebrow">DEIN PROFIL · WELT DER ZWÖLF</span>
-          <h2>{character.name}</h2>
+          <h2>
+            {character.name} <OmegaBadge character={character} />
+          </h2>
           <p>
             {cls?.nameDe ?? character.className} · Stufe {character.level} ·{" "}
             {character.server}
@@ -130,6 +135,9 @@ export default function CharacterProfile({
               {characters.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
+                  {c.level === 200 && c.omegaLevel
+                    ? ` · Ω ${c.omegaLevel}`
+                    : ""}
                 </option>
               ))}
             </select>
@@ -169,6 +177,14 @@ export default function CharacterProfile({
           {error}
         </p>
       )}
+      <ProfessionLevels
+        config={config}
+        characterId={character.id}
+        onChange={() => {
+          setProfessionRevision((v) => v + 1);
+          window.dispatchEvent(new Event("companion:professions"));
+        }}
+      />
       {tab === "Allgemein" && (
         <div className="profile-general">
           <aside>

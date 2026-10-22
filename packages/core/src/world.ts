@@ -26,6 +26,7 @@ export interface WorldRegion {
   areaName: string;
 }
 export interface GatherableResource {
+  aliases?: number[];
   id: number;
   itemId: number;
   name: string;
@@ -73,6 +74,13 @@ export interface WorldPoint {
   kind: "zaap" | "dungeon" | "poi";
 }
 export interface WorldDataset {
+  gatheringNodes?: GatheringNode[];
+  gatheringSource?: {
+    url: string;
+    version: string;
+    fetchedAt: string;
+    sha256: string;
+  };
   points?: WorldPoint[];
   schemaVersion: 1;
   version: string;
@@ -86,6 +94,51 @@ export interface WorldDataset {
   transitions: WorldTransition[];
   interactions: WorldInteraction[];
   report: Record<string, number | string>;
+}
+export interface GatheringNode {
+  id: string;
+  mapId: number;
+  resourceId: number;
+  itemId: number;
+  cellId: number;
+  x: number;
+  y: number;
+  worldId: number;
+  subAreaId: number;
+  jobId: number;
+  level: number;
+  quantity: number;
+  criterion: string;
+  verification: "verified" | "unconfirmed-version" | "personal-observation";
+  sourceVersion: string;
+}
+
+/** Screen-space clustering only; original coordinates and map identity stay intact. */
+export function clusterGatheringNodes(
+  nodes: GatheringNode[],
+  camera: { x: number; y: number; scale: number },
+  width: number,
+  height: number,
+  aspect = 1,
+  cluster = true,
+) {
+  const groups = new Map<
+    string,
+    { x: number; y: number; nodes: GatheringNode[] }
+  >();
+  for (const node of nodes) {
+    const x = width / 2 + (node.x - camera.x) * camera.scale,
+      y = height / 2 + (node.y - camera.y) * camera.scale * aspect;
+    if (x < -24 || y < -24 || x > width + 24 || y > height + 24) continue;
+    const key =
+      cluster && camera.scale < 12
+        ? `${Math.floor(x / 42)}:${Math.floor(y / 42)}`
+        : String(node.mapId);
+    const existing = groups.get(key);
+    if (existing) existing.nodes.push(node);
+    else groups.set(key, { x, y, nodes: [node] });
+  }
+  return [...groups.values()];
 }
 export interface WorldRoute {
   mapIds: number[];

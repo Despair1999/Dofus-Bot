@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
+  X,
   ArrowUpRight,
   Check,
   Clipboard,
@@ -45,12 +46,49 @@ export default function CraftingPage({
   item: initialItem,
   navigateItem,
   onNotice,
+  onClear,
+  characterId,
 }: {
+  characterId?: string;
+  onClear?: () => void;
   config: Config;
   item: Item | null;
   navigateItem: (id: number, category?: string) => void;
   onNotice?: (message: string) => void;
 }) {
+  const [professionLevels, setProfessionLevels] = useState<
+    { jobId: number; level: number }[]
+  >([]);
+  useEffect(() => {
+    setProfessionLevels([]);
+    if (!characterId) return;
+    const c = new AbortController();
+    void request<{ levels: { jobId: number; level: number }[] }>(
+      `/api/profession-personal/${characterId}`,
+      config,
+      c.signal,
+    )
+      .then((r) => {
+        if (!c.signal.aborted) setProfessionLevels(r.data.levels);
+      })
+      .catch(() => {});
+    return () => c.abort();
+  }, [config, characterId]);
+  const selectionRevision = useRef(0);
+  function clearSelection() {
+    selectionRevision.current++;
+    setItem(null);
+    setSearch("");
+    setQuantity(1);
+    setSale(undefined);
+    setTax(2);
+    setMissingOnly(false);
+    setSort("name");
+    setProjectName("");
+    setError("");
+    setLoading(false);
+    onClear?.();
+  }
   const [item, setItem] = useState<CatalogDetail | null>(
       initialItem as CatalogDetail | null,
     ),
@@ -70,7 +108,8 @@ export default function CraftingPage({
     [missingOnly, setMissingOnly] = useState(false),
     [sort, setSort] = useState<"name" | "value">("name");
   useEffect(() => {
-    if (initialItem) setItem(initialItem as CatalogDetail);
+    selectionRevision.current++;
+    setItem(initialItem as CatalogDetail | null);
   }, [initialItem]);
   useEffect(() => {
     void Promise.all([
@@ -92,6 +131,7 @@ export default function CraftingPage({
   }, []);
   useEffect(() => {
     if (!item?.id) return;
+    const revision = selectionRevision.current;
     const c = new AbortController();
     void request<CatalogDetail>(
       `/api/items/${item.id}?lang=de&category=${item.category}`,
@@ -99,7 +139,8 @@ export default function CraftingPage({
       c.signal,
     )
       .then((r) => {
-        if (!c.signal.aborted) setItem(r.data);
+        if (!c.signal.aborted && revision === selectionRevision.current)
+          setItem(r.data);
       })
       .catch((e) => {
         if (!c.signal.aborted) setError(message(e));
@@ -107,6 +148,7 @@ export default function CraftingPage({
     return () => c.abort();
   }, [item?.id, item?.category, config.url, config.token]);
   async function choose(selected: CatalogItem) {
+    const revision = ++selectionRevision.current;
     setLoading(true);
     setError("");
     try {
@@ -114,13 +156,18 @@ export default function CraftingPage({
         `/api/items/${selected.id}?lang=de&category=${selected.category}`,
         config,
       );
+      if (revision !== selectionRevision.current) return;
       setItem(result.data);
       setSearch("");
       setQuantity(1);
+      setSale(undefined);
+      setTax(2);
+      setProjectName("");
+      setMissingOnly(false);
     } catch (e) {
-      setError(message(e));
+      if (revision === selectionRevision.current) setError(message(e));
     } finally {
-      setLoading(false);
+      if (revision === selectionRevision.current) setLoading(false);
     }
   }
   const needs = useMemo(
@@ -191,6 +238,7 @@ export default function CraftingPage({
     onNotice?.("Crafting-Projekt lokal gespeichert.");
   }
   async function loadProject(project: Project) {
+    const revision = ++selectionRevision.current;
     setLoading(true);
     setError("");
     try {
@@ -198,6 +246,7 @@ export default function CraftingPage({
         `/api/items/${project.itemId}?category=${project.category}&lang=de`,
         config,
       );
+      if (revision !== selectionRevision.current) return;
       setItem(response.data);
       setQuantity(project.quantity);
       setServer(project.server);
@@ -206,9 +255,9 @@ export default function CraftingPage({
       setSale(project.sale);
       setTax(project.tax);
     } catch (e) {
-      setError(message(e));
+      if (revision === selectionRevision.current) setError(message(e));
     } finally {
-      setLoading(false);
+      if (revision === selectionRevision.current) setLoading(false);
     }
   }
   const listText = rows
@@ -264,7 +313,11 @@ export default function CraftingPage({
       <ItemSearchBar
         config={config}
         value={search}
-        onChange={setSearch}
+        onChange={(value) => {
+          selectionRevision.current++;
+          setLoading(false);
+          setSearch(value);
+        }}
         onSubmit={(q) => setSearch(q)}
         onSelect={(i) => void choose(i)}
         placeholder="Gegenstand mit Rezept suchen …"
@@ -279,7 +332,18 @@ export default function CraftingPage({
       {loading && <p role="status">Gegenstand und Rezept werden geladen …</p>}
       {item ? (
         <>
-          <ItemSummaryCard item={item} compact />
+          <div className="craft-selection">
+            <button
+              type="button"
+              className="icon-button craft-clear"
+              title="Auswahl aufheben"
+              aria-label="Auswahl aufheben"
+              onClick={clearSelection}
+            >
+              <X size={18} />
+            </button>
+            <ItemSummaryCard item={item} compact />
+          </div>
           <section className="panel">
             <div className="panel-title">
               <span>
@@ -287,6 +351,21 @@ export default function CraftingPage({
               </span>
               <span className="pill">{item.recipe.length} Rezeptzutaten</span>
             </div>
+            {item.crafting?.map((r) => {
+              const level = professionLevels.find(
+                (l) => l.jobId === r.jobId,
+              )?.level;
+              return (
+                <p key={r.jobId}>
+                  {r.jobName} · benötigt Stufe {r.level} ·{" "}
+                  {level === undefined
+                    ? "Berufsstufe nicht erfasst"
+                    : level >= r.level
+                      ? `Mit deiner Stufe ${level} herstellbar`
+                      : `Deine Stufe ${level} reicht noch nicht aus`}
+                </p>
+              );
+            })}
             <div className="v2-craft-inputs">
               <label>
                 Herstellungsmenge

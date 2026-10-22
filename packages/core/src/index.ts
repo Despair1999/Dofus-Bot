@@ -1,12 +1,24 @@
 import { z } from "zod";
 
-export const characterInput = z.object({
-  name: z.string().trim().min(1).max(64),
-  server: z.string().trim().min(1).max(64),
-  className: z.string().trim().min(1).max(64),
-  classId: z.number().int().positive().nullable().optional(),
-  level: z.number().int().min(1).max(200),
-});
+export const characterInput = z
+  .object({
+    name: z.string().trim().min(1).max(64),
+    server: z.string().trim().min(1).max(64),
+    className: z.string().trim().min(1).max(64),
+    classId: z.number().int().positive().nullable().optional(),
+    level: z.number().int().min(1).max(200),
+    omegaLevel: z
+      .number()
+      .int()
+      .min(0)
+      .max(Number.MAX_SAFE_INTEGER)
+      .nullable()
+      .optional(),
+  })
+  .refine((c) => !c.omegaLevel || c.level === 200, {
+    message: "Omega-Level ist erst ab Charakterstufe 200 verfügbar.",
+    path: ["omegaLevel"],
+  });
 export type CharacterInput = z.infer<typeof characterInput>;
 export interface Character extends CharacterInput {
   id: string;
