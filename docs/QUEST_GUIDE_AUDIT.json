@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-22T18:29:41.657879+00:00",
+  "sitemap": "https://www.dofuspourlesnoobs.com/sitemap.xml",
+  "catalogQuests": 1976,
+  "publishedSitemapLinks": 2484,
+  "uniqueCandidates": 1494,
+  "verifiedArticles": 1494,
+  "unmappedQuests": 482,
+  "policy": "Only URLs from published sitemap with successful HTTP response and matching title. No invented slugs, ambiguous or failed pages omitted."
+}

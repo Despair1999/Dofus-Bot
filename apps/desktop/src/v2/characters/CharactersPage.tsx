@@ -1,3 +1,4 @@
+import OmegaBadge from "../../ui/OmegaBadge";
 import ClassArtwork from "../../ui/ClassArtwork";
 import CharacterProfile from "./CharacterProfile";
 import { useRoute } from "../routing";
@@ -95,6 +96,9 @@ export default function CharactersPage({
       className: selectedClass.nameDe,
       classId: selectedClass.id,
       level: Number(data.get("level")),
+      omegaLevel: data.get("omegaLevel")
+        ? Number(data.get("omegaLevel"))
+        : null,
     };
     if (await onSave(input, editing ?? undefined)) {
       setEditing(null);
@@ -172,7 +176,9 @@ export default function CharactersPage({
                         />
                         <span className="v2-level">{character.level}</span>
                       </div>
-                      <h3>{character.name}</h3>
+                      <h3>
+                        {character.name} <OmegaBadge character={character} />
+                      </h3>
                       <p>{gameClass?.nameDe || character.className}</p>
                       <small>{character.server}</small>
                       <small>
@@ -341,6 +347,21 @@ export default function CharactersPage({
                 required
                 defaultValue={editing?.level || 1}
               />
+            </label>
+            <label>
+              Omega-Level
+              <input
+                name="omegaLevel"
+                aria-label="Omega-Level"
+                type="number"
+                min={0}
+                step={1}
+                defaultValue={editing?.omegaLevel ?? ""}
+                placeholder="Keines · ab Stufe 200"
+              />
+              <small>
+                Unabhängig von der Charakterstufe, erst ab Stufe 200.
+              </small>
             </label>
             <button disabled={busy || !selectedClass}>
               <Plus size={16} />

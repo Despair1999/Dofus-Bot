@@ -1,0 +1,88 @@
+{
+  "version": "0.8.0",
+  "testedAt": "2026-10-22T19:10:17.060Z",
+  "baseline": "072c1c7",
+  "unitTests": 117,
+  "browserTests": 54,
+  "typecheckPassed": true,
+  "lintPassed": true,
+  "monorepoBuildPassed": true,
+  "windowsInstallerBuilt": true,
+  "releasePackagesVerified": true,
+  "productionUiPassed": true,
+  "productionUiChecks": 15,
+  "existingUpdaterKeyPreserved": true,
+  "serviceUpgradePassed": true,
+  "assetAuditPassed": true,
+  "existingImagesAndCalculationsUnchanged": true,
+  "newImagesDownloaded": 0,
+  "gatheringAudit": {
+    "datasetVersion": "3.7.12.12",
+    "source": {
+      "url": "https://api.dofusdb.fr/recoltables2",
+      "version": "3.7.4.4",
+      "fetchedAt": "2026-10-22T18:20:37.628538+00:00",
+      "sha256": "2f3421ebde039e4a16cfd92388e47a9bfdad2c7650fc8c0b8bb24ef4f427b3e6"
+    },
+    "counts": {
+      "sourceMaps": 4999,
+      "sourceResourceCells": 15842,
+      "validatedMapResourceReferences": 13987,
+      "unconfirmedPatch": 13987,
+      "fishingCells": 3527,
+      "unmatchedItem": 548,
+      "worldMismatch": 1303,
+      "duplicates": 4
+    },
+    "resources": 124,
+    "regions": 1467,
+    "byJob": {
+      "2": 3878,
+      "24": 896,
+      "26": 2850,
+      "28": 2836,
+      "36": 3527
+    },
+    "policy": "Exact map/cell/item references validated, not region-expanded. Different source patch is unconfirmed, hidden by default and excluded from verified farm routes. No spawn coordinates or walkable edges inferred.",
+    "skillCrossCheck": {
+      "source": "https://api.dofusdb.fr/skills",
+      "sourceVersion": "3.7.4.4",
+      "checked": 124,
+      "matchingJobItemLevel": 124,
+      "differingSkillIds": []
+    },
+    "canonicalProfessionResourcesByJob": {
+      "2": 20,
+      "24": 16,
+      "26": 13,
+      "28": 13,
+      "36": 23
+    },
+    "sourceVerifiedCurrentPatch": 0
+  },
+  "questGuideAudit": {
+    "checkedAt": "2026-10-22T18:29:41.657879+00:00",
+    "sitemap": "https://www.dofuspourlesnoobs.com/sitemap.xml",
+    "catalogQuests": 1976,
+    "publishedSitemapLinks": 2484,
+    "uniqueCandidates": 1494,
+    "verifiedArticles": 1494,
+    "unmappedQuests": 482,
+    "policy": "Only URLs from published sitemap with successful HTTP response and matching title. No invented slugs, ambiguous or failed pages omitted."
+  },
+  "installerSha256": "36593f1c3b703746510af8b92653dc7a29c1dd60f4f816683752b1d867bffac6",
+  "nativeUi": {
+    "version": "0.8.0",
+    "testedAt": "2026-10-22T18:42:56.326Z",
+    "skipped": true,
+    "reason": "Existing user Companion process or listener on 4310/9223; no user process was changed",
+    "passed": []
+  },
+  "limitations": [
+    "13987 external source cells have an older patch and remain unconfirmed, hidden by default; no current-patch external spawn coverage is claimed",
+    "482 quests have no uniquely verified direct article",
+    "Native 0.8 smoke test skipped when a user instance was running; production Chromium checks do not establish interactive WebView2 behavior",
+    "Physical multi-monitor/DPI and live Discord authentication remain untested",
+    "Existing incomplete patch-verified dungeon strategies and four missing cosmetic catalog images remain"
+  ]
+}

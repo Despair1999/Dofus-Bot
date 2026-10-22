@@ -1,0 +1,36 @@
+{
+  "version": "0.8.0",
+  "builtFrom": "22d62108469767491256524f44b0d3d56e04b13a",
+  "files": [
+    {
+      "name": "DOFUS-Companion-0.8.0-setup.exe",
+      "size": 135055868,
+      "sha256": "36593f1c3b703746510af8b92653dc7a29c1dd60f4f816683752b1d867bffac6"
+    },
+    {
+      "name": "DOFUS-Companion-0.8.0-setup.exe.sig",
+      "size": 424,
+      "sha256": "5aed14170a959e85a67bb6c58169fc5ad4b0a60bf3654fb2396813c870a1c960"
+    },
+    {
+      "name": "Dofus-Companion-0.8.0-setup.zip",
+      "size": 135078812,
+      "sha256": "cb52ed52e28e144b2c64f81bcc67b510d12ec7b9753ed19df1ebf4fedf6d7145"
+    },
+    {
+      "name": "Dofus-Companion-0.8.0-portable.zip",
+      "size": 175886228,
+      "sha256": "de201f07e9f2ac050b2d301311751ef4b5614205fff1a1ff5c7c3a5d35b0c3e9"
+    },
+    {
+      "name": "game-catalog-v0.8.0.sqlite",
+      "size": 45096960,
+      "sha256": "a544dfbe41512226b711350ba96c945166191432b9977428db03c12cc5fa506e"
+    },
+    {
+      "name": "latest.json",
+      "size": 2376,
+      "sha256": "63aa1182c85cf509754c716411ec0ec4400615add8ed68d2d3c3f4c15327e43c"
+    }
+  ]
+}

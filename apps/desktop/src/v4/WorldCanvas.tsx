@@ -1,3 +1,5 @@
+import ResourceLayer from "./ResourceLayer";
+import type { GatheringNode, GatherableResource } from "@dofus/core";
 import { useEffect, useRef, useState } from "react";
 import type {
   WorldPosition,
@@ -15,6 +17,10 @@ export interface Camera {
   scale: number;
 }
 export default function WorldCanvas({
+  gatheringNodes = [],
+  gatheringResources = [],
+  clusterResources = true,
+  onResource,
   artwork,
   points = [],
   onPoint,
@@ -29,6 +35,10 @@ export default function WorldCanvas({
   onCoordinate,
   onViewport,
 }: {
+  gatheringNodes?: GatheringNode[];
+  gatheringResources?: GatherableResource[];
+  clusterResources?: boolean;
+  onResource?: (nodes: GatheringNode[]) => void;
   artwork?: WorldArtwork;
   points?: WorldPoint[];
   onPoint?: (point: WorldPoint) => void;
@@ -346,7 +356,7 @@ export default function WorldCanvas({
     });
   }
   useEffect(() => {
-    const node = canvas.current;
+    const node = canvas.current?.parentElement;
     if (!node) return;
     const handle = (e: WheelEvent) => {
       e.preventDefault();
@@ -458,6 +468,16 @@ export default function WorldCanvas({
           }
           drag.current = null;
         }}
+      />
+      <ResourceLayer
+        nodes={gatheringNodes}
+        resources={gatheringResources}
+        camera={camera}
+        width={size.width}
+        height={size.height}
+        aspect={aspect}
+        cluster={clusterResources}
+        onSelect={(nodes) => onResource?.(nodes)}
       />
       <div className="world-map-label">
         <span className="eyebrow">ATLAS DER ZWÖLF</span>

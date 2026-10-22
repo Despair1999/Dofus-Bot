@@ -1,3 +1,4 @@
+import type { GatheringNode } from "@dofus/core";
 import GameGlyph, { markerAppearance, mapCategories } from "../ui/GameGlyph";
 import {
   useCallback,
@@ -8,6 +9,7 @@ import {
   type CSSProperties,
 } from "react";
 import {
+  ChevronDown,
   Compass,
   MapPin,
   Route,
@@ -62,6 +64,15 @@ export default function WorldPage({
   characterId?: string;
 }) {
   const assets = useGameAssets();
+  const [gatheringNodes, setGatheringNodes] = useState<GatheringNode[]>([]),
+    [includeUnconfirmed, setIncludeUnconfirmed] = useState(false),
+    [clusterResources, setClusterResources] = useState(true),
+    [resourceDetails, setResourceDetails] = useState<GatheringNode[]>([]),
+    [estimatedOrder, setEstimatedOrder] = useState<number[]>([]),
+    [farmNodeCount, setFarmNodeCount] = useState(0);
+  const routeRevision = useRef(0);
+  const [maxStops, setMaxStops] = useState(30),
+    [omittedStops, setOmittedStops] = useState(0);
   const locationRoute = useRoute();
   const [rightVisible, setRightVisible] = useState(true);
   const [panelWidths, setPanelWidths] = useState({ left: 250, right: 285 });
@@ -236,6 +247,21 @@ export default function WorldPage({
     (value: typeof bounds) => setBounds(value),
     [],
   );
+  useEffect(() => {
+    if (!resources.length) return;
+    setResourceIds((ids) => {
+      const next = [
+        ...new Set(
+          ids.map(
+            (id) =>
+              resources.find((r) => r.id === id || r.aliases?.includes(id))
+                ?.id ?? id,
+          ),
+        ),
+      ];
+      return JSON.stringify(ids) === JSON.stringify(next) ? ids : next;
+    });
+  }, [resources, resourceIds]);
   const selectedResources = useMemo(
     () => resources.filter((r) => resourceIds.includes(r.id)),
     [resources, resourceIds],
@@ -546,6 +572,7 @@ export default function WorldPage({
     setCamera((c) => ({ ...c, x: map.x, y: map.y }));
   }
   async function calculate(farm = false) {
+    const revision = ++routeRevision.current;
     await run(async () => {
       const response = await send<WorldRoute>(
         farm ? "/api/world/farm-route" : "/api/world/route",
@@ -553,6 +580,11 @@ export default function WorldPage({
           startMapId: Number(startId),
           targetMapIds: targetIds,
           resourceIds,
+          includeUnconfirmed,
+          maxStops,
+          maxLevel,
+          ...(jobFilter ? { jobId: Number(jobFilter) } : {}),
+          ...(onlyCharacter && characterId ? { characterId } : {}),
           roundTrip,
           ...(farm && params.has("questId")
             ? { questId: Number(params.get("questId")) }
@@ -562,11 +594,22 @@ export default function WorldPage({
             : {}),
         },
       );
+      if (revision !== routeRevision.current) return;
+      const extra = response as typeof response & {
+        estimatedOrderMapIds?: number[];
+        omittedMapCount?: number;
+        nodeCount?: number;
+        warning?: string;
+      };
+      setEstimatedOrder(extra.estimatedOrderMapIds ?? []);
+      setFarmNodeCount(extra.nodeCount ?? 0);
+      setOmittedStops(extra.omittedMapCount ?? 0);
       setRoute(response.data);
       setCompleted([]);
       if (farm && response.data.mapIds.length <= 1) {
         setNotice(
-          "Keine erreichbaren eigenen Fundorte für diese Auswahl. Gebietsangaben allein erlauben keine genaue Farmroute.",
+          extra.warning ??
+            "Keine bestätigten aktuellen Fundorte für diese Auswahl. Dokumentierte Fundorte eines älteren Datenstands können ausdrücklich eingeblendet werden.",
         );
         return;
       }
@@ -627,6 +670,53 @@ export default function WorldPage({
       price,
     ],
   );
+  useEffect(() => {
+    routeRevision.current++;
+    setRoute(null);
+    setEstimatedOrder([]);
+    setResourceDetails([]);
+  }, [
+    resourceIds,
+    jobFilter,
+    maxLevel,
+    onlyCharacter,
+    includeUnconfirmed,
+    characterId,
+  ]);
+  useEffect(() => {
+    const c = new AbortController();
+    setGatheringNodes([]);
+    if (!resourceIds.length) return;
+    const q = new URLSearchParams({
+      worldId: String(worldId),
+      resourceIds: resourceIds.join(","),
+      includeUnconfirmed: String(includeUnconfirmed),
+      includePersonal: String(!activity),
+      maxLevel: String(maxLevel),
+    });
+    if (jobFilter) q.set("jobId", jobFilter);
+    if (onlyCharacter && characterId) q.set("characterId", characterId);
+    void request<GatheringNode[]>(`/api/world/gathering?${q}`, config, c.signal)
+      .then((r) => {
+        if (!c.signal.aborted) setGatheringNodes(r.data);
+      })
+      .catch((e) => {
+        if (!c.signal.aborted) setError(message(e));
+      });
+    return () => c.abort();
+  }, [
+    config,
+    worldId,
+    resourceIds,
+    includeUnconfirmed,
+    maxLevel,
+    jobFilter,
+    onlyCharacter,
+    characterId,
+    characterLevels,
+    markers,
+    activity,
+  ]);
   const resourceList = resources.filter(
     (r) =>
       (!jobFilter || r.jobId === Number(jobFilter)) &&
@@ -752,8 +842,11 @@ export default function WorldPage({
                   Zaaps
                 </label>
               </div>
-              <details className="map-category-filter">
-                <summary>Alle Kartenkategorien</summary>
+              <details className="map-category-filter world-layer-toggle">
+                <summary>
+                  Alle Kartenkategorien{" "}
+                  <ChevronDown size={16} aria-hidden="true" />
+                </summary>
                 {Object.entries(mapCategories).map(([id, entry]) => (
                   <label key={id}>
                     <input
@@ -914,6 +1007,31 @@ export default function WorldPage({
                   Berufslevel unter „Berufe & Sammelquests“ pflegen.
                 </p>
               )}
+              <label>
+                <input
+                  type="checkbox"
+                  checked={includeUnconfirmed}
+                  onChange={(e) => setIncludeUnconfirmed(e.target.checked)}
+                />{" "}
+                Dokumentierte Fundorte aus älterem Patch anzeigen
+              </label>
+              <small>
+                DofusDB 3.7.4.4 · Companion {version}. Exakte Quellenpositionen
+                sind für diesen Patch unbestätigt. Regionen sind keine
+                Sammelstellen.
+              </small>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={clusterResources}
+                  onChange={(e) => setClusterResources(e.target.checked)}
+                />{" "}
+                Fundstellen bei kleinem Zoom gruppieren
+              </label>
+              <p role="status">
+                {gatheringNodes.length} dokumentierte Sammelzellen für die
+                aktuelle Auswahl sichtbar.
+              </p>
               <div className="world-resource-list">
                 {resourceList.map((r) => (
                   <label
@@ -1081,6 +1199,34 @@ export default function WorldPage({
           </aside>
         )}
         <WorldCanvas
+          gatheringNodes={gatheringNodes}
+          gatheringResources={resources}
+          clusterResources={clusterResources}
+          onResource={(nodes) => {
+            setRightVisible(true);
+            setResourceDetails(nodes);
+            requestAnimationFrame(() => {
+              const panel = root.current?.querySelector(".world-details");
+              if (panel) panel.scrollTop = 0;
+            });
+            if (new Set(nodes.map((n) => n.mapId)).size > 1) {
+              setResourceDetails([]);
+              setCamera((c) => ({
+                ...c,
+                x: nodes[0].x,
+                y: nodes[0].y,
+                scale: Math.max(16, c.scale * 1.8),
+              }));
+              return;
+            }
+            void run(async () => {
+              const r = await request<WorldPosition>(
+                `/api/world/maps/${nodes[0].mapId}`,
+                config,
+              );
+              choose(r.data);
+            });
+          }}
           onCoordinate={(x, y) => {
             void run(async () => {
               const result = await request<WorldPosition[]>(
@@ -1131,6 +1277,61 @@ export default function WorldPage({
         />
         {rightVisible && (
           <aside className="world-side world-details">
+            {!!resourceDetails.length && (
+              <section className="resource-map-details">
+                <h3>Sammelstellen</h3>
+                {[...new Set(resourceDetails.map((n) => n.resourceId))].map(
+                  (id) => {
+                    const resource = resources.find((r) => r.id === id);
+                    return resource ? (
+                      <div key={id}>
+                        <ItemImage
+                          item={{ name: resource.name }}
+                          iconId={resource.iconId}
+                          itemId={resource.itemId}
+                          size={40}
+                        />
+                        <strong>{resource.name}</strong>
+                        <p>
+                          {resource.jobName} · Stufe {resource.level}
+                        </p>
+                      </div>
+                    ) : null;
+                  },
+                )}
+                <p>
+                  [{resourceDetails[0].x}, {resourceDetails[0].y}] · Karte{" "}
+                  {resourceDetails[0].mapId}
+                </p>
+                <p>
+                  {resourceDetails.length} dokumentierte Zellen · Quellenpatch{" "}
+                  {resourceDetails[0].sourceVersion}
+                </p>
+                <strong>
+                  {resourceDetails[0].verification === "verified"
+                    ? "Quellenstand bestätigt"
+                    : resourceDetails[0].verification === "personal-observation"
+                      ? "Persönliche Beobachtung · kein Echtzeit-Spawn"
+                      : "Aktueller Patch unbestätigt"}
+                </strong>
+                <button
+                  onClick={() => {
+                    const id = resourceDetails[0].mapId;
+                    setTargetIds((v) => [...new Set([...v, id])]);
+                    setTargetText((v) =>
+                      [
+                        ...new Set([
+                          ...v.split(",").filter(Boolean),
+                          String(id),
+                        ]),
+                      ].join(", "),
+                    );
+                  }}
+                >
+                  Als Routenziel übernehmen
+                </button>
+              </section>
+            )}
             <span className="eyebrow">DEIN NÄCHSTER SCHRITT</span>
             {selected ? (
               <>
@@ -1288,6 +1489,26 @@ export default function WorldPage({
                 />{" "}
                 Zum Start zurückkehren
               </label>
+              {farming && (
+                <label>
+                  Maximale Zielkarten
+                  <input
+                    aria-label="Maximale Zielkarten"
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={maxStops}
+                    onChange={(e) => {
+                      setMaxStops(
+                        Math.min(60, Math.max(1, Number(e.target.value) || 1)),
+                      );
+                      setRoute(null);
+                      setEstimatedOrder([]);
+                      routeRevision.current++;
+                    }}
+                  />
+                </label>
+              )}
               <div className="world-actions">
                 <button
                   disabled={busy || !Number(startId) || !targetIds.length}
@@ -1301,11 +1522,61 @@ export default function WorldPage({
                     disabled={busy || !Number(startId) || !resourceIds.length}
                     onClick={() => void calculate(true)}
                   >
-                    Eigene Fundorte verbinden
+                    Fundorte planen
                   </button>
                 )}
               </div>
             </details>
+            {!!estimatedOrder.length && (
+              <section aria-label="Geschätzte Fundortreihenfolge">
+                <h3>Geschätzte Besuchsreihenfolge</h3>
+                <p>
+                  {Math.max(0, estimatedOrder.length - 1)} Zielkarten ·{" "}
+                  {farmNodeCount} Fundstellen. Keine geprüfte Wegstrecke. Ältere
+                  Quellen bleiben unbestätigt.
+                </p>
+                <p>
+                  Start: Karte {estimatedOrder[0]} ·{" "}
+                  {selectedResources.map((r) => r.name).join(", ")}
+                </p>
+                {omittedStops > 0 && (
+                  <p>
+                    {omittedStops} weitere Zielkarten außerhalb der gewählten
+                    Begrenzung.
+                  </p>
+                )}
+                <ol>
+                  {estimatedOrder.map((id) => (
+                    <li key={id}>
+                      <button
+                        className="text-button"
+                        onClick={() =>
+                          void run(async () =>
+                            choose(
+                              (
+                                await request<WorldPosition>(
+                                  `/api/world/maps/${id}`,
+                                  config,
+                                )
+                              ).data,
+                            ),
+                          )
+                        }
+                      >
+                        Karte {id}{" "}
+                        {(() => {
+                          const p =
+                            gatheringNodes.find((n) => n.mapId === id) ??
+                            displayedMaps.find((m) => m.id === id);
+                          return p ? `[${p.x}, ${p.y}]` : "";
+                        })()}{" "}
+                        anzeigen
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            )}
             {route && (
               <div className="world-route">
                 <strong>{route.steps} Kartenwechsel</strong>
@@ -1332,7 +1603,25 @@ export default function WorldPage({
                           }
                         />
                         <span>
-                          Karte {id}
+                          <button
+                            type="button"
+                            className="text-button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              void run(async () =>
+                                choose(
+                                  (
+                                    await request<WorldPosition>(
+                                      `/api/world/maps/${id}`,
+                                      config,
+                                    )
+                                  ).data,
+                                ),
+                              );
+                            }}
+                          >
+                            Karte {id}
+                          </button>
                           <small>
                             {index < route.transitions.length
                               ? route.transitions[index].direction

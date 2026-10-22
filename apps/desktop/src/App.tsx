@@ -1,3 +1,4 @@
+import OmegaBadge from "./ui/OmegaBadge";
 import ClassArtwork from "./ui/ClassArtwork";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
@@ -997,7 +998,9 @@ function MainApp() {
                   />
                   <span>
                     <small>AKTIVER CHARAKTER</small>
-                    <strong>{character.name}</strong>
+                    <strong>
+                      {character.name} <OmegaBadge character={character} />
+                    </strong>
                     <span>
                       {character.className} · Stufe {character.level} ·{" "}
                       {character.server}
@@ -1334,6 +1337,8 @@ function MainApp() {
             <CraftingPage
               config={config}
               item={craftItem}
+              characterId={active || undefined}
+              onClear={() => setCraftItem(null)}
               navigateItem={navigateItem}
               onNotice={setNotice}
             />

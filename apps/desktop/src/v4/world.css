@@ -548,3 +548,50 @@
 .ui-point-filters {
   gap: 9px;
 }
+
+.resource-map-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.resource-map-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  width: 42px;
+  height: 42px;
+  padding: 4px;
+  border-radius: 50%;
+  border: 2px solid #d5b465;
+  background: #15251ff2;
+  box-shadow: 0 2px 7px #000a;
+  display: grid;
+  place-items: center;
+}
+.resource-map-marker.unconfirmed {
+  border-style: dashed;
+}
+.resource-map-marker:hover,
+.resource-map-marker:focus-visible {
+  z-index: 4;
+  outline: 3px solid #b1eb86;
+  background: #263b2f;
+}
+.resource-map-marker .resource-count {
+  position: absolute;
+  right: -6px;
+  bottom: -3px;
+  background: #e5c66d;
+  color: #211b0d;
+  border-radius: 10px;
+  min-width: 18px;
+  padding: 1px 4px;
+  font-size: 10px;
+  font-weight: bold;
+}
+.resource-map-details {
+  padding: 14px 0;
+  border-block: 1px solid var(--border);
+}

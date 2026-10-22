@@ -1,0 +1,10 @@
+{
+  "version": "0.8.0",
+  "testedAt": "2026-10-22T19:13:24.775Z",
+  "publicEndpoint": "https://github.com/Despair1999/Dofus-Bot/releases/latest/download/latest.json",
+  "publicManifestMatchesSignedLocalRelease": true,
+  "publicInstallerAvailable": true,
+  "installerBytes": 135055868,
+  "release": "https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.8.0",
+  "scope": "Public HTTP manifest compared against verified signed local release; upload SHA256 checked separately; no installation into user application performed"
+}

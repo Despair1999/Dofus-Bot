@@ -20,7 +20,9 @@ const specifications = inputs.length
       { version: "3.7.12.12", path: ".data/upstream.sqlite" },
     ];
 const versions = {};
-const imageManifest = JSON.parse(await readFile("apps/desktop/public/game-assets/manifest.json", "utf8"));
+const imageManifest = JSON.parse(
+  await readFile("apps/desktop/public/game-assets/manifest.json", "utf8"),
+);
 let guideIndex = { links: [] };
 try {
   guideIndex = JSON.parse(
@@ -150,11 +152,20 @@ for (const specification of specifications) {
       };
     });
   for (const dungeon of dungeons) {
-    const baseName = dungeon.nameFr.replace(/^Expédition(?: de l'Audace| de la Bravoure)? - /, "");
-    const base = baseName !== dungeon.nameFr ? dungeons.find(d => d.nameFr === baseName) : undefined;
+    const baseName = dungeon.nameFr.replace(
+      /^Expédition(?: de l'Audace| de la Bravoure)? - /,
+      "",
+    );
+    const base =
+      baseName !== dungeon.nameFr
+        ? dungeons.find((d) => d.nameFr === baseName)
+        : undefined;
     dungeon.variantOf = base?.id;
     dungeon.illustrationMonsterId = dungeon.bossIds[0] ?? base?.bossIds[0];
-    if (base) dungeon.guideUrls = [...new Set([...dungeon.guideUrls, ...base.guideUrls])];
+    if (base)
+      dungeon.guideUrls = [
+        ...new Set([...dungeon.guideUrls, ...base.guideUrls]),
+      ];
   }
   const monsterIds = new Set(dungeons.flatMap((d) => d.monsterIds));
   const spellQuery = db.prepare("SELECT * FROM SpellData WHERE id=?");
@@ -186,7 +197,10 @@ for (const specification of specifications) {
       ...names(row),
       gfxId: row.gfxId,
       image: imageManifest.monsters[String(row.id)] ?? null,
-      imageStatus: version === "3.7.12.12" ? "bundled-original-3.7.12.12" : "illustration-3.7.12.12",
+      imageStatus:
+        version === "3.7.12.12"
+          ? "bundled-original-3.7.12.12"
+          : "illustration-3.7.12.12",
       grades: parse(row.grades).map((g) => ({
         grade: g.grade,
         level: g.level,
@@ -311,9 +325,12 @@ for (const specification of specifications) {
     importedAt: new Date().toISOString(),
     dungeons,
     monsters,
-    professions: [...jobs.values()].filter((j) =>
-      [2, 24, 26, 28, 36, 41].includes(j.id),
-    ),
+    craftingRecipes: db
+      .prepare(
+        "SELECT resultId AS itemId,jobId,resultLevel AS level FROM RecipeData",
+      )
+      .all(),
+    professions: [...jobs.values()].filter((j) => j.id !== 1),
     professionQuests,
     report: {
       catalogDungeons: dungeons.length,
@@ -329,7 +346,7 @@ for (const specification of specifications) {
         .filter((e) => e.version === version && e.mechanicsVerified)
         .reduce((n, e) => n + e.mechanics.length, 0),
       verifiedStrategies: 0,
-      missingImages: monsters.filter(m => !m.image).length,
+      missingImages: monsters.filter((m) => !m.image).length,
       invalidBossReferences,
       professionQuests: professionQuests.length,
     },
