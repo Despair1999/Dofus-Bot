@@ -72,3 +72,7 @@ Die öffentliche Website enthält Startseite, Feature-Tabs, interaktive vereinfa
 ## Prüfungen
 
 Vor dem Merge: Website-Workflow grün (TypeScript, Unit Tests, Produktionsbuild). Zusätzliche manuelle Browserabnahme: Zugang falsch/richtig, Reload in Session, neuer Browser-Sitzungstoken, Deep Links, Sichtbarkeit auf Handy/Desktop, fehlender Verifier, 404 auf deaktivierten rechtlichen URLs. Nach optionalem autorisiertem Deployment echte Firebase-URLs und Response-Header prüfen. Ein erfolgreicher CI-Build allein belegt keinen erfolgreichen Live-Deploy und keine gerichtsfeste rechtliche Einordnung.
+
+## Veröffentlichungsvorgang
+
+Die erste passwortgeschützte Firebase-Hosting-Vorschau wird über den dedizierten GitHub-Actions-Workflow aus `main` veröffentlicht. Das Website-Build muss erfolgreich sein und der Deployment-Job muss anschließend als erfolgreich bestätigt werden; ein erfolgreicher Commit oder Merge allein beweist noch keine Bereitstellung. Bei fehlendem Workflow-Lauf kann der Workflow in GitHub Actions manuell über `Run workflow` auf Branch `main` gestartet werden.
