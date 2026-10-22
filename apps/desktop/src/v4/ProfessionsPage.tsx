@@ -7,7 +7,7 @@ import type {
 } from "@dofus/core";
 import { api, type Config } from "../client";
 import { request, message } from "../v2/shared/request";
-import { navigatePath } from "../v2/routing";
+import { navigatePath, useRoute } from "../v2/routing";
 import "./dungeons.css";
 import ItemImage from "../v2/shared/ItemImage";
 type Personal = {
@@ -30,6 +30,11 @@ export default function ProfessionsPage({
   activeCharacterId?: string;
   onNavigate?: (path: string) => void;
 }) {
+  const route = useRoute();
+  useEffect(() => {
+    const id = Number(route.params.get("jobId"));
+    if ([2, 24, 26, 28, 36, 41].includes(id)) setResourceJob(id);
+  }, [route.path]);
   const [quests, setQuests] = useState<ProfessionQuest[]>([]),
     [jobs, setJobs] = useState<{ id: number; name: string }[]>([]),
     [characterId, setCharacterId] = useState(

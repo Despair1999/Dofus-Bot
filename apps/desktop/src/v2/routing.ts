@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 export type View =
+  | "monsters"
+  | "sets"
   | "dashboard"
   | "items"
   | "builder"

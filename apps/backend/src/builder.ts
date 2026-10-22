@@ -432,6 +432,62 @@ export function registerBuilder(app: FastifyInstance, store: BuilderStore) {
     const d = store.dataset.versions[version];
     return { data: { items: d?.items ?? [], sets: d?.sets ?? [] } };
   });
+  app.get("/api/builder/sets", (request) => {
+    const f = z
+      .object({
+        version: versionSchema,
+        q: z.string().max(150).default(""),
+        limit: z.coerce.number().int().min(1).max(100).default(40),
+        page: z.coerce.number().int().min(1).default(1),
+      })
+      .parse(request.query);
+    const data = store.dataset.versions[f.version];
+    const term = f.q.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase();
+    const sets = (data?.sets ?? []).filter((s) =>
+      `${s.name} ${s.id}`
+        .normalize("NFKD")
+        .replace(/\p{M}/gu, "")
+        .toLowerCase()
+        .includes(term),
+    );
+    return {
+      data: sets
+        .slice((f.page - 1) * f.limit, f.page * f.limit)
+        .map((s) => ({
+          ...s,
+          items: (data?.items ?? [])
+            .filter((i) => i.setId === s.id)
+            .map((i) => ({
+              id: i.id,
+              name: i.name,
+              imageUrl: i.imageUrl,
+              level: i.level,
+            })),
+        })),
+      total: sets.length,
+      version: f.version,
+    };
+  });
+  app.get("/api/builder/sets/:id", (request, reply) => {
+    const version = z
+        .object({ version: versionSchema })
+        .parse(request.query).version,
+      id = z.coerce
+        .number()
+        .int()
+        .positive()
+        .parse((request.params as { id: string }).id),
+      data = store.dataset.versions[version],
+      set = data?.sets.find((s) => s.id === id);
+    return set
+      ? {
+          data: { ...set, items: data.items.filter((i) => i.setId === id) },
+          version,
+        }
+      : reply
+          .code(404)
+          .send({ error: "Set ist in diesem Datenstand nicht enthalten." });
+  });
   app.get("/api/builder/spells", (request) => {
     const f = z
       .object({

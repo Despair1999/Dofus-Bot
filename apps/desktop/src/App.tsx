@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  LayoutDashboard,
   Package,
   BookOpen,
   ScanLine,
@@ -8,7 +7,6 @@ import {
   Users,
   CalendarDays,
   Star,
-  Settings,
   RefreshCw,
   Wifi,
   WifiOff,
@@ -76,6 +74,19 @@ import ProfessionsPage from "./v4/ProfessionsPage";
 import TranslatorPanel from "./v4/translator/TranslatorPanel";
 import { useRoute, navigatePath, type View } from "./v2/routing";
 import { AppearanceSettings } from "./appearance";
+import SideNavigation from "./ui/SideNavigation";
+import { navigationItems } from "./ui/navigation";
+import CommandPalette from "./ui/CommandPalette";
+import { useWorkspace } from "./ui/workspace";
+import WorkspaceHome from "./ui/WorkspaceHome";
+import MonstersPage from "./ui/MonstersPage";
+import SetsPage from "./ui/SetsPage";
+import SettingsWorkspace, {
+  SettingsGroup,
+  SettingsInformation,
+  AssetDiagnostics,
+} from "./ui/SettingsWorkspace";
+import { DisplayPreferences } from "./ui/preferences";
 import appPackage from "../package.json";
 import type { OverlaySnapshot } from "./v2/overlay/model";
 import "./v2/v2.css";
@@ -88,31 +99,11 @@ type Favorite = {
   category?: string;
 };
 type SavedProgress = Pick<Progress, "questId" | "step" | "status" | "version">;
-const tabs: { id: View; label: string; icon: typeof Search }[] = [
-  { id: "dashboard", label: "Übersicht", icon: LayoutDashboard },
-  { id: "items", label: "Gegenstände", icon: Package },
-  { id: "builder", label: "Builder", icon: ShieldCheck },
-  { id: "world", label: "Weltkarte", icon: Compass },
-  { id: "farming", label: "Farmrouten", icon: Hammer },
-  { id: "dungeons", label: "Dungeons & Bosse", icon: ShieldCheck },
-  { id: "professions", label: "Berufe & Sammelquests", icon: BookOpen },
-  { id: "translator", label: "Übersetzer", icon: BookOpen },
-  { id: "quests", label: "Quest-Assistent", icon: BookOpen },
-  { id: "scanner", label: "Bildschirm erkennen", icon: ScanLine },
-  { id: "craft", label: "Crafting & Kamas", icon: Hammer },
-  { id: "characters", label: "Charaktere", icon: Users },
-  { id: "almanax", label: "Almanax", icon: CalendarDays },
-  { id: "favorites", label: "Favoriten", icon: Star },
-  { id: "settings", label: "Einstellungen", icon: Settings },
-];
+const tabs = navigationItems;
 export default function App() {
   return isOverlayWindow() ? <OverlayView /> : <MainApp />;
 }
 function MainApp() {
-  const [toolsOpen, setToolsOpen] = useState(false);
-  useEffect(() => {
-    void read("navigation:tools-open", false).then(setToolsOpen);
-  }, []);
   const [navigation, setNavigation] = useState<OverlaySnapshot["navigation"]>();
   useEffect(() => {
     let mounted = true;
@@ -158,6 +149,35 @@ function MainApp() {
     [onboarding, setOnboarding] = useState(false),
     [catalogRevision, setCatalogRevision] = useState(0),
     [dashboardQuery, setDashboardQuery] = useState("");
+  const [commandOpen, setCommandOpen] = useState(false);
+  useWorkspace(ready, route.path);
+  const routeHistory = useRef<string[]>([]);
+  useEffect(() => {
+    const list = routeHistory.current;
+    if (list.at(-1) !== route.path) {
+      if (list.at(-2) === route.path) list.pop();
+      else list.push(route.path);
+    }
+  }, [route.path]);
+  function goBack() {
+    if (routeHistory.current.length > 1) history.back();
+    else navigatePath(route.entityId ? `/${route.view}` : "/");
+  }
+  useEffect(() => {
+    const open = () => setCommandOpen(true);
+    const keys = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandOpen((v) => !v);
+      }
+    };
+    window.addEventListener("companion:command", open);
+    window.addEventListener("keydown", keys);
+    return () => {
+      window.removeEventListener("companion:command", open);
+      window.removeEventListener("keydown", keys);
+    };
+  }, []);
   const lastSearch = useRef("/items/search");
   useEffect(() => {
     if (route.view === "items" && !route.id) lastSearch.current = route.path;
@@ -724,122 +744,57 @@ function MainApp() {
   };
   return (
     <div className={`app v2-shell ${mode}`}>
+      {commandOpen && (
+        <CommandPalette config={config} onClose={() => setCommandOpen(false)} />
+      )}
       {mode === "dashboard" && (
-        <aside className="sidebar">
-          <div className="brand">
-            <img
-              className="v2-brand-image"
-              src="/branding/wordmark.png"
-              alt="DOFUS Companion"
-            />
-          </div>
-          <div className="workspace">
-            <span className="status-dot" /> DEIN ABENTEUER. DEIN COMPANION.
-          </div>
-          <nav aria-label="Hauptnavigation">
-            {tabs
-              .filter((e) => e.id === "dashboard")
-              .map((entry) => (
-                <button
-                  key={entry.id}
-                  className={`nav ${tab === entry.id ? "active" : ""}`}
-                  onClick={() => navigate(entry.id)}
-                >
-                  <entry.icon size={19} />
-                  {entry.label}
-                </button>
-              ))}
-            <button
-              className={`nav tools-toggle ${!["dashboard", "characters", "almanax", "favorites", "settings"].includes(tab) ? "active" : ""}`}
-              aria-expanded={toolsOpen}
-              aria-controls="tools-navigation"
-              onClick={() => {
-                const next = !toolsOpen;
-                setToolsOpen(next);
-                void write("navigation:tools-open", next);
-              }}
-            >
-              <Layers size={19} />
-              Tools
-              <ChevronRight size={16} />
-            </button>
-            {toolsOpen && (
-              <div id="tools-navigation" className="tools-links">
-                {tabs
-                  .filter(
-                    (e) =>
-                      ![
-                        "dashboard",
-                        "characters",
-                        "almanax",
-                        "favorites",
-                        "settings",
-                      ].includes(e.id),
-                  )
-                  .map((entry) => (
-                    <button
-                      key={entry.id}
-                      className={`nav ${tab === entry.id ? "active" : ""}`}
-                      onClick={() => navigate(entry.id)}
-                    >
-                      <entry.icon size={17} />
-                      {entry.label}
-                      {entry.id === "scanner" && (
-                        <span className="nav-tag">OCR</span>
-                      )}
-                    </button>
-                  ))}
+        <SideNavigation
+          current={tab}
+          onNavigate={navigate}
+          footer={
+            <div className="sidebar-bottom">
+              <div className="safe">
+                <ShieldCheck size={18} />
+                <div>
+                  Dein Spiel. Deine Kontrolle.
+                  <small>Unabhängiges Community-Projekt</small>
+                </div>
               </div>
-            )}
-            {tabs
-              .filter((e) =>
-                ["characters", "almanax", "favorites", "settings"].includes(
-                  e.id,
-                ),
-              )
-              .map((entry) => (
-                <button
-                  key={entry.id}
-                  className={`nav ${tab === entry.id ? "active" : ""}`}
-                  onClick={() => navigate(entry.id)}
-                >
-                  <entry.icon size={19} />
-                  {entry.label}
-                </button>
-              ))}
-          </nav>
-          <div className="sidebar-bottom">
-            <div className="safe">
-              <ShieldCheck size={18} />
-              <div>
-                Dein Spiel. Deine Kontrolle.
-                <small>Unabhängiges Community-Projekt</small>
-              </div>
+              <button
+                className="profile"
+                onClick={() => navigate("characters")}
+              >
+                <div className="avatar">
+                  {gameClass ? (
+                    <img src={gameClass.icon} alt="" />
+                  ) : (
+                    character?.name.slice(0, 2).toUpperCase() || "＋"
+                  )}
+                </div>
+                <span>
+                  {character?.name || "Charakter hinzufügen"}
+                  <small>
+                    {character
+                      ? `${gameClass?.nameDe || character.className} · Stufe ${character.level}`
+                      : "Dein persönliches Profil"}
+                  </small>
+                </span>
+                <ChevronRight size={16} />
+              </button>
             </div>
-            <button className="profile" onClick={() => navigate("characters")}>
-              <div className="avatar">
-                {gameClass ? (
-                  <img src={gameClass.icon} alt="" />
-                ) : (
-                  character?.name.slice(0, 2).toUpperCase() || "＋"
-                )}
-              </div>
-              <span>
-                {character?.name || "Charakter hinzufügen"}
-                <small>
-                  {character
-                    ? `${gameClass?.nameDe || character.className} · Stufe ${character.level}`
-                    : "Dein persönliches Profil"}
-                </small>
-              </span>
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </aside>
+          }
+        />
       )}
       <main>
         <header>
           <div className="breadcrumb">
+            <button
+              className="icon-button ui-header-back"
+              aria-label="Zurück zur vorherigen Ansicht"
+              onClick={goBack}
+            >
+              <ChevronRight size={17} style={{ transform: "rotate(180deg)" }} />
+            </button>
             Mein Companion <ChevronRight size={13} />
             <strong>{tabs.find((entry) => entry.id === tab)?.label}</strong>
             {route.id && (
@@ -850,6 +805,15 @@ function MainApp() {
             )}
           </div>
           <div className="v2-header-buttons">
+            <button
+              className="ui-global-search"
+              aria-label="Globale Suche öffnen"
+              onClick={() => setCommandOpen(true)}
+            >
+              <Search size={16} />
+              <span>Alles durchsuchen</span>
+              <kbd>Ctrl K</kbd>
+            </button>
             <span className={`connection ${online ? "online" : ""}`}>
               {online ? <Wifi size={14} /> : <WifiOff size={14} />}{" "}
               {online ? "Backend erreichbar" : "Offline"}
@@ -884,6 +848,26 @@ function MainApp() {
             </button>
           </div>
         </header>
+        <div className="ui-mobile-navigation">
+          <label className="sr-only" htmlFor="mobile-module">
+            Modul wählen
+          </label>
+          <select
+            id="mobile-module"
+            value={tab}
+            onChange={(e) => navigate(e.target.value as View)}
+          >
+            {tabs.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+          <button className="secondary" onClick={() => setCommandOpen(true)}>
+            <Search size={16} />
+            Suchen
+          </button>
+        </div>
         <div className="content">
           {mode === "compact" && (
             <div className="v2-compact-nav">
@@ -899,7 +883,9 @@ function MainApp() {
               ))}
             </div>
           )}
-          {!["builder", "dungeons", "professions"].includes(tab) && (
+          {!["builder", "dungeons", "professions", "monsters", "sets"].includes(
+            tab,
+          ) && (
             <div className="page-heading">
               <div>
                 <span className="eyebrow">
@@ -980,7 +966,7 @@ function MainApp() {
             </section>
           )}
           {notice && (
-            <div className="notice" role="status">
+            <div className="notice ui-toast" role="status">
               <span>{notice}</span>
               <button className="text-button" onClick={() => setNotice("")}>
                 Schließen
@@ -989,6 +975,7 @@ function MainApp() {
           )}
           {tab === "dashboard" && (
             <div className="v2-dashboard">
+              <WorkspaceHome config={config} />
               <section className="panel v2-dashboard-search">
                 <span className="eyebrow">SCHNELL GEFUNDEN</span>
                 <h2>Wonach suchst du heute?</h2>
@@ -1336,6 +1323,8 @@ function MainApp() {
               onDelete={deleteCharacter}
             />
           )}
+          {tab === "monsters" && <MonstersPage config={config} />}
+          {tab === "sets" && <SetsPage config={config} />}
           {tab === "builder" && (
             <BuilderPage
               config={config}
@@ -1414,155 +1403,166 @@ function MainApp() {
             </section>
           )}
           {tab === "settings" && (
-            <>
-              <AppearanceSettings />
-              <UpdatePanel />
-              <CatalogPanel
-                config={config}
-                onComplete={() => setCatalogRevision((value) => value + 1)}
-              />
-              <OverlaySettings onNotice={setNotice} />
-              <section className="panel">
-                <div className="panel-title">
-                  <span>
-                    <Layers size={18} /> Hauptfenster
-                  </span>
-                </div>
-                <div className="toolbar">
-                  <button
-                    className="secondary"
-                    onClick={() => void changeMode("dashboard")}
-                  >
-                    Dashboard
-                  </button>
-                  <button
-                    className="secondary"
-                    onClick={() => void changeMode("compact")}
-                  >
-                    Compact Mode
-                  </button>
-                  <button
-                    className="secondary"
-                    onClick={() => void changeMode("hotbar")}
-                  >
-                    Mini-Hotbar
-                  </button>
-                </div>
-                <small>
-                  Escape bringt das Hauptfenster aus einer kompakten Ansicht
-                  zurück.
-                </small>
-              </section>
-              <section className="panel">
-                <div className="panel-title">
-                  <span>
-                    <Wifi size={18} /> Backend-Verbindung
-                  </span>
-                  <span className="pill">Einzelbenutzer-Modus</span>
-                </div>
-                <form
-                  className="form-grid v2-connection-form"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void run(async () => {
-                      await write("config", { url: config.url, token: "" });
-                      sessionStorage.setItem("companion-token", config.token);
-                      setNotice(
-                        "Verbindung gespeichert. Der Schlüssel wird nur für diese Sitzung gespeichert.",
-                      );
-                    });
-                  }}
-                >
-                  <label>
-                    Backend-URL
-                    <input
-                      type="url"
-                      required
-                      value={config.url}
-                      onChange={(event) =>
-                        setConfig({ ...config, url: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label>
-                    Lokaler Zugangsschlüssel
-                    <input
-                      type="password"
-                      autoComplete="off"
-                      value={config.token}
-                      onChange={(event) =>
-                        setConfig({ ...config, token: event.target.value })
-                      }
-                    />
-                  </label>
-                  <button>Verbindung speichern</button>
-                  <button
-                    type="button"
-                    className="secondary"
-                    onClick={() => void synchronize()}
-                  >
-                    Verbindung testen & synchronisieren
-                  </button>
+            <SettingsWorkspace>
+              <SettingsInformation config={config} />
+              <SettingsGroup id="appearance">
+                <AppearanceSettings />
+                <DisplayPreferences />
+              </SettingsGroup>
+              <SettingsGroup id="data">
+                <AssetDiagnostics />
+                <UpdatePanel />
+                <CatalogPanel
+                  config={config}
+                  onComplete={() => setCatalogRevision((value) => value + 1)}
+                />
+              </SettingsGroup>
+              <SettingsGroup id="overlay">
+                <OverlaySettings onNotice={setNotice} />
+              </SettingsGroup>
+              <SettingsGroup id="advanced">
+                <section className="panel">
+                  <div className="panel-title">
+                    <span>
+                      <Layers size={18} /> Hauptfenster
+                    </span>
+                  </div>
+                  <div className="toolbar">
+                    <button
+                      className="secondary"
+                      onClick={() => void changeMode("dashboard")}
+                    >
+                      Dashboard
+                    </button>
+                    <button
+                      className="secondary"
+                      onClick={() => void changeMode("compact")}
+                    >
+                      Compact Mode
+                    </button>
+                    <button
+                      className="secondary"
+                      onClick={() => void changeMode("hotbar")}
+                    >
+                      Mini-Hotbar
+                    </button>
+                  </div>
                   <small>
-                    Die Windows-App startet ihr lokales Backend automatisch. Für
-                    die Browseransicht liegt der Schlüssel in
-                    .data/backend-token bzw. deiner eigenen .env. Keine
-                    Ankama-Zugangsdaten eingeben.
+                    Escape bringt das Hauptfenster aus einer kompakten Ansicht
+                    zurück.
                   </small>
-                </form>
-              </section>
-              <section className="panel">
-                <h2>Datenschutz & Synchronisierung</h2>
-                <p>
-                  {pending} Änderung(en) warten auf Synchronisierung.
-                  Versionskonflikte werden nicht automatisch überschrieben.
-                </p>
-                <div className="toolbar">
-                  <button
-                    className="secondary"
-                    onClick={() => void run(exportData)}
-                  >
-                    <Clipboard size={16} /> Eigene Daten exportieren
-                  </button>
-                  <button
-                    className="secondary"
-                    onClick={() => {
-                      if (
-                        confirm(
-                          "Ausstehende lokale Änderungen verwerfen? Anschließend erneut synchronisieren.",
-                        )
-                      )
-                        void run(async () => {
-                          await write("outbox", []);
-                          setPending(0);
-                          setNotice(
-                            "Warteschlange verworfen. Jetzt den Serverstand synchronisieren.",
-                          );
-                        });
+                </section>
+                <section className="panel">
+                  <div className="panel-title">
+                    <span>
+                      <Wifi size={18} /> Backend-Verbindung
+                    </span>
+                    <span className="pill">Einzelbenutzer-Modus</span>
+                  </div>
+                  <form
+                    className="form-grid v2-connection-form"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void run(async () => {
+                        await write("config", { url: config.url, token: "" });
+                        sessionStorage.setItem("companion-token", config.token);
+                        setNotice(
+                          "Verbindung gespeichert. Der Schlüssel wird nur für diese Sitzung gespeichert.",
+                        );
+                      });
                     }}
                   >
-                    Warteschlange verwerfen
-                  </button>
-                  <button
-                    className="danger"
-                    onClick={() => {
-                      if (
-                        confirm(
-                          "Alle lokalen Daten einschließlich nicht synchronisierter Änderungen löschen? Backend-Profile bleiben erhalten.",
+                    <label>
+                      Backend-URL
+                      <input
+                        type="url"
+                        required
+                        value={config.url}
+                        onChange={(event) =>
+                          setConfig({ ...config, url: event.target.value })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Lokaler Zugangsschlüssel
+                      <input
+                        type="password"
+                        autoComplete="off"
+                        value={config.token}
+                        onChange={(event) =>
+                          setConfig({ ...config, token: event.target.value })
+                        }
+                      />
+                    </label>
+                    <button>Verbindung speichern</button>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => void synchronize()}
+                    >
+                      Verbindung testen & synchronisieren
+                    </button>
+                    <small>
+                      Die Windows-App startet ihr lokales Backend automatisch.
+                      Für die Browseransicht liegt der Schlüssel in
+                      .data/backend-token bzw. deiner eigenen .env. Keine
+                      Ankama-Zugangsdaten eingeben.
+                    </small>
+                  </form>
+                </section>
+                <section className="panel">
+                  <h2>Datenschutz & Synchronisierung</h2>
+                  <p>
+                    {pending} Änderung(en) warten auf Synchronisierung.
+                    Versionskonflikte werden nicht automatisch überschrieben.
+                  </p>
+                  <div className="toolbar">
+                    <button
+                      className="secondary"
+                      onClick={() => void run(exportData)}
+                    >
+                      <Clipboard size={16} /> Eigene Daten exportieren
+                    </button>
+                    <button
+                      className="secondary"
+                      onClick={() => {
+                        if (
+                          confirm(
+                            "Ausstehende lokale Änderungen verwerfen? Anschließend erneut synchronisieren.",
+                          )
                         )
-                      )
-                        void run(async () => {
-                          await erase();
-                          sessionStorage.clear();
-                          location.reload();
-                        });
-                    }}
-                  >
-                    Lokale Daten löschen
-                  </button>
-                </div>
-              </section>
-            </>
+                          void run(async () => {
+                            await write("outbox", []);
+                            setPending(0);
+                            setNotice(
+                              "Warteschlange verworfen. Jetzt den Serverstand synchronisieren.",
+                            );
+                          });
+                      }}
+                    >
+                      Warteschlange verwerfen
+                    </button>
+                    <button
+                      className="danger"
+                      onClick={() => {
+                        if (
+                          confirm(
+                            "Alle lokalen Daten einschließlich nicht synchronisierter Änderungen löschen? Backend-Profile bleiben erhalten.",
+                          )
+                        )
+                          void run(async () => {
+                            await erase();
+                            sessionStorage.clear();
+                            location.reload();
+                          });
+                      }}
+                    >
+                      Lokale Daten löschen
+                    </button>
+                  </div>
+                </section>
+              </SettingsGroup>
+            </SettingsWorkspace>
           )}
           <footer>
             <span>

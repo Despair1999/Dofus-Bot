@@ -4,6 +4,8 @@ import App from "./App";
 import ActivityApp from "./v4/ActivityApp";
 import "./styles.css";
 import { AppearanceSync } from "./appearance";
+import "./ui/design-system.css";
+import { PreferenceSync } from "./ui/preferences";
 const activityParameters = new URLSearchParams(location.search);
 const activityMode =
   location.pathname.replace(/\/$/, "") === "/activity" ||
@@ -11,6 +13,7 @@ const activityMode =
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AppearanceSync />
+    {!activityMode && <PreferenceSync />}
     {activityMode ? <ActivityApp /> : <App />}
   </React.StrictMode>,
 );

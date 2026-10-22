@@ -1,0 +1,147 @@
+import {
+  LayoutDashboard,
+  Package,
+  Layers,
+  Swords,
+  BookOpen,
+  ScanLine,
+  Hammer,
+  Users,
+  CalendarDays,
+  Star,
+  Settings,
+  ShieldCheck,
+  Compass,
+  Route,
+  Languages,
+} from "lucide-react";
+import type { View } from "../v2/routing";
+
+export const navigationItems: {
+  id: View;
+  label: string;
+  icon: typeof Compass;
+  group: string;
+  description: string;
+}[] = [
+  {
+    id: "dashboard",
+    label: "Übersicht",
+    icon: LayoutDashboard,
+    group: "Entdecken",
+    description: "Dein Abenteuer auf einen Blick",
+  },
+  {
+    id: "world",
+    label: "Weltkarte",
+    icon: Compass,
+    group: "Entdecken",
+    description: "Orte, Ressourcen und eigene Markierungen",
+  },
+  {
+    id: "items",
+    label: "Gegenstände",
+    icon: Package,
+    group: "Entdecken",
+    description: "Ausrüstung, Materialien und Rezepte",
+  },
+  {
+    id: "sets",
+    label: "Sets",
+    icon: Layers,
+    group: "Entdecken",
+    description: "Ausrüstungssets und ihre Boni",
+  },
+  {
+    id: "monsters",
+    label: "Monster",
+    icon: Swords,
+    group: "Entdecken",
+    description: "Bestiarium, Resistenzen und Drops",
+  },
+  {
+    id: "dungeons",
+    label: "Dungeons & Bosse",
+    icon: ShieldCheck,
+    group: "Entdecken",
+    description: "Mechaniken und Vorbereitung",
+  },
+  {
+    id: "quests",
+    label: "Quest-Assistent",
+    icon: BookOpen,
+    group: "Entdecken",
+    description: "Ziele und Fortschritt",
+  },
+  {
+    id: "characters",
+    label: "Charaktere",
+    icon: Users,
+    group: "Planen",
+    description: "Deine Charaktere und Klassen",
+  },
+  {
+    id: "builder",
+    label: "Builder",
+    icon: ShieldCheck,
+    group: "Planen",
+    description: "Ausrüstung, Schaden und Optimierer",
+  },
+  {
+    id: "farming",
+    label: "Farmrouten",
+    icon: Route,
+    group: "Planen",
+    description: "Sammelrunden und bestätigte Fundorte",
+  },
+  {
+    id: "professions",
+    label: "Berufe & Sammelquests",
+    icon: Hammer,
+    group: "Planen",
+    description: "Berufslevel und tägliche Ziele",
+  },
+  {
+    id: "craft",
+    label: "Crafting & Kamas",
+    icon: Hammer,
+    group: "Planen",
+    description: "Materialbedarf und eigene Preise",
+  },
+  {
+    id: "translator",
+    label: "Übersetzer",
+    icon: Languages,
+    group: "Tools",
+    description: "Zwei kostenlose lokale Übersetzer",
+  },
+  {
+    id: "scanner",
+    label: "Bildschirm erkennen",
+    icon: ScanLine,
+    group: "Tools",
+    description: "Aufnahmen lokal mit OCR auswerten",
+  },
+  {
+    id: "almanax",
+    label: "Almanax",
+    icon: CalendarDays,
+    group: "Tools",
+    description: "Opfergaben und Tagesboni",
+  },
+  {
+    id: "favorites",
+    label: "Favoriten",
+    icon: Star,
+    group: "Persönlich",
+    description: "Deine gespeicherten Gegenstände und Quests",
+  },
+  {
+    id: "settings",
+    label: "Einstellungen",
+    icon: Settings,
+    group: "Persönlich",
+    description: "Darstellung, Overlay, Daten und Updates",
+  },
+];
+export const viewPath = (id: View) => (id === "dashboard" ? "/" : `/${id}`);
