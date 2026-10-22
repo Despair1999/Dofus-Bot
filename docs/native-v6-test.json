@@ -1,0 +1,24 @@
+{
+  "testedAt": "2026-10-22T15:57:36.810Z",
+  "version": "0.6.0",
+  "runtime": "Windows x64 / Tauri QA identifier / WebView2",
+  "isolatedProfile": true,
+  "applicationId": "fr.dofus.companion.qa.v6",
+  "scope": "Same release source and frontend, separate native application identifier to protect productive SQLite/settings profiles; installer executable is validated separately by signature and ZIP checks.",
+  "passed": [
+    "packaged loopback backend matches version and bundled translator runtime/models are ready",
+    "embedded original world artwork loads in packaged WebView and interior quest target keeps its map identity",
+    "appearance preset is persisted by native SQLite and reapplied after reload",
+    "packaged builder keeps AP BP LP semantic colors in an alternate theme",
+    "both packaged WebView translator cards execute real local FR→DE and DE→FR model inference",
+    "all six directions through packaged service and bundled Python runtime",
+    "independent native overlay contains both cards, real local translation, route coordinates and progress snapshot"
+  ],
+  "notTested": [
+    "physical DOFUS window coexistence",
+    "all monitor/DPI combinations",
+    "system-wide external-network firewall blocking",
+    "global keyboard chords"
+  ],
+  "fixtureData": "Navigation snapshot is explicit fixture; translator results are real local inference. Only backed-up UI preference records were temporarily edited and restored."
+}
