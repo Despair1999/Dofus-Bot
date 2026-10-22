@@ -1,5 +1,9 @@
 # DOFUS Companion 0.8.0 – Fehlerbehebung und Datenqualität
 
+Veröffentlicht am 22. Oktober 2026: [Release v0.8.0](https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.8.0), [PR #5](https://github.com/Despair1999/Dofus-Bot/pull/5). Der bestehende öffentliche Update-Endpunkt liefert 0.8.0 mit der geprüften Signatur aus; Nachweis: `UPDATE_v0.8.0_PUBLIC.json`. Abruf in der Anwendung: Einstellungen → Daten & Updates → Nach Updates suchen. Die laufende Benutzerinstanz wurde nicht verändert und das Update dort nicht automatisch installiert.
+
+Implementierung: `5a11a13`; abschließende UI-/Zustandskorrekturen: `d5c183e`; Daten-/Releaseabnahme: `22d6210`. Die gebaute Quellrevision und Paketprüfsummen stehen in `BUILD_v0.8.0_SHA256.json`.
+
 ## 1. Gefundene Probleme
 
 Ressourcenregionen erlaubten keine belastbare Auswahl konkreter Sammelkarten. Präzise externe Karten-/Zelldaten fehlten im Import; persönliche Beobachtungen waren die einzige exakte Eingabe. Der Kartenausschnitt lädt höchstens 2.500 Karten. Der Berufsimport beschränkte die Liste absichtlich auf sechs Sammelberufe. Omega-Level fehlten. Crafting besaß keine verlässliche Abwahl und erlaubte verspätete Auswahlantworten. Quest-Direktlinks waren auf zwei Namen begrenzt. Der OCR-Bereich erklärte seine tatsächlichen Einsatzmöglichkeiten unzureichend.
