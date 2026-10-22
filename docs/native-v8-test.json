@@ -1,0 +1,7 @@
+{
+  "version": "0.8.0",
+  "testedAt": "2026-10-22T18:42:56.326Z",
+  "skipped": true,
+  "reason": "Existing user Companion process or listener on 4310/9223; no user process was changed",
+  "passed": []
+}

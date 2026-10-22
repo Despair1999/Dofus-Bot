@@ -1,0 +1,12 @@
+{
+  "testedAt": "2026-10-22T19:09:18.304Z",
+  "version": "0.8.0",
+  "algorithm": "ED",
+  "releaseSignatureVerified": true,
+  "trustedCommentVerified": true,
+  "tamperedInstallerRejected": true,
+  "existingUpdaterKeyPreserved": true,
+  "installerBytes": 135055868,
+  "sha256": "36593f1c3b703746510af8b92653dc7a29c1dd60f4f816683752b1d867bffac6",
+  "scope": "Independent Node Ed25519/Minisign verification; does not claim a downloaded installed-updater transition"
+}
