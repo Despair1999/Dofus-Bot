@@ -15,6 +15,7 @@ export async function configure(page: Page) {
   await page.evaluate(async (url) => {
     const { write } = await import("/src/storage.ts");
     await write("config", { url, token: "" });
+    await write("navigation:tools-open", true);
   }, backend);
   await page.reload();
 }

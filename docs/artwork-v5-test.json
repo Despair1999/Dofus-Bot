@@ -1,0 +1,32 @@
+{
+  "version": "0.5.0",
+  "testedAt": "2026-10-21T21:49:17.864Z",
+  "source": "https://github.com/ledouxm/dofus-sqlite/releases/tag/v6.0_3.7.12.12",
+  "archiveSha256": {
+    "images-worldmap.zip": "adea08bb9d615a528c30559efc0e11fadec6573545a302804879bfd46db32e55",
+    "images-monster.zip": "0498686137b53dfd14bd1534adf7392d3e7ec721724c2f4d64548eb07454cf54",
+    "images-item.zip": "44c380df2765a2c99d2969ea5d7964a63b0aef4ef1a430214f7e0579bd854886",
+    "images-spell.zip": "385f79e8e30d431631dd78820d3da0ea885d9edd013d153bffc3b57ac342711b"
+  },
+  "worlds": 40,
+  "monsters": 896,
+  "bosses": 137,
+  "resources": 124,
+  "professionQuestItems": 6,
+  "itemIcons": 12279,
+  "spellIcons": 543,
+  "uniqueFiles": 13645,
+  "bytes": 60021676,
+  "completeReferencedBossCoverage": true,
+  "completeGatherableAndProfessionQuestCoverage": true,
+  "imagePathsAndWebpHeadersVerified": true,
+  "missingDungeonIllustrations": [
+    {
+      "id": 96,
+      "name": "Tempel des Todes von Arachnas",
+      "reason": "No explicit boss or matching base-dungeon reference"
+    }
+  ],
+  "sourcedShortGuides": 20,
+  "fullyPatchVerifiedStrategies": 0
+}

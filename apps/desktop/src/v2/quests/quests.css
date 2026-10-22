@@ -11,11 +11,11 @@
   align-items: center;
   flex: 1;
   min-width: 250px;
-  background: #1a2a24;
-  border: 1px solid #40583c;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0 13px;
-  color: #9eba88;
+  color: var(--green);
 }
 .v2-quest-search input {
   border: 0;
@@ -50,9 +50,9 @@
 .v2-quest-categories,
 .v2-quest-list,
 .v2-quest-detail {
-  border: 1px solid #354b35;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #17251f;
+  background: var(--surface-0);
   min-width: 0;
   overflow: hidden;
 }
@@ -62,9 +62,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 18px 16px;
-  border-bottom: 1px solid #344732;
-  background: #203125;
-  color: #c4dcae;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--green);
   font-size: 12px;
 }
 .v2-quest-column-heading > strong {
@@ -72,7 +72,7 @@
 }
 .v2-quest-column-heading > span {
   font-size: 10px;
-  color: #91ae7d;
+  color: var(--muted);
 }
 .v2-category-tree {
   max-height: 770px;
@@ -87,16 +87,16 @@
   min-height: 36px;
 }
 .v2-category-row.selected {
-  background: #32482d;
+  background: var(--surface-2);
 }
 .v2-category-toggle {
   background: transparent;
-  color: #8da97c;
+  color: var(--muted);
   padding: 5px 1px;
 }
 .v2-category-select {
   background: transparent;
-  color: #a8bc9b;
+  color: var(--muted);
   justify-content: space-between;
   flex: 1;
   min-width: 0;
@@ -109,7 +109,7 @@
 .v2-category-select small {
   font-size: 9px;
   white-space: nowrap;
-  color: #9bb484;
+  color: var(--muted);
 }
 .v2-category-select > span {
   min-width: 0;
@@ -124,14 +124,14 @@
   width: calc(100% - 16px);
   margin: 8px;
   background: transparent;
-  color: #b6cda6;
+  color: var(--green);
   font-size: 11px;
   padding: 11px;
 }
 .v2-category-all.selected {
-  background: #354b2c;
-  color: #d4eeb7;
-  border-color: #597541;
+  background: var(--surface-2);
+  color: var(--green);
+  border-color: var(--accent-border);
 }
 .v2-column-empty {
   padding: 25px 17px;
@@ -148,19 +148,19 @@
   align-items: flex-start;
   flex-direction: column;
   position: relative;
-  background: #203427;
-  border: 1px solid #3c5235;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
   border-radius: 8px;
   width: 100%;
   padding: 15px;
   margin: 0 0 10px;
-  color: #cbdcbe;
+  color: var(--green);
   text-align: left;
   gap: 9px;
 }
 .v2-quest-list-card.selected {
-  background: #344a2c;
-  border-color: #90b567;
+  background: var(--surface-2);
+  border-color: var(--accent-border);
 }
 .v2-quest-list-title {
   display: flex;
@@ -172,12 +172,12 @@
   line-height: 1.6;
 }
 .v2-quest-list-title svg {
-  color: #94b16c;
+  color: var(--muted);
   margin-top: 2px;
 }
 .v2-quest-list-card p {
   font-size: 10px;
-  color: #8ea581;
+  color: var(--muted);
   line-height: 1.7;
   margin: 0;
   display: -webkit-box;
@@ -187,16 +187,16 @@
 }
 .v2-quest-list-card > small {
   font-size: 9px;
-  color: #b8cea6;
+  color: var(--green);
 }
 .v2-quest-level {
   font-size: 9px;
-  color: #9db08f;
+  color: var(--muted);
 }
 .v2-progress {
   height: 5px;
   border-radius: 10px;
-  background: #142117;
+  background: var(--surface-0);
   overflow: hidden;
   width: 100%;
 }
@@ -204,13 +204,13 @@
   display: block;
   height: 100%;
   border-radius: 10px;
-  background: #b4dc7f;
+  background: var(--green);
 }
 .v2-quest-list-pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid #354a32;
+  border-top: 1px solid var(--border);
   padding: 13px;
 }
 .v2-quest-detail {
@@ -234,7 +234,7 @@
 }
 .v2-french-name {
   font-size: 11px;
-  color: #849c78;
+  color: var(--muted);
 }
 .v2-quest-detail > p {
   font-size: 12px;
@@ -249,11 +249,11 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid #465c3c;
+  border: 1px solid var(--border);
   border-radius: 5px;
-  background: #263a28;
+  background: var(--surface-1);
   padding: 5px 7px;
-  color: #a7c18c;
+  color: var(--green);
   font-size: 9px;
 }
 .v2-quest-progress-summary {
@@ -261,18 +261,18 @@
 }
 .v2-quest-progress-summary > span {
   font-size: 10px;
-  color: #a3bc8f;
+  color: var(--green);
   display: block;
   margin-bottom: 10px;
 }
 .v2-quest-requirements {
-  border: 1px solid #405238;
+  border: 1px solid var(--border);
   border-radius: 7px;
   padding: 13px;
-  background: #203123;
+  background: var(--surface-1);
   margin: 18px 0;
   font-size: 11px;
-  color: #abc396;
+  color: var(--green);
 }
 .v2-quest-requirements summary {
   cursor: pointer;
@@ -289,12 +289,12 @@
 .v2-quest-step {
   display: flex;
   gap: 13px;
-  border-bottom: 1px solid #334a30;
+  border-bottom: 1px solid var(--border);
   padding: 20px 0;
 }
 .v2-quest-step.current {
-  background: #2b3d2655;
-  border-left: 2px solid #acd174;
+  background: color-mix(in srgb, var(--surface-2) 33%, transparent);
+  border-left: 2px solid var(--accent-border);
   padding-left: 12px;
   margin-left: -12px;
 }
@@ -302,9 +302,9 @@
   height: 25px;
   width: 25px;
   border-radius: 50%;
-  background: #354a2c;
-  border: 1px solid #54723c;
-  color: #d0e6aa;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--green);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -321,7 +321,7 @@
 .v2-quest-step li {
   font-size: 11px;
   line-height: 1.85;
-  color: #a0b694;
+  color: var(--muted);
 }
 .v2-quest-step ul {
   padding-left: 15px;
@@ -331,16 +331,16 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #cfdfa9;
+  color: var(--green);
   margin-left: 5px;
   font-size: 10px;
   white-space: nowrap;
 }
 .v2-step-confirm {
   font-size: 9px;
-  background: #2f432a;
-  border: 1px solid #4f683d;
-  color: #bfd9a1;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--green);
   padding: 8px 10px;
 }
 .v2-quest-detail .toolbar button {
@@ -351,9 +351,9 @@
   display: flex;
   gap: 12px;
   margin: 25px 0;
-  border-top: 1px solid #3a5033;
+  border-top: 1px solid var(--border);
   padding-top: 22px;
-  color: #b3cc97;
+  color: var(--green);
 }
 .v2-guide-section strong {
   font-size: 11px;
@@ -376,7 +376,7 @@
   text-align: center;
   max-width: 330px;
   margin: 90px auto;
-  color: #93ae7d;
+  color: var(--muted);
 }
 .v2-quest-detail-empty h3 {
   font-size: 20px;
@@ -389,21 +389,21 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  border: 1px solid #3c5034;
-  background: #1f3124;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
   padding: 13px;
   border-radius: 8px;
   margin-bottom: 20px;
 }
 .v2-quest-history button {
-  background: #2a402b;
-  color: #c1d9a6;
+  background: var(--surface-2);
+  color: var(--green);
   font-size: 10px;
   padding: 8px;
 }
 .v2-quest-history span {
   font-size: 11px;
-  color: #91aa80;
+  color: var(--muted);
 }
 .v2-quest-materials {
   margin: 25px 0;
@@ -417,8 +417,8 @@
   justify-content: flex-start;
   gap: 10px;
   width: 100%;
-  background: #263a29;
-  color: #bad3a2;
+  background: var(--surface-1);
+  color: var(--green);
   padding: 11px;
   margin-bottom: 7px;
   font-size: 11px;

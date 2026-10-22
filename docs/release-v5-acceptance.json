@@ -1,0 +1,24 @@
+{
+  "version": "0.5.0",
+  "testedAt": "2026-10-21T22:02:29.167Z",
+  "unitTests": 105,
+  "browserTests": 37,
+  "typecheckPassed": true,
+  "lintPassed": true,
+  "windowsInstallerBuilt": true,
+  "productionArtworkMatchesSource": true,
+  "installerSha256": "f4bde0e90b569dde348a056dda4ff8c09f8f16b5759a87c70654babda0704ca9",
+  "releasePackagesVerified": true,
+  "productionUiPassed": true,
+  "existingUpdaterKeyPreserved": true,
+  "serviceUpgradePassed": true,
+  "nativeUi": {
+    "skipped": true,
+    "reason": "Existing user Companion process or listener on 4310/9223; no user process was changed"
+  },
+  "limitations": [
+    "20 sourced short guides; no fully patch-verified complete strategy catalog",
+    "Arachnas catalog entry has no explicit boss illustration",
+    "No automatic installation over the user's running app"
+  ]
+}

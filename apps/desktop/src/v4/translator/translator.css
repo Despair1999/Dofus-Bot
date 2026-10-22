@@ -1,0 +1,78 @@
+.translator-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.translator-two-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.translator-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.translator-languages {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.translator-languages select {
+  min-width: 0;
+  flex: 1;
+  padding: 5px;
+  font-size: inherit;
+}
+.translator-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.translator-actions small {
+  margin-left: auto;
+}
+.translator-output {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-height: 54px;
+  max-height: 160px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-0);
+  color: var(--text);
+}
+.translator-card textarea,
+.overlay-module-body .translator-card textarea {
+  height: 78px;
+  min-height: 44px;
+  resize: vertical;
+}
+.translator-error {
+  color: #f0bba4;
+  overflow-wrap: anywhere;
+}
+.overlay-module-body .translator-card {
+  font-size: 12px;
+}
+.overlay-module-body .translator-card button {
+  font-size: 11px;
+}
+.translator-header-actions {
+  display: flex;
+  gap: 4px;
+}
+.translator-header-actions button {
+  padding: 0 4px;
+  min-height: 18px;
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .translator-two-cards {
+    grid-template-columns: 1fr;
+  }
+}

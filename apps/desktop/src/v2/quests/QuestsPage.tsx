@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { navigatePath } from "../routing";
 import {
   ArrowLeft,
   ArrowRight,
@@ -545,10 +546,34 @@ export default function QuestsPage({
                             {objective.description ||
                               "Für dieses Ziel ist kein übersetzter Text hinterlegt."}
                             {objective.coordinates && (
-                              <span className="v2-quest-coordinate">
+                              <button
+                                className="v2-quest-coordinate"
+                                title="Auf der Weltkarte anzeigen"
+                                onClick={() =>
+                                  navigatePath(
+                                    objective.mapId
+                                      ? `/world?mapId=${objective.mapId}`
+                                      : `/world?x=${objective.coordinates!.x}&y=${objective.coordinates!.y}`,
+                                  )
+                                }
+                              >
                                 <MapPin size={12} />[{objective.coordinates.x},{" "}
                                 {objective.coordinates.y}]
-                              </span>
+                              </button>
+                            )}
+                            {(objective.mapId || objective.coordinates) && (
+                              <button
+                                className="text-button"
+                                onClick={() =>
+                                  navigatePath(
+                                    objective.mapId
+                                      ? `/world?mapId=${objective.mapId}`
+                                      : `/world?x=${objective.coordinates!.x}&y=${objective.coordinates!.y}`,
+                                  )
+                                }
+                              >
+                                Auf Weltkarte anzeigen
+                              </button>
                             )}
                             {objective.mapId && !objective.coordinates && (
                               <small>

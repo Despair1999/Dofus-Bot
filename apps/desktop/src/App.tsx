@@ -70,8 +70,14 @@ import OverlaySettings from "./v2/overlay/OverlaySettings";
 import UpdatePanel from "./v2/updates/UpdatePanel";
 import CatalogPanel from "./v2/settings/CatalogPanel";
 import BuilderPage from "./v3/BuilderPage";
+import WorldPage from "./v4/WorldPage";
+import DungeonsPage from "./v4/DungeonsPage";
+import ProfessionsPage from "./v4/ProfessionsPage";
+import TranslatorPanel from "./v4/translator/TranslatorPanel";
 import { useRoute, navigatePath, type View } from "./v2/routing";
+import { AppearanceSettings } from "./appearance";
 import appPackage from "../package.json";
+import type { OverlaySnapshot } from "./v2/overlay/model";
 import "./v2/v2.css";
 
 type Todo = { id: string; text: string; done: boolean };
@@ -86,6 +92,11 @@ const tabs: { id: View; label: string; icon: typeof Search }[] = [
   { id: "dashboard", label: "Übersicht", icon: LayoutDashboard },
   { id: "items", label: "Gegenstände", icon: Package },
   { id: "builder", label: "Builder", icon: ShieldCheck },
+  { id: "world", label: "Weltkarte", icon: Compass },
+  { id: "farming", label: "Farmrouten", icon: Hammer },
+  { id: "dungeons", label: "Dungeons & Bosse", icon: ShieldCheck },
+  { id: "professions", label: "Berufe & Sammelquests", icon: BookOpen },
+  { id: "translator", label: "Übersetzer", icon: BookOpen },
   { id: "quests", label: "Quest-Assistent", icon: BookOpen },
   { id: "scanner", label: "Bildschirm erkennen", icon: ScanLine },
   { id: "craft", label: "Crafting & Kamas", icon: Hammer },
@@ -98,6 +109,28 @@ export default function App() {
   return isOverlayWindow() ? <OverlayView /> : <MainApp />;
 }
 function MainApp() {
+  const [toolsOpen, setToolsOpen] = useState(false);
+  useEffect(() => {
+    void read("navigation:tools-open", false).then(setToolsOpen);
+  }, []);
+  const [navigation, setNavigation] = useState<OverlaySnapshot["navigation"]>();
+  useEffect(() => {
+    let mounted = true;
+    const load = () => {
+      void read<OverlaySnapshot["navigation"]>(
+        "world:active-route",
+        undefined,
+      ).then((value) => {
+        if (mounted) setNavigation(value);
+      });
+    };
+    load();
+    window.addEventListener("companion:route", load);
+    return () => {
+      mounted = false;
+      window.removeEventListener("companion:route", load);
+    };
+  }, []);
   const route = useRoute();
   const tab = tabs.some((t) => t.id === route.view) ? route.view : "dashboard";
   const [ready, setReady] = useState(false),
@@ -502,8 +535,9 @@ function MainApp() {
       almanax,
       favorites,
       tasks: todos,
+      navigation,
     }),
-    [character, quest, current?.step, almanax, favorites, todos],
+    [character, quest, current?.step, almanax, favorites, todos, navigation],
   );
   const snapshotRef = useRef(snapshot);
   snapshotRef.current = snapshot;
@@ -702,18 +736,77 @@ function MainApp() {
           <div className="workspace">
             <span className="status-dot" /> DEIN ABENTEUER. DEIN COMPANION.
           </div>
-          <nav>
-            {tabs.map((entry) => (
-              <button
-                key={entry.id}
-                className={`nav ${tab === entry.id ? "active" : ""}`}
-                onClick={() => navigate(entry.id)}
-              >
-                <entry.icon size={19} />
-                {entry.label}
-                {entry.id === "scanner" && <span className="nav-tag">OCR</span>}
-              </button>
-            ))}
+          <nav aria-label="Hauptnavigation">
+            {tabs
+              .filter((e) => e.id === "dashboard")
+              .map((entry) => (
+                <button
+                  key={entry.id}
+                  className={`nav ${tab === entry.id ? "active" : ""}`}
+                  onClick={() => navigate(entry.id)}
+                >
+                  <entry.icon size={19} />
+                  {entry.label}
+                </button>
+              ))}
+            <button
+              className={`nav tools-toggle ${!["dashboard", "characters", "almanax", "favorites", "settings"].includes(tab) ? "active" : ""}`}
+              aria-expanded={toolsOpen}
+              aria-controls="tools-navigation"
+              onClick={() => {
+                const next = !toolsOpen;
+                setToolsOpen(next);
+                void write("navigation:tools-open", next);
+              }}
+            >
+              <Layers size={19} />
+              Tools
+              <ChevronRight size={16} />
+            </button>
+            {toolsOpen && (
+              <div id="tools-navigation" className="tools-links">
+                {tabs
+                  .filter(
+                    (e) =>
+                      ![
+                        "dashboard",
+                        "characters",
+                        "almanax",
+                        "favorites",
+                        "settings",
+                      ].includes(e.id),
+                  )
+                  .map((entry) => (
+                    <button
+                      key={entry.id}
+                      className={`nav ${tab === entry.id ? "active" : ""}`}
+                      onClick={() => navigate(entry.id)}
+                    >
+                      <entry.icon size={17} />
+                      {entry.label}
+                      {entry.id === "scanner" && (
+                        <span className="nav-tag">OCR</span>
+                      )}
+                    </button>
+                  ))}
+              </div>
+            )}
+            {tabs
+              .filter((e) =>
+                ["characters", "almanax", "favorites", "settings"].includes(
+                  e.id,
+                ),
+              )
+              .map((entry) => (
+                <button
+                  key={entry.id}
+                  className={`nav ${tab === entry.id ? "active" : ""}`}
+                  onClick={() => navigate(entry.id)}
+                >
+                  <entry.icon size={19} />
+                  {entry.label}
+                </button>
+              ))}
           </nav>
           <div className="sidebar-bottom">
             <div className="safe">
@@ -806,7 +899,7 @@ function MainApp() {
               ))}
             </div>
           )}
-          {tab !== "builder" && (
+          {!["builder", "dungeons", "professions"].includes(tab) && (
             <div className="page-heading">
               <div>
                 <span className="eyebrow">
@@ -843,6 +936,16 @@ function MainApp() {
                           "Deine wichtigsten Gegenstände und Quests direkt griffbereit.",
                         settings: "Dein Companion, so wie du ihn brauchst.",
                         builder: "Deine Ausrüstung. Dein Plan.",
+                        world:
+                          "Ein gemeinsamer Atlas für deine Ziele, Ressourcen und nächsten Wege.",
+                        farming:
+                          "Plane deine Sammelrunde mit echten Spieldaten und persönlichen Fundorten.",
+                        dungeons:
+                          "Bosse, Monsterwerte und Quellen – getrennt nach Spielversion.",
+                        professions:
+                          "Deine Sammelberufe, täglichen Quests und bestätigten Fortschritte.",
+                        translator:
+                          "Nachrichten verstehen und Antworten schreiben. Vollständig lokal.",
                       } as Record<View, string>
                     )[tab]
                   }
@@ -1194,6 +1297,21 @@ function MainApp() {
               />
             </>
           )}
+          {(tab === "world" || tab === "farming") && (
+            <WorldPage
+              key={route.path}
+              config={config}
+              farming={tab === "farming"}
+              characterId={active || undefined}
+            />
+          )}
+          {tab === "dungeons" && (
+            <DungeonsPage config={config} characters={characters} />
+          )}
+          {tab === "professions" && (
+            <ProfessionsPage config={config} characters={characters} />
+          )}
+          {tab === "translator" && <TranslatorPanel config={config} />}
           {tab === "craft" && (
             <CraftingPage
               config={config}
@@ -1297,6 +1415,7 @@ function MainApp() {
           )}
           {tab === "settings" && (
             <>
+              <AppearanceSettings />
               <UpdatePanel />
               <CatalogPanel
                 config={config}

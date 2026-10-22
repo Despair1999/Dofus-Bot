@@ -1,0 +1,12 @@
+{
+  "testedAt": "2026-10-21T19:23:19.213Z",
+  "fromVersion": "0.3.0",
+  "version": "0.4.0",
+  "scope": "Real old/new bundled Windows Node services, isolated SQLite fixture and loopback APIs; no productive user database modified",
+  "serviceUpgradePassed": true,
+  "existingCharacterPreserved": true,
+  "existingQuestProgressPreserved": true,
+  "existingBuildAndCalculationPreserved": true,
+  "newProfessionsAndMarkersPersistAfterRestart": true,
+  "worldAndDungeonDataLoadedOffline": true
+}

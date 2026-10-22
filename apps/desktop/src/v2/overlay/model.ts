@@ -1,3 +1,7 @@
+import {
+  normalizeTranslator,
+  type TranslatorPreferences,
+} from "../../v4/translator/model";
 export type OverlayModuleId =
   | "quest"
   | "step"
@@ -10,7 +14,10 @@ export type OverlayModuleId =
   | "notes"
   | "character"
   | "favorites"
-  | "tasks";
+  | "tasks"
+  | "navigation"
+  | "translator-incoming"
+  | "translator-outgoing";
 export const moduleLabels: Record<OverlayModuleId, string> = {
   quest: "Aktuelle Quest",
   step: "Nächster Schritt",
@@ -24,6 +31,9 @@ export const moduleLabels: Record<OverlayModuleId, string> = {
   character: "Charakterinformation",
   favorites: "Schnellaktionen & Favoriten",
   tasks: "Eigene Aufgaben",
+  navigation: "Farmroute · Nächstes Ziel",
+  "translator-incoming": "Übersetzer · Nachrichten",
+  "translator-outgoing": "Übersetzer · Antworten",
 };
 export type OverlayModule = {
   id: OverlayModuleId;
@@ -32,6 +42,7 @@ export type OverlayModule = {
   y: number;
   width: number;
   height: number;
+  translator?: TranslatorPreferences;
 };
 export type OverlayProfile = {
   id: string;
@@ -111,10 +122,22 @@ export function defaultLayouts(): OverlayLayouts {
             "character",
             "notes",
           ].includes(id),
-          x: 12 + (index % 2) * 210,
-          y: 12 + Math.floor(index / 2) * 130,
-          width: 198,
-          height: 118,
+          x: id.startsWith("translator-") ? 12 : 12 + (index % 2) * 210,
+          y: id.startsWith("translator-")
+            ? id === "translator-outgoing"
+              ? 1320
+              : 920
+            : 12 + Math.floor(index / 2) * 130,
+          width: id.startsWith("translator-") ? 340 : 198,
+          height: id.startsWith("translator-") ? 390 : 118,
+          ...(id.startsWith("translator-")
+            ? {
+                translator: normalizeTranslator(
+                  undefined,
+                  id === "translator-outgoing",
+                ),
+              }
+            : {}),
         })),
       },
     ],
@@ -140,19 +163,47 @@ export function normalizeLayouts(raw: OverlayLayouts): OverlayLayouts {
       ...p,
       opacity: Math.max(25, Math.min(100, p.opacity || 94)),
       fontSize: Math.max(11, Math.min(24, p.fontSize || 14)),
-      modules: p.modules
-        .filter((m) => m.id in moduleLabels)
+      modules: [
+        ...p.modules,
+        ...defaultLayouts().profiles[0].modules.filter(
+          (m) =>
+            (m.id.startsWith("translator-") || m.id === "navigation") &&
+            !p.modules.some((existing) => existing.id === m.id),
+        ),
+      ]
+        .filter(
+          (m, index, modules) =>
+            m.id in moduleLabels &&
+            modules.findIndex((entry) => entry.id === m.id) === index,
+        )
         .map((m) => ({
           ...m,
           x: Math.max(0, Number(m.x) || 0),
           y: Math.max(0, Number(m.y) || 0),
           width: Math.max(150, Math.min(1200, Number(m.width) || 198)),
           height: Math.max(85, Math.min(900, Number(m.height) || 118)),
+          ...(m.id.startsWith("translator-")
+            ? {
+                translator: normalizeTranslator(
+                  m.translator,
+                  m.id === "translator-outgoing",
+                ),
+              }
+            : {}),
         })),
     })),
   };
 }
 export type OverlaySnapshot = {
+  navigation?: {
+    nextMapId: number;
+    coordinates?: { x: number; y: number };
+    direction: string;
+    remaining: number;
+    resourceNames: string[];
+    step: number;
+    total: number;
+  } | null;
   character?: {
     name: string;
     className?: string;

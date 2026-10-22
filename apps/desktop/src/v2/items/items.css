@@ -19,12 +19,12 @@
   align-items: center;
   gap: 13px;
   padding: 9px 10px 9px 17px;
-  border: 1px solid #465b43;
+  border: 1px solid var(--border);
   border-radius: 11px;
-  background: #1a2925;
+  background: var(--surface-1);
 }
 .v2-search > svg {
-  color: #9bb58d;
+  color: var(--muted);
 }
 .v2-search input {
   flex: 1;
@@ -44,10 +44,10 @@
   right: 0;
   max-height: min(520px, 65vh);
   overflow: auto;
-  border: 1px solid #4c6548;
+  border: 1px solid var(--border);
   border-radius: 11px;
   box-shadow: 0 18px 55px #0008;
-  background: #182520;
+  background: var(--surface-0);
   padding: 7px;
 }
 .v2-suggestion {
@@ -58,13 +58,13 @@
   width: 100%;
   gap: 13px;
   background: transparent;
-  color: #d7e4d0;
+  color: var(--text);
   padding: 11px 13px;
   border-radius: 7px;
 }
 .v2-suggestion:hover,
 .v2-suggestion.is-active {
-  background: #30452b;
+  background: var(--surface-2);
 }
 .v2-suggestion span:not(.v2-item-placeholder) {
   display: block;
@@ -78,14 +78,14 @@
   font-size: 11px;
 }
 .v2-suggestion mark {
-  background: #b9e77930;
-  color: #d6f69c;
+  background: color-mix(in srgb, var(--green) 19%, transparent);
+  color: var(--green);
   border-radius: 2px;
 }
 .v2-all-results {
   width: 100%;
-  background: #263b2c;
-  color: #c5dfa5;
+  background: var(--surface-2);
+  color: var(--green);
   justify-content: flex-start;
   padding: 13px;
   margin-top: 6px;
@@ -96,7 +96,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #a8b8a0;
+  color: var(--muted);
   font-size: 13px;
 }
 .v2-item-image {
@@ -108,29 +108,29 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #233329;
-  border: 1px solid #40503b;
-  color: #809779;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--muted);
   border-radius: 9px;
   flex-shrink: 0;
 }
 .v2-catalog-tabs {
   display: flex;
   gap: 8px;
-  border-bottom: 1px solid #324337;
+  border-bottom: 1px solid var(--border);
   margin: 23px 0 20px;
   padding-bottom: 12px;
 }
 .v2-catalog-tabs button {
   background: transparent;
-  color: #8fa387;
+  color: var(--muted);
   border: 1px solid transparent;
   padding: 11px 22px;
 }
 .v2-catalog-tabs button[aria-selected="true"] {
-  color: #d4eeaf;
-  background: #2d422d;
-  border-color: #516a40;
+  color: var(--green);
+  background: var(--surface-2);
+  border-color: var(--border);
 }
 .v2-filters {
   display: flex;
@@ -138,8 +138,8 @@
   gap: 13px;
   flex-wrap: wrap;
   padding: 18px;
-  background: #182421;
-  border: 1px solid #2c3c31;
+  background: var(--surface-0);
+  border: 1px solid var(--border);
   border-radius: 10px;
   margin-bottom: 23px;
 }
@@ -174,7 +174,7 @@
   font-size: 11px;
 }
 .v2-results-heading > span {
-  color: #82977b;
+  color: var(--muted);
   font-size: 10px;
 }
 .v2-item-grid {
@@ -187,17 +187,17 @@
   align-items: flex-start;
   flex-direction: column;
   gap: 10px;
-  border: 1px solid #334536;
-  background: #1b2925;
-  color: #d8e5cd;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text);
   padding: 20px;
   text-align: left;
   min-height: 165px;
   position: relative;
 }
 .v2-item-card:hover {
-  border-color: #92b766;
-  background: #253a29;
+  border-color: var(--accent-border);
+  background: var(--surface-1);
   transform: translateY(-2px);
 }
 .v2-item-card strong {
@@ -216,9 +216,9 @@
 }
 .v2-level {
   font-size: 10px;
-  border: 1px solid #495c3f;
-  background: #273b29;
-  color: #c4db9f;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--green);
   border-radius: 5px;
   padding: 4px 7px;
 }
@@ -228,7 +228,7 @@
   align-items: center;
   margin: 25px 0;
   font-size: 12px;
-  color: #8fa387;
+  color: var(--muted);
 }
 .v2-pagination > div {
   display: flex;
@@ -243,12 +243,12 @@
   align-items: center;
   justify-content: center;
   gap: 15px;
-  color: #afc89b;
+  color: var(--green);
 }
 .v2-empty {
   text-align: center;
   padding: 60px 25px;
-  color: #a5bd8b;
+  color: var(--green);
 }
 .v2-empty h3 {
   margin: 20px 0 10px;
@@ -261,8 +261,8 @@
 }
 .v2-item-summary {
   background:
-    radial-gradient(ellipse at top right, #33442a77, transparent 60%), #192723;
-  border: 1px solid #40583c;
+    radial-gradient(ellipse at top right, color-mix(in srgb, var(--surface-2) 47%, transparent), transparent 60%), var(--surface-0);
+  border: 1px solid var(--border);
   padding: 28px;
   border-radius: 12px;
   margin-bottom: 23px;
@@ -275,8 +275,8 @@
 }
 .v2-item-summary-heading > .v2-item-image,
 .v2-item-summary-heading > .v2-item-placeholder {
-  background: #263b29;
-  border: 1px solid #4a633d;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   border-radius: 15px;
   padding: 12px;
 }
@@ -293,12 +293,12 @@
 .v2-item-facts {
   display: flex;
   gap: 22px;
-  color: #a4b69a;
+  color: var(--muted);
   font-size: 11px;
   margin-bottom: 18px;
 }
 .v2-item-facts strong {
-  color: #d2dfc7;
+  color: var(--green);
   margin-left: 6px;
 }
 .v2-effect-grid {
@@ -312,14 +312,14 @@
   gap: 10px;
   align-items: center;
   padding: 11px 13px;
-  background: #14201c80;
-  border: 1px solid #31472f;
+  background: color-mix(in srgb, var(--surface-0) 50%, transparent);
+  border: 1px solid var(--border);
   border-radius: 7px;
   font-size: 12px;
-  color: #bad4a5;
+  color: var(--green);
 }
 .v2-effect > span {
-  color: #8eaf66;
+  color: var(--muted);
   font-size: 8px;
 }
 .v2-requirements {
@@ -331,19 +331,19 @@
   margin-top: 7px;
 }
 .v2-source {
-  border-top: 1px solid #33492f;
+  border-top: 1px solid var(--border);
   display: flex;
   gap: 8px;
   align-items: center;
   padding-top: 15px;
   margin-top: 20px;
-  color: #819b77;
+  color: var(--muted);
 }
 .v2-source small {
   font-size: 10px;
 }
 .v2-muted {
-  color: #8b9e84;
+  color: var(--muted);
   font-size: 12px;
 }
 .v2-material-grid {
@@ -354,9 +354,9 @@
 .v2-material-card {
   justify-content: flex-start;
   text-align: left;
-  border: 1px solid #3b5035;
-  background: #1d3025;
-  color: #d1e3c3;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--green);
   padding: 15px;
 }
 .v2-material-card strong {

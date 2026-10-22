@@ -1,0 +1,18 @@
+{
+  "testedAt": "2026-10-21T19:29:37.878Z",
+  "version": "0.4.0",
+  "runtime": "Windows x64 / packaged Tauri / WebView2",
+  "passed": [
+    "packaged loopback backend matches version and bundled translator runtime/models are ready",
+    "both packaged WebView translator cards execute real local FR→DE and DE→FR model inference",
+    "all six directions through packaged service and bundled Python runtime",
+    "independent native overlay contains both cards, real local translation, route coordinates and progress snapshot"
+  ],
+  "notTested": [
+    "physical DOFUS window coexistence",
+    "all monitor/DPI combinations",
+    "system-wide external-network firewall blocking",
+    "global keyboard chords"
+  ],
+  "fixtureData": "Navigation snapshot is explicit fixture; translator results are real local inference. Only backed-up UI preference records were temporarily edited and restored."
+}

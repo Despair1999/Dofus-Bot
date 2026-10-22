@@ -1,6 +1,6 @@
 {
   "name": "@dofus/desktop",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,9 @@
     "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
+    "@discord/embedded-app-sdk": "^2.5.0",
     "@dofus/core": "workspace:*",
+    "@dofus/game-data": "workspace:*",
     "@fontsource/dm-sans": "^5.3.0",
     "@fontsource/manrope": "^5.3.0",
     "@tauri-apps/api": "^2.8.0",
@@ -23,8 +25,7 @@
     "lucide-react": "^0.468.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tesseract.js": "^6.0.1",
-    "@dofus/game-data": "workspace:*"
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.8.0",

@@ -230,3 +230,5 @@ export function route(
 }
 export * from "./builder.js";
 export * from "./optimizer.js";
+export * from "./world.js";
+export * from "./dungeons.js";

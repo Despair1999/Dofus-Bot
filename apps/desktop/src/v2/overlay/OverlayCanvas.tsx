@@ -7,6 +7,8 @@ import {
   Save,
 } from "lucide-react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
+import TranslatorCard from "../../v4/translator/TranslatorCard";
+import { normalizeTranslator } from "../../v4/translator/model";
 import {
   moduleLabels,
   type OverlayModule,
@@ -84,6 +86,53 @@ export default function OverlayCanvas({
     const quest = snapshot.quest;
     const step = quest?.steps?.[snapshot.step ?? 0];
     switch (id) {
+      case "navigation": {
+        const route = snapshot.navigation;
+        return route ? (
+          <>
+            <strong>
+              {route.coordinates
+                ? `[${route.coordinates.x}, ${route.coordinates.y}]`
+                : `Karte ${route.nextMapId}`}
+            </strong>
+            <small>
+              Map-ID {route.nextMapId} · {route.direction}
+            </small>
+            <small>
+              {route.resourceNames.join(", ") || "Gespeicherte Farmroute"}
+            </small>
+            <small>
+              Schritt {route.step} / {route.total} · {route.remaining} Übergänge
+              verbleiben
+            </small>
+          </>
+        ) : (
+          <small>
+            Im Farmrouten-Planer eine Route berechnen und Schritte manuell
+            abhaken.
+          </small>
+        );
+      }
+      case "translator-incoming":
+      case "translator-outgoing": {
+        const module = profile.modules.find((m) => m.id === id)!;
+        return (
+          <TranslatorCard
+            preferences={normalizeTranslator(
+              module.translator,
+              id === "translator-outgoing",
+            )}
+            onChange={(translator) =>
+              onChange?.({
+                ...profile,
+                modules: profile.modules.map((m) =>
+                  m.id === id ? { ...m, translator } : m,
+                ),
+              })
+            }
+          />
+        );
+      }
       case "quest":
         return (
           <>
@@ -272,7 +321,11 @@ export default function OverlayCanvas({
             left: module.x,
             top: module.y,
             width: module.width,
-            height: module.height,
+            height:
+              module.id.startsWith("translator-") &&
+              module.translator?.minimized
+                ? 30
+                : module.height,
           }}
         >
           <header
@@ -286,6 +339,50 @@ export default function OverlayCanvas({
               {editable ? <GripVertical size={12} /> : <BookOpen size={12} />}{" "}
               {moduleLabels[module.id]}
             </span>
+            {module.id.startsWith("translator-") && (
+              <div
+                className="translator-header-actions"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <button
+                  title="Übersetzer minimieren/öffnen"
+                  onClick={() =>
+                    onChange?.({
+                      ...profile,
+                      modules: profile.modules.map((m) =>
+                        m.id === module.id
+                          ? {
+                              ...m,
+                              translator: {
+                                ...normalizeTranslator(
+                                  m.translator,
+                                  m.id === "translator-outgoing",
+                                ),
+                                minimized: !m.translator?.minimized,
+                              },
+                            }
+                          : m,
+                      ),
+                    })
+                  }
+                >
+                  −
+                </button>
+                <button
+                  title="Übersetzer entfernen"
+                  onClick={() =>
+                    onChange?.({
+                      ...profile,
+                      modules: profile.modules.map((m) =>
+                        m.id === module.id ? { ...m, enabled: false } : m,
+                      ),
+                    })
+                  }
+                >
+                  ×
+                </button>
+              </div>
+            )}
           </header>
           <div className="overlay-module-body">{contents(module.id)}</div>
           {editable && (

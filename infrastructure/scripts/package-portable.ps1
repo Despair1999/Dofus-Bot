@@ -15,7 +15,7 @@ $serviceTarget = Join-Path $portablePath 'service'
 $artifactPath = Join-Path $workspacePath 'artifacts'
 [void](New-Item -ItemType Directory -Path $portablePath,$serviceTarget,$artifactPath -Force)
 Copy-Item -LiteralPath $executablePath -Destination (Join-Path $portablePath 'dofus-companion.exe') -Force
-Get-ChildItem -LiteralPath $servicePath -File | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $serviceTarget -Force }
+Get-ChildItem -LiteralPath $servicePath | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $serviceTarget -Recurse -Force }
 $readmeText = "DOFUS Companion $version portable`r`n`r`nDas gesamte ZIP entpacken und dofus-companion.exe starten. Den service-Ordner mitliefern.`r`nMicrosoft Edge WebView2 Runtime wird benötigt. Persönliche Daten werden im Windows-AppData-Verzeichnis gespeichert.`r`n"
 [IO.File]::WriteAllText((Join-Path $portablePath 'LIESMICH.txt'),$readmeText,[Text.UTF8Encoding]::new($false))
 $zipPath = Join-Path $artifactPath ('Dofus-Companion-' + $version + '-portable.zip')

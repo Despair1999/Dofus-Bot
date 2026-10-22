@@ -1,5 +1,9 @@
 # DOFUS Companion
 
+**v0.4.0 – Weltkarte, Farmrouten, Dungeons und Offline-Übersetzer.** Der bestehende Companion enthält jetzt einen lokalen schematischen Atlas mit 40 Weltkarten und 15.409 Kartenpositionen, 118 unterschiedlichen Sammelitems (124 Sammelaktionen), versionierte Dungeon-/Monsterdaten und sechs Berufsquests. Zwei reguläre Overlaykarten übersetzen DE/EN/FR mit lokalen Argos-Modellen. Die Modelle werden einmalig nach Klick heruntergeladen; die Python-/Inferenzruntime ist im Windows-Paket enthalten.
+
+Die Routen verwenden ausschließlich bekannte Kartenübergänge und eigene bestätigte Ressourcenfunde. Gebietsangaben sind keine genauen Sammelstellen oder aktuellen Spawns. Nicht belegte Raumzusammenstellungen, Strategien und Aktivitätszustände bleiben ausdrücklich offen. Umfang, Quellen, Tests und noch erforderliche externe Discord-Konfiguration: [v0.4-Stand](V4_IMPLEMENTATION_STATUS.md), [Weltkartenimport](WORLD_DATA_IMPORT.md), [Dungeonimport](DUNGEON_DATA_IMPORT.md), [Übersetzer](docs/OFFLINE_TRANSLATOR.md), [Discord Activity](ACTIVITY_SETUP.md).
+
 Eine deutschsprachige, unabhängige Spielhilfe für DOFUS 3: Windows-Desktop mit React/Tauri, lokales Backend und optionaler Discord-Bot. **v0.3.0** ergänzt einen Ausrüstungs-Builder mit Charakter-Sets, gemeinsamen Effektfiltern, versionierten Zaubern, Schadensvorschau, Vergleichen und einem Optimierer im Hintergrund. Gelieferte Bilder aller 19 Klassen sind integriert. Die bisherigen Such-, Quest-, OCR-, Crafting-, Almanax- und Overlay-Module bleiben erhalten.
 
 Windows-Pakete: [Releases](https://github.com/Despair1999/Dofus-Bot/releases). Für bestehende Installationen: **Einstellungen → Nach Updates suchen**. Details: [UPDATE_GUIDE.md](UPDATE_GUIDE.md). Umsetzungsgrenzen und ausgeführte Prüfungen: [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), [TEST_REPORT.md](TEST_REPORT.md).

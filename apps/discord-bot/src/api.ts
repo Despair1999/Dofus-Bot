@@ -52,4 +52,22 @@ export class Backend {
       );
     return response.json();
   }
+  async binary(path: string): Promise<Buffer> {
+    const response = await fetch(new URL(path, this.base), {
+      headers: { authorization: `Bearer ${this.token}` },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (
+      !response.ok ||
+      response.headers.get("content-type")?.split(";")[0] !== "image/png"
+    )
+      throw Error("Kartenvorschau nicht verfügbar.");
+    const result = Buffer.from(await response.arrayBuffer());
+    if (
+      result.length > 2 * 1024 * 1024 ||
+      result.subarray(0, 8).toString("hex") !== "89504e470d0a1a0a"
+    )
+      throw Error("Ungültige Kartengrafik.");
+    return result;
+  }
 }

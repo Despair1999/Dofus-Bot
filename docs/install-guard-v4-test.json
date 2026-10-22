@@ -1,0 +1,8 @@
+{
+  "testedAt": "2026-10-21T19:24:29.233Z",
+  "scope": "Real NSIS preinstall service-guard executable with disposable v0.3 service holding node.exe; no installer execution and no registry changes",
+  "legacyServiceReleased": true,
+  "nodeExecutableReplaced": true,
+  "userDataModified": false,
+  "nsisInstallerExecuted": false
+}

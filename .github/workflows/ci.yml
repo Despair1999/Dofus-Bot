@@ -35,6 +35,10 @@ jobs:
         with:
           workspaces: apps/desktop/src-tauri -> target
       - run: pnpm install --frozen-lockfile
+      - uses: astral-sh/setup-uv@v6
+      - name: Prepare bundled offline translator runtime
+        shell: pwsh
+        run: ./infrastructure/scripts/setup-translator.ps1
       - run: pnpm --filter @dofus/desktop build
       - run: node infrastructure/scripts/bundle-backend.mjs
       - run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml

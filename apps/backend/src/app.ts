@@ -7,6 +7,12 @@ import { characterInput, progressInput } from "@dofus/core";
 import { GameDataStore } from "@dofus/game-data";
 import { PersonalStore, ConflictError } from "./store.js";
 import { BuilderStore, registerBuilder, parseEffects } from "./builder.js";
+import { registerWorld } from "./world.js";
+import { registerDungeons } from "./dungeons.js";
+import { registerTranslator } from "./translator.js";
+import { registerActivity } from "./activity.js";
+import { registerMapPreview } from "./map-preview.js";
+import appPackage from "../package.json" with { type: "json" };
 import {
   Dofusdude,
   UpstreamError,
@@ -62,7 +68,12 @@ export async function createApp(options: AppOptions) {
   app.addHook("onRequest", async (request, reply) => {
     if (request.method === "OPTIONS") return;
     const url = request.url.split("?")[0] ?? "";
+    if (url.startsWith("/api/activity/")) return; // Activity validates its own scoped Discord sessions.
     const privateRoute =
+      url.startsWith("/api/world/personal") ||
+      url.startsWith("/api/dungeon-personal") ||
+      url.startsWith("/api/profession-personal") ||
+      url.startsWith("/api/translator") ||
       url.startsWith("/api/characters") ||
       url.startsWith("/api/account") ||
       url.startsWith("/api/builder/builds") ||
@@ -111,10 +122,10 @@ export async function createApp(options: AppOptions) {
       .code(500)
       .send({ error: "Interner Fehler. Details im Backend-Protokoll." });
   });
-  app.get("/health", () => ({ status: "ok", version: "0.3.0" }));
+  app.get("/health", () => ({ status: "ok", version: appPackage.version }));
   app.get("/api/status", () => ({
     data: {
-      version: "0.3.0",
+      version: appPackage.version,
       mode: "local-single-owner",
       database: "sqlite",
       sources: [api.status()],
@@ -126,6 +137,11 @@ export async function createApp(options: AppOptions) {
     pageSize: z.coerce.number().int().min(1).max(100).default(30),
   };
   registerBuilder(app, new BuilderStore(personal, game));
+  const world = registerWorld(app, personal);
+  registerMapPreview(app, world);
+  registerDungeons(app, personal);
+  await registerTranslator(app);
+  registerActivity(app, personal, options.token, options.fetcher);
   app.get("/api/items", async (request) => {
     const filters = querySchema
       .extend({

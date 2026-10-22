@@ -1,17 +1,33 @@
 import { useEffect, useState } from "react";
 import { Package } from "lucide-react";
+import { useGameAssets } from "../../gameAssets";
 export default function ItemImage({
   url: explicitUrl,
   name: explicitName,
   item,
   size = 44,
+  iconId,
+  itemId,
 }: {
   url?: string;
   name?: string;
   size?: number;
+  iconId?: number;
+  itemId?: number;
   item?: { imageUrl?: string; name: string };
 }) {
-  const url = explicitUrl ?? item?.imageUrl;
+  const assets = useGameAssets();
+  const original = explicitUrl ?? item?.imageUrl;
+  const icon =
+    iconId ??
+    (itemId ? assets?.itemIcons[String(itemId)] : undefined) ??
+    Number(original?.match(/\/img\/item\/(\d+)-/)?.[1]);
+  const url =
+    assets?.items[String(icon)] ??
+    original ??
+    (icon
+      ? `https://api.dofusdu.de/dofus3/v1/img/item/${icon}-64.png`
+      : undefined);
   const name = explicitName ?? item?.name ?? "";
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [url]);
