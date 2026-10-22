@@ -1,3 +1,4 @@
+import SourceLink from "../../ui/SourceLink";
 import { useEffect, useMemo, useState } from "react";
 import { navigatePath } from "../routing";
 import {
@@ -9,7 +10,6 @@ import {
   ChevronDown,
   ChevronRight,
   Compass,
-  ExternalLink,
   Filter,
   Flag,
   MapPin,
@@ -20,7 +20,6 @@ import {
 import type { Progress } from "@dofus/core";
 import type { Quest } from "@dofus/game-data";
 import type { Config } from "../../client";
-import { openExternal } from "../../native";
 import { read, write } from "../../storage";
 import { request, message, type PageEnvelope } from "../shared/request";
 import ItemImage from "../shared/ItemImage";
@@ -543,8 +542,10 @@ export default function QuestsPage({
                       <ul>
                         {step.objectives.map((objective) => (
                           <li key={objective.id}>
-                            {objective.description ||
-                              "Für dieses Ziel ist kein übersetzter Text hinterlegt."}
+                            <span className="v2-objective-text">
+                              {objective.description ||
+                                "Für dieses Ziel ist kein übersetzter Text hinterlegt."}
+                            </span>
                             {objective.coordinates && (
                               <button
                                 className="v2-quest-coordinate"
@@ -558,20 +559,20 @@ export default function QuestsPage({
                                 }
                               >
                                 <MapPin size={12} />[{objective.coordinates.x},{" "}
-                                {objective.coordinates.y}]
+                                {objective.coordinates.y}] · Auf Weltkarte
+                                anzeigen
                               </button>
                             )}
-                            {(objective.mapId || objective.coordinates) && (
+                            {objective.mapId && !objective.coordinates && (
                               <button
-                                className="text-button"
+                                className="v2-quest-coordinate"
                                 onClick={() =>
                                   navigatePath(
-                                    objective.mapId
-                                      ? `/world?mapId=${objective.mapId}`
-                                      : `/world?x=${objective.coordinates!.x}&y=${objective.coordinates!.y}`,
+                                    `/world?mapId=${objective.mapId}`,
                                   )
                                 }
                               >
+                                <MapPin size={14} />
                                 Auf Weltkarte anzeigen
                               </button>
                             )}
@@ -648,30 +649,12 @@ export default function QuestsPage({
                   <Check size={15} /> Abschließen
                 </button>
               </div>
-              <div className="v2-guide-section">
-                <ExternalLink size={17} />
-                <div>
-                  <strong>Guide auf DOFUS Pour les Noobs</strong>
-                  <p>
-                    Originalartikel öffnen. Externe Texte und Bilder werden
-                    nicht übernommen.
-                  </p>
-                  <button
-                    className="text-button"
-                    onClick={() =>
-                      void openExternal(
-                        quest.guideUrl ??
-                          `https://www.google.com/search?q=${encodeURIComponent("site:dofuspourlesnoobs.com " + (quest.nameFr || quest.name))}`,
-                      )
-                    }
-                  >
-                    {quest.guideUrl
-                      ? "Guide auf DOFUS Pour les Noobs öffnen"
-                      : "Originalguide auf DOFUS Pour les Noobs suchen"}{" "}
-                    <ArrowUpRight size={13} />
-                  </button>
-                </div>
-              </div>
+              <SourceLink url={quest.guideUrl} />
+              {!quest.guideUrl && (
+                <small>
+                  Kein eindeutig geprüfter DofusPourLesNoobs-Artikel hinterlegt.
+                </small>
+              )}
               <small className="v2-quest-provenance">
                 {quest.source} · Version {quest.version} · Quest-ID {quest.id}.
                 Keine Live-Abfrage deines Spielaccounts.

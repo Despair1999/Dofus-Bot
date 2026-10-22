@@ -212,6 +212,108 @@ export function registerWorld(
       version: dataset.version,
     };
   });
+  const canonicalResources = [
+    ...new Map(
+      [...dataset.resources]
+        .reverse()
+        .map((r) => [`${r.jobId}:${r.itemId}:${r.level}`, r]),
+    ).values(),
+  ].map((r) => ({
+    ...r,
+    aliases: dataset.resources
+      .filter(
+        (a) =>
+          a.itemId === r.itemId && a.jobId === r.jobId && a.level === r.level,
+      )
+      .map((a) => a.id),
+  }));
+  app.get("/api/world/gathering", (request) => {
+    const q = z
+      .object({
+        worldId: id.optional(),
+        resourceIds: z.string().max(2000).optional(),
+        includeUnconfirmed: z.enum(["true", "false"]).default("false"),
+        includePersonal: z.enum(["true", "false"]).default("false"),
+        maxLevel: z.coerce.number().int().min(0).max(200).default(200),
+        jobId: id.optional(),
+        characterId: z.uuid().optional(),
+      })
+      .parse(request.query);
+    const requested = q.resourceIds
+      ? z.array(id).max(200).parse(q.resourceIds.split(","))
+      : [];
+    const selected = new Set(
+      canonicalResources
+        .filter((r) => requested.some((i) => r.aliases.includes(i)))
+        .map((r) => r.id),
+    );
+    const levels = q.characterId
+      ? (personal.db
+          .prepare(
+            "SELECT job_id AS jobId,level FROM character_professions WHERE character_id=?",
+          )
+          .all(q.characterId) as { jobId: number; level: number }[])
+      : null;
+    const data = (dataset.gatheringNodes ?? []).filter(
+      (n) =>
+        (q.worldId === undefined || n.worldId === q.worldId) &&
+        selected.has(n.resourceId) &&
+        n.level <= q.maxLevel &&
+        (!q.jobId || n.jobId === q.jobId) &&
+        (!levels ||
+          levels.some((l) => l.jobId === n.jobId && l.level >= n.level)) &&
+        (n.verification === "verified" || q.includeUnconfirmed === "true"),
+    );
+    const observations = (q.includePersonal === "true" ? store.markers() : [])
+      .filter((m) => m.kind === "observation" && m.resourceId !== undefined)
+      .flatMap((m) => {
+        const map = store.maps.get(m.mapId),
+          r = dataset.resources.find((r) => r.id === m.resourceId);
+        return map &&
+          r &&
+          requested.some((i) =>
+            canonicalResources
+              .find((c) => c.id === r.id || c.aliases.includes(r.id))
+              ?.aliases.includes(i),
+          ) &&
+          (q.worldId === undefined || map.worldId === q.worldId) &&
+          r.level <= q.maxLevel &&
+          (!q.jobId || r.jobId === q.jobId) &&
+          (!levels ||
+            levels.some((l) => l.jobId === r.jobId && l.level >= r.level))
+          ? [
+              {
+                id: m.id,
+                mapId: map.id,
+                resourceId:
+                  canonicalResources.find((c) => c.aliases.includes(r.id))
+                    ?.id ?? r.id,
+                itemId: r.itemId,
+                cellId: -1,
+                x: map.x,
+                y: map.y,
+                worldId: map.worldId,
+                subAreaId: map.subAreaId,
+                jobId: r.jobId,
+                level: r.level,
+                quantity: 1,
+                criterion: "",
+                verification: "personal-observation",
+                sourceVersion: dataset.version,
+              },
+            ]
+          : [];
+      });
+    return {
+      data: [...data, ...observations],
+      total: data.length + observations.length,
+      source: dataset.gatheringSource,
+      version: dataset.version,
+      unconfirmedAvailable: (dataset.gatheringNodes ?? []).filter(
+        (n) => selected.has(n.resourceId) && n.verification !== "verified",
+      ).length,
+    };
+  });
   app.get("/api/world/resources", (request) => {
     const q = z
       .object({
@@ -221,8 +323,9 @@ export function registerWorld(
       })
       .parse(request.query);
     const term = normalize(q.q);
-    const data = dataset.resources.filter(
+    const data = canonicalResources.filter(
       (r) =>
+        (q.jobId !== undefined || r.jobId !== 1) &&
         (q.jobId === undefined || r.jobId === q.jobId) &&
         (q.maxLevel === undefined || r.level <= q.maxLevel) &&
         normalize(`${r.name} ${r.nameFr} ${r.nameEn} ${r.jobName}`).includes(
@@ -306,13 +409,46 @@ export function registerWorld(
     const input = routeInput
       .omit({ targetMapIds: true })
       .extend({
-        resourceIds: z.array(id).min(1).max(20),
+        resourceIds: z.array(id).min(1).max(200),
         questId: id.optional(),
         areaIds: z.array(id).max(100).optional(),
         maxStops: z.number().int().min(1).max(60).default(30),
+        includeUnconfirmed: z.boolean().default(false),
+        maxLevel: z.number().int().min(0).max(200).default(200),
+        jobId: id.optional(),
+        characterId: z.uuid().optional(),
       })
       .parse(request.body);
-    const resourceIds = new Set(input.resourceIds);
+    const chosen = canonicalResources.filter((r) =>
+      input.resourceIds.some((i) => r.aliases.includes(i)),
+    );
+    if (
+      input.resourceIds.some((i) => !dataset.resources.some((r) => r.id === i))
+    )
+      throw Object.assign(Error("Unbekannte Sammelressource."), {
+        statusCode: 400,
+      });
+    const resourceIds = new Set(chosen.flatMap((r) => r.aliases));
+    store.validateMaps([input.startMapId]);
+    const start = store.maps.get(input.startMapId)!;
+    const levels = input.characterId
+      ? (personal.db
+          .prepare(
+            "SELECT job_id AS jobId,level FROM character_professions WHERE character_id=?",
+          )
+          .all(input.characterId) as { jobId: number; level: number }[])
+      : null;
+    const allowed = new Set(
+      chosen
+        .filter(
+          (r) =>
+            r.level <= input.maxLevel &&
+            (!input.jobId || r.jobId === input.jobId) &&
+            (!levels ||
+              levels.some((l) => l.jobId === r.jobId && l.level >= r.level)),
+        )
+        .flatMap((r) => r.aliases),
+    );
     // Quest restrictions are enforced here, independently of client-supplied filters.
     // Piocher's current item/quest IDs are corroborated by the 3.7 source;
     // Amakna-only gathering is documented by the linked profession guide.
@@ -341,25 +477,63 @@ export function registerWorld(
       .markers()
       .filter(
         (m) =>
-          m.kind !== "waypoint" &&
+          m.kind === "observation" &&
           m.resourceId !== undefined &&
-          resourceIds.has(m.resourceId) &&
+          allowed.has(m.resourceId) &&
+          store.maps.get(m.mapId)?.worldId === start.worldId &&
           (input.questId !== 945 || store.maps.get(m.mapId)?.areaId === 0) &&
           (!areas || areas.has(store.maps.get(m.mapId)!.areaId)),
       );
-    const targetMapIds = [...new Set(nodes.map((m) => m.mapId))].slice(
-      0,
-      input.maxStops,
+    const documented = (dataset.gatheringNodes ?? []).filter(
+      (n) =>
+        allowed.has(n.resourceId) &&
+        n.worldId === start.worldId &&
+        !n.criterion &&
+        (n.verification === "verified" || input.includeUnconfirmed) &&
+        (input.questId !== 945 || store.maps.get(n.mapId)?.areaId === 0) &&
+        (!areas || areas.has(store.maps.get(n.mapId)!.areaId)),
     );
+    const candidates = [
+      ...new Set([...nodes, ...documented].map((n) => n.mapId)),
+    ].filter((i) => !input.excludedMapIds.includes(i));
+    const estimated = [input.startMapId];
+    let cursor = start;
+    const remaining = new Set(candidates.filter((i) => i !== start.id));
+    while (remaining.size && estimated.length <= input.maxStops) {
+      const next = [...remaining].sort((a, b) => {
+        const pa = store.maps.get(a)!,
+          pb = store.maps.get(b)!;
+        return (
+          Math.hypot(pa.x - cursor.x, pa.y - cursor.y) -
+            Math.hypot(pb.x - cursor.x, pb.y - cursor.y) || a - b
+        );
+      })[0];
+      remaining.delete(next);
+      estimated.push(next);
+      cursor = store.maps.get(next)!;
+    }
+    const targetMapIds = estimated.slice(1);
     const route = store.route({ ...input, targetMapIds });
+    if (!candidates.length) {
+      route.complete = false;
+      route.warning =
+        "Keine geeigneten bestätigten Fundstellen. Gebietsangaben werden nicht als Sammelstellen verwendet.";
+    }
     return {
       data: route,
+      estimatedOrderMapIds: estimated,
+      estimatedOrderWarning:
+        "Geschätzte Besuchsreihenfolge, keine geprüfte Wegstrecke. Nur die separat berechneten Kartenwechsel sind im Teilgraph belegt.",
       observations: nodes,
-      nodeCount: nodes.length,
-      locationPrecision: "personal-observation",
-      warning: targetMapIds.length
-        ? "Persönliche Beobachtungen sind keine Echtzeit-Spawns."
-        : "Keine eigenen bestätigten Fundorte. Untergebiete allein erlauben keine genaue Farmroute.",
+      nodeCount: documented.length + nodes.length,
+      targetMapCount: targetMapIds.length,
+      omittedMapCount: remaining.size,
+      locationPrecision: documented.some((n) => n.verification !== "verified")
+        ? "documented-unconfirmed-version"
+        : "personal-or-source-verified",
+      warning: documented.some((n) => n.verification !== "verified")
+        ? "Einbezogene DofusDB-Fundstellen stammen aus einem anderen Patch und sind für den aktuellen Patch unbestätigt."
+        : route.warning,
       version: dataset.version,
     };
   });

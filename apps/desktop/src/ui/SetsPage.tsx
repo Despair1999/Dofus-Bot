@@ -1,3 +1,6 @@
+import { read } from "../storage";
+import type { Build } from "@dofus/core";
+import { EffectRows } from "./attributes";
 import { useEffect, useState } from "react";
 import type { BuilderSet, BuilderItem } from "@dofus/core";
 import type { Config } from "../client";
@@ -14,6 +17,22 @@ import {
 type SetDetail = BuilderSet & { items: BuilderItem[] };
 export default function SetsPage({ config }: { config: Config }) {
   const route = useRoute();
+  const [activeBuild, setActiveBuild] = useState<Build | null>(null);
+  useEffect(() => {
+    let live = true;
+    void read("active", "")
+      .then(async (id) => {
+        const r = await request<Build[]>("/api/builder/builds", config);
+        if (live)
+          setActiveBuild(
+            r.data.find((b) => b.active && b.characterId === id) ?? null,
+          );
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [config]);
   const [q, setQ] = useState(""),
     [version, setVersion] = useState("3.7.12.12"),
     [rows, setRows] = useState<SetDetail[]>([]),
@@ -111,7 +130,11 @@ export default function SetsPage({ config }: { config: Config }) {
                 <div>
                   <h2>{detail.name}</h2>
                   <p>
-                    {detail.items.length} Teile · Set #{detail.id} · {version}
+                    {detail.items.length} Teile ·{" "}
+                    {detail.items.length
+                      ? `Stufe ${Math.max(...detail.items.map((i) => i.level))}`
+                      : "Stufe nicht verfügbar"}{" "}
+                    · Set #{detail.id} · {version}
                   </p>
                   <button onClick={() => navigatePath("/builder")}>
                     Im Builder planen
@@ -120,6 +143,19 @@ export default function SetsPage({ config }: { config: Config }) {
               </div>
               <section className="panel">
                 <h3>Setboni vergleichen</h3>
+                <p className="v2-muted">
+                  {activeBuild && activeBuild.gameVersion === version
+                    ? `${
+                        new Set(
+                          Object.values(activeBuild.equipment)
+                            .filter((e) =>
+                              detail.items.some((i) => i.id === e.itemId),
+                            )
+                            .map((e) => e.itemId),
+                        ).size
+                      } unterschiedliche Teile im aktiven Companion-Build „${activeBuild.name}“ eingeplant.`
+                    : "Kein aktiver Companion-Build für diesen Datenstand ausgewählt."}
+                </p>
                 <label>
                   Anzahl getragener Teile
                   <select
@@ -135,11 +171,7 @@ export default function SetsPage({ config }: { config: Config }) {
                   </select>
                 </label>
                 <div className="v2-effect-grid">
-                  {(detail.tiers[tier] ?? []).map((effect, i) => (
-                    <div className="v2-effect" key={i}>
-                      {effect.label}
-                    </div>
-                  ))}
+                  <EffectRows effects={detail.tiers[tier] ?? []} />
                 </div>
                 {!detail.tiers[tier]?.length && (
                   <p className="v2-muted">
@@ -152,12 +184,17 @@ export default function SetsPage({ config }: { config: Config }) {
                   <button
                     className="ui-object-card"
                     key={i.id}
-                    onClick={() => navigatePath(`/items/${i.id}`)}
+                    onClick={() =>
+                      navigatePath(`/items/${i.id}?version=${version}`)
+                    }
                   >
                     <ItemImage item={i} itemId={i.id} size={64} />
                     <span>
                       <h3>{i.name}</h3>
                       <StatusBadge>Stufe {i.level}</StatusBadge>
+                      {i.requirements && (
+                        <small>Voraussetzungen: {i.requirements}</small>
+                      )}
                     </span>
                   </button>
                 ))}

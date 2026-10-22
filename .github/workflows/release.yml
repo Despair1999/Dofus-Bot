@@ -2,6 +2,9 @@ name: Windows release
 on:
   push:
     tags: ['v*']
+    branches: ['main']
+    paths:
+      - '.github/release-requests/**'
   workflow_dispatch:
 permissions:
   contents: write

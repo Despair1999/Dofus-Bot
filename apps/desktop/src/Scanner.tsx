@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createWorker } from "tesseract.js";
-import { Camera, Upload, ScanLine } from "lucide-react";
+import {
+  Camera,
+  Upload,
+  ScanLine,
+  FileText,
+  Search,
+  CheckCircle,
+} from "lucide-react";
 import { matchText } from "./matching";
 import { api, type Config } from "./client";
 type Candidate = {
@@ -138,6 +145,48 @@ export default function Scanner({
         </div>
         <ScanLine size={42} />
       </div>
+      <details className="panel ocr-capabilities" open>
+        <summary>
+          <strong>Was kann die Bildschirmerkennung?</strong>
+        </summary>
+        <p>
+          Erkenne relevante Informationen aus deinem DOFUS-Spielbildschirm und
+          nutze sie direkt in deinem Companion.
+        </p>
+        <div className="ocr-use-cases">
+          <div>
+            <strong>
+              <FileText size={17} /> Texte erkennen
+            </strong>
+            <p>
+              Texte aus einem freigegebenen Fenster oder Screenshot lokal
+              auslesen und korrigieren.
+            </p>
+          </div>
+          <div>
+            <strong>
+              <Search size={17} /> Items und Quests finden
+            </strong>
+            <p>
+              Erkannten Text mit dem Katalog abgleichen und passende Einträge
+              öffnen.
+            </p>
+          </div>
+          <div>
+            <strong>
+              <CheckCircle size={17} /> Vorschläge prüfen
+            </strong>
+            <p>
+              Quest- und Schrittevorschläge selbst bestätigen, bevor du sie
+              übernimmst.
+            </p>
+          </div>
+        </div>
+        <small>
+          Die Funktion liest Bilder aus und automatisiert keine Aktionen im
+          Spiel.
+        </small>
+      </details>
       <section className="panel">
         <div className="toolbar">
           <select

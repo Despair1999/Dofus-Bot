@@ -34,6 +34,10 @@ export class PersonalStore {
       this.db.exec(
         "ALTER TABLE characters ADD COLUMN class_id INTEGER; INSERT OR IGNORE INTO migrations VALUES(2,datetime('now'));",
       );
+    if (!columns.some((c) => c.name === "omega_level"))
+      this.db.exec(
+        "ALTER TABLE characters ADD COLUMN omega_level INTEGER CHECK(omega_level IS NULL OR omega_level>=0); INSERT OR IGNORE INTO migrations VALUES(4,datetime('now'));",
+      );
   }
   migrateClasses(classes: GameClass[]) {
     const normalize = (s: string) =>
@@ -53,11 +57,16 @@ export class PersonalStore {
   characters(): Character[] {
     return this.db
       .prepare(
-        "SELECT id,name,server,class_name AS className,class_id AS classId,level,version,updated_at AS updatedAt FROM characters ORDER BY updated_at DESC",
+        "SELECT id,name,server,class_name AS className,class_id AS classId,level,omega_level AS omegaLevel,version,updated_at AS updatedAt FROM characters ORDER BY updated_at DESC",
       )
       .all() as unknown as Character[];
   }
   createCharacter(input: CharacterInput): Character {
+    if (input.omegaLevel && input.level !== 200)
+      throw Object.assign(
+        Error("Omega-Level ist erst ab Charakterstufe 200 verfügbar."),
+        { statusCode: 400 },
+      );
     const character = {
       ...input,
       id: randomUUID(),
@@ -66,7 +75,7 @@ export class PersonalStore {
     };
     this.db
       .prepare(
-        "INSERT INTO characters(id,name,server,class_name,level,version,updated_at,class_id) VALUES(?,?,?,?,?,?,?,?)",
+        "INSERT INTO characters(id,name,server,class_name,level,version,updated_at,class_id,omega_level) VALUES(?,?,?,?,?,?,?,?,?)",
       )
       .run(
         character.id,
@@ -77,6 +86,7 @@ export class PersonalStore {
         character.version,
         character.updatedAt,
         input.classId ?? null,
+        input.omegaLevel ?? null,
       );
     this.audit("character.created", character.id);
     return character;
@@ -86,9 +96,18 @@ export class PersonalStore {
     input: CharacterInput,
     expectedVersion: number,
   ): Character {
+    const omega =
+      input.omegaLevel === undefined
+        ? this.characters().find((c) => c.id === id)?.omegaLevel
+        : input.omegaLevel;
+    if (omega && input.level !== 200)
+      throw Object.assign(
+        Error("Omega-Level ist erst ab Charakterstufe 200 verfügbar."),
+        { statusCode: 400 },
+      );
     const result = this.db
       .prepare(
-        "UPDATE characters SET name=?,server=?,class_name=?,level=?,class_id=?,version=version+1,updated_at=? WHERE id=? AND version=?",
+        "UPDATE characters SET name=?,server=?,class_name=?,level=?,class_id=?,omega_level=?,version=version+1,updated_at=? WHERE id=? AND version=?",
       )
       .run(
         input.name,
@@ -96,6 +115,9 @@ export class PersonalStore {
         input.className,
         input.level,
         input.classId ?? null,
+        input.omegaLevel === undefined
+          ? (this.characters().find((c) => c.id === id)?.omegaLevel ?? null)
+          : input.omegaLevel,
         new Date().toISOString(),
         id,
         expectedVersion,

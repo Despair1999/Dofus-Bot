@@ -31,6 +31,7 @@ export interface ItemsPageProps {
   query?: string;
   itemId?: number;
   itemCategory?: string;
+  dataVersion?: string;
   filters?: Partial<ItemFilters>;
   page?: number;
   navigateItem: (id: number, category?: string) => void;
@@ -45,6 +46,7 @@ export default function ItemsPage({
   query = "",
   itemId,
   itemCategory,
+  dataVersion,
   filters: initialFilters,
   page: initialPage = 1,
   navigateItem,
@@ -96,7 +98,7 @@ export default function ItemsPage({
     setError("");
     if (itemId) {
       void request<CatalogDetail>(
-        `/api/items/${itemId}?lang=de${itemCategory ? `&category=${itemCategory}` : ""}`,
+        `/api/items/${itemId}?lang=de${itemCategory ? `&category=${itemCategory}` : ""}${dataVersion ? `&version=${encodeURIComponent(dataVersion)}` : ""}`,
         config,
         c.signal,
       )
@@ -133,7 +135,16 @@ export default function ItemsPage({
         });
     }
     return () => c.abort();
-  }, [search, filterKey, page, itemId, itemCategory, config.url, config.token]);
+  }, [
+    search,
+    filterKey,
+    page,
+    itemId,
+    itemCategory,
+    dataVersion,
+    config.url,
+    config.token,
+  ]);
   function submit(q: string) {
     setSearch(q);
     setDraft(q);

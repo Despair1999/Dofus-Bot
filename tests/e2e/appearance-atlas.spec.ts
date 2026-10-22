@@ -153,6 +153,17 @@ test("boss resource quest and drop images use local assets and remain visible of
       .first()
       .boundingBox())!.height,
   ).toBeLessThan(220);
+  // Lazy images must be requested before disconnecting the browser server.
+  // Opening the resource picker can move the quest cards below the viewport.
+  await page.locator(".profession-card img").first().scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      page
+        .locator(".profession-card img")
+        .first()
+        .evaluate((el: HTMLImageElement) => el.naturalWidth),
+    )
+    .toBeGreaterThan(0);
   await context.setOffline(true);
   await expect
     .poll(() =>
