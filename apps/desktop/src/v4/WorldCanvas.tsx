@@ -5,8 +5,10 @@ import type {
   WorldMarker,
 } from "../../../../packages/core/src/world";
 
+import { markerAppearance, glyphImage } from "../ui/GameGlyph";
 import type { WorldArtwork } from "../gameAssets";
 
+const markerSprites = new Map<string, HTMLImageElement>();
 export interface Camera {
   x: number;
   y: number;
@@ -47,6 +49,36 @@ export default function WorldCanvas({
   }) => void;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const [spriteRevision, setSpriteRevision] = useState(0);
+  useEffect(() => {
+    const cleanup: (() => void)[] = [],
+      seen = new Set<string>();
+    for (const p of [
+      ...points,
+      { kind: "waypoint" },
+      { kind: "resource" },
+      { kind: "observation" },
+      { kind: "route" },
+      { kind: "quest" },
+    ]) {
+      const a = markerAppearance(p),
+        key = a.glyph + a.color;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      let image = markerSprites.get(key);
+      if (!image) {
+        image = new Image();
+        markerSprites.set(key, image);
+        image.src = glyphImage(a.glyph, a.color);
+      }
+      if (!image.complete) {
+        const update = () => setSpriteRevision((v) => v + 1);
+        image.addEventListener("load", update);
+        cleanup.push(() => image!.removeEventListener("load", update));
+      }
+    }
+    return () => cleanup.forEach((fn) => fn());
+  }, [points]);
   const [background, setBackground] = useState<HTMLImageElement | null>(null);
   const [imageError, setImageError] = useState(false);
   const aspect = artwork?.aspect ?? 1;
@@ -237,38 +269,19 @@ export default function WorldCanvas({
     for (const point of points) {
       const [x, y] = project(point.x, point.y);
       if (x < 0 || y < 0 || x > size.width || y > size.height) continue;
-      ctx.fillStyle =
-        point.kind === "zaap"
-          ? "#50c6c9"
-          : point.kind === "dungeon"
-            ? "#d9b96e"
-            : "#a5b3c9";
-      ctx.strokeStyle = "#101622";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      if (point.kind === "dungeon") {
-        ctx.rect(x - 5, y - 5, 10, 10);
-      } else if (point.kind === "zaap") {
-        ctx.moveTo(x, y - 7);
-        ctx.lineTo(x + 6, y);
-        ctx.lineTo(x, y + 7);
-        ctx.lineTo(x - 6, y);
-        ctx.closePath();
-      } else ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      const a = markerAppearance(point),
+        sprite = markerSprites.get(a.glyph + a.color);
+      if (sprite?.complete && sprite.naturalWidth)
+        ctx.drawImage(sprite, x - 13, y - 13, 26, 26);
     }
     for (const marker of markers) {
       const map = byId.get(marker.mapId);
       if (!map) continue;
       const [x, y] = project(map.x, map.y);
-      ctx.fillStyle = marker.kind === "observation" ? "#99d9c7" : "#deb767";
-      ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#10231b";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      const a = markerAppearance(marker),
+        sprite = markerSprites.get(a.glyph + a.color);
+      if (sprite?.complete && sprite.naturalWidth)
+        ctx.drawImage(sprite, x - 13, y - 13, 26, 26);
     }
     if (selected !== undefined) {
       const map = byId.get(selected);
@@ -296,6 +309,7 @@ export default function WorldCanvas({
     }
   }, [
     points,
+    spriteRevision,
     maps,
     markers,
     selected,
@@ -331,6 +345,17 @@ export default function WorldCanvas({
       scale,
     });
   }
+  useEffect(() => {
+    const node = canvas.current;
+    if (!node) return;
+    const handle = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zoom(e.deltaY > 0 ? 0.85 : 1.18, e.clientX, e.clientY);
+    };
+    node.addEventListener("wheel", handle, { passive: false });
+    return () => node.removeEventListener("wheel", handle);
+  }, [camera, size, aspect, onCamera]);
   return (
     <div className="world-stage">
       <canvas
@@ -367,10 +392,6 @@ export default function WorldCanvas({
           if (e.key === "+") zoom(1.3);
           if (e.key === "-") zoom(1 / 1.3);
         }}
-        onWheel={(e) => {
-          e.preventDefault();
-          zoom(e.deltaY > 0 ? 0.85 : 1.18, e.clientX, e.clientY);
-        }}
         onDoubleClick={(e) => zoom(1.5, e.clientX, e.clientY)}
         onPointerDown={(e) => {
           e.currentTarget.setPointerCapture(e.pointerId);
@@ -383,7 +404,20 @@ export default function WorldCanvas({
         }}
         onPointerMove={(e) => {
           const p = position(e.clientX, e.clientY);
-          setHover(`[${Math.round(p.x)}, ${Math.round(p.y)}]`);
+          const hint = points.find(
+            (v) =>
+              Math.hypot(
+                (v.x - p.x) * camera.scale,
+                (v.y - p.y) * camera.scale * aspect,
+              ) < 13,
+          );
+          const label = hint
+            ? `${hint.name} · ${markerAppearance(hint).label} · [${hint.x}, ${hint.y}] · Karte ${hint.mapId}`
+            : `[${Math.round(p.x)}, ${Math.round(p.y)}]`;
+          setHover(label);
+          e.currentTarget.title = hint
+            ? label
+            : "Karte verschieben · Mausrad zum Zoomen";
           const d = drag.current;
           if (!d) return;
           if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) d.moved = true;

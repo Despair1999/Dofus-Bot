@@ -48,7 +48,11 @@
   align-items: center;
   justify-content: center;
   color: var(--green);
-  background: radial-gradient(circle, color-mix(in srgb, var(--surface-active) 33%, transparent), transparent 75%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--surface-active) 33%, transparent),
+    transparent 75%
+  );
   border-radius: 50%;
 }
 .v2-character-art > img {

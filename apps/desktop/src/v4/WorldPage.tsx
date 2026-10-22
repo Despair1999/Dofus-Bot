@@ -1,3 +1,4 @@
+import GameGlyph, { markerAppearance, mapCategories } from "../ui/GameGlyph";
 import {
   useCallback,
   useEffect,
@@ -66,6 +67,9 @@ export default function WorldPage({
   const [panelWidths, setPanelWidths] = useState({ left: 250, right: 285 });
   const [layoutReady, setLayoutReady] = useState(false);
   const params = new URLSearchParams(locationRoute.path.split("?")[1] ?? "");
+  const [hiddenCategories, setHiddenCategories] = useState<number[]>([
+    1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12,
+  ]);
   const [points, setPoints] = useState<WorldPoint[]>([]);
   const [pointKinds, setPointKinds] = useState({
     zaap: true,
@@ -468,16 +472,21 @@ export default function WorldPage({
     setStartId(String(saved.route.mapIds[0] ?? ""));
     setTargetIds(saved.route.mapIds.slice(1));
     setTargetText(saved.route.mapIds.slice(1).join(", "));
+    const controller = new AbortController();
     void request<WorldPosition>(
       `/api/world/maps/${saved.route.mapIds[0]}`,
       config,
+      controller.signal,
     )
       .then((r) => {
         choose(r.data);
         setCamera({ x: r.data.x, y: r.data.y, scale: 32 });
+        setNotice(`Route geladen: ${saved.name}`);
       })
-      .catch((e) => setError(message(e)));
-    setNotice(`Route geladen: ${saved.name}`);
+      .catch((e) => {
+        if (!controller.signal.aborted) setError(message(e));
+      });
+    return () => controller.abort();
   }, [activity, savedRoutes, locationRoute.path, config]);
   useEffect(() => {
     if (sharedState) {
@@ -531,6 +540,7 @@ export default function WorldPage({
       .catch((e) => setError(message(e)));
   }, [route, routeMaps, completed, activity, selectedResources]);
   function choose(map: WorldPosition) {
+    setNotice("");
     setSelected(map);
     setWorldId(map.worldId);
     setCamera((c) => ({ ...c, x: map.x, y: map.y }));
@@ -677,6 +687,7 @@ export default function WorldPage({
             aria-label="Weltkarte"
             value={worldId}
             onChange={(e) => {
+              setNotice("");
               setWorldId(Number(e.target.value));
               setSelected(null);
               setChoices([]);
@@ -729,27 +740,38 @@ export default function WorldPage({
             <details className="ui-world-points" open>
               <summary>Kartenobjekte & Legende</summary>
               <div className="ui-point-filters">
-                {(["zaap", "dungeon", "poi"] as const).map((kind) => (
-                  <label key={kind}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={pointKinds.zaap}
+                    onChange={(e) =>
+                      setPointKinds((v) => ({ ...v, zaap: e.target.checked }))
+                    }
+                  />
+                  <GameGlyph name="zaap" size={19} />
+                  Zaaps
+                </label>
+              </div>
+              <details className="map-category-filter">
+                <summary>Alle Kartenkategorien</summary>
+                {Object.entries(mapCategories).map(([id, entry]) => (
+                  <label key={id}>
                     <input
                       type="checkbox"
-                      checked={pointKinds[kind]}
+                      checked={!hiddenCategories.includes(+id)}
                       onChange={(e) =>
-                        setPointKinds((v) => ({
-                          ...v,
-                          [kind]: e.target.checked,
-                        }))
+                        setHiddenCategories((v) =>
+                          e.target.checked
+                            ? v.filter((i) => i !== +id)
+                            : [...v, +id],
+                        )
                       }
                     />
-                    <span className={`ui-point-dot ${kind}`} />
-                    {kind === "zaap"
-                      ? "Zaaps"
-                      : kind === "dungeon"
-                        ? "Dungeons"
-                        : "Weitere Orte"}
+                    <GameGlyph name={entry.glyph} size={18} />
+                    {entry.label}
                   </label>
                 ))}
-              </div>
+              </details>
               <label>
                 Orte suchen
                 <input
@@ -763,7 +785,9 @@ export default function WorldPage({
                 {points
                   .filter(
                     (p) =>
-                      pointKinds[p.kind] &&
+                      (p.kind === "zaap"
+                        ? pointKinds.zaap
+                        : !hiddenCategories.includes(p.categoryId)) &&
                       `${p.name} ${p.category}`
                         .toLocaleLowerCase()
                         .includes(pointQuery.toLocaleLowerCase()),
@@ -786,7 +810,9 @@ export default function WorldPage({
                         })
                       }
                     >
-                      <span className={`ui-point-dot ${p.kind}`} />
+                      <span style={{ color: markerAppearance(p).color }}>
+                        <GameGlyph name={markerAppearance(p).glyph} size={19} />
+                      </span>
                       {p.name}
                       <small>
                         [{p.x}, {p.y}]
@@ -1072,7 +1098,9 @@ export default function WorldPage({
           }}
           points={points.filter(
             (p) =>
-              pointKinds[p.kind] &&
+              (p.kind === "zaap"
+                ? pointKinds.zaap
+                : !hiddenCategories.includes(p.categoryId)) &&
               `${p.name} ${p.category}`
                 .toLocaleLowerCase()
                 .includes(pointQuery.toLocaleLowerCase()),

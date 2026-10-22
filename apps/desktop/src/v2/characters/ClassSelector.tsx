@@ -1,3 +1,4 @@
+import ClassArtwork from "../../ui/ClassArtwork";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Check, Search, Shield } from "lucide-react";
 import { normalize, type GameClass } from "@dofus/core";
@@ -14,6 +15,7 @@ export default function ClassSelector({
   label?: string;
   required?: boolean;
 }) {
+  const [grid, setGrid] = useState(false);
   const [open, setOpen] = useState(false),
     [query, setQuery] = useState(""),
     [active, setActive] = useState(0);
@@ -81,7 +83,15 @@ export default function ClassSelector({
         <ChevronDown size={16} />
       </button>
       {open && (
-        <div className="v2-class-popover">
+        <div className={`v2-class-popover ${grid ? "class-grid-popover" : ""}`}>
+          <button
+            type="button"
+            className="text-button"
+            aria-pressed={grid}
+            onClick={() => setGrid((v) => !v)}
+          >
+            {grid ? "Listenansicht" : "Klassenraster anzeigen"}
+          </button>
           <div className="v2-class-search">
             <Search size={15} />
             <input
@@ -113,6 +123,7 @@ export default function ClassSelector({
           <div
             id={`${label}-list`}
             role="listbox"
+            className="v2-class-options"
             aria-label="Verfügbare Klassen"
           >
             {matches.map((c, index) => (
@@ -125,7 +136,11 @@ export default function ClassSelector({
                 onMouseEnter={() => setActive(index)}
                 onClick={() => choose(index)}
               >
-                <img src={c.icon} alt="" />
+                <ClassArtwork
+                  classId={c.id}
+                  name={c.nameDe}
+                  size={grid ? 86 : 34}
+                />
                 <span>
                   <strong>{c.nameDe}</strong>
                   <small>
