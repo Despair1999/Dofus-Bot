@@ -128,6 +128,22 @@ export function registerWorld(
     data: dataset.worlds,
     version: dataset.version,
   }));
+  app.get("/api/world/points", (request) => {
+    const q = z
+      .object({
+        worldId: id.optional(),
+        kind: z.enum(["zaap", "dungeon", "poi"]).optional(),
+        q: z.string().max(150).default(""),
+      })
+      .parse(request.query);
+    const points = (dataset.points ?? []).filter(
+      (p) =>
+        (q.worldId === undefined || p.worldId === q.worldId) &&
+        (!q.kind || p.kind === q.kind) &&
+        normalize(`${p.name} ${p.category}`).includes(normalize(q.q)),
+    );
+    return { data: points, total: points.length, version: dataset.version };
+  });
   app.get("/api/world/maps", (request) => {
     const q = z
       .object({
@@ -301,9 +317,25 @@ export function registerWorld(
     // Piocher's current item/quest IDs are corroborated by the 3.7 source;
     // Amakna-only gathering is documented by the linked profession guide.
     if (input.questId !== undefined && input.questId !== 945)
-      throw Object.assign(Error("Für diese Berufsquest sind die gültigen Sammelgebiete noch nicht ausreichend geprüft."), {statusCode:400});
-    if (input.questId === 945 && (input.resourceIds.length !== 1 || !dataset.resources.some(r=>resourceIds.has(r.id)&&r.itemId===442)))
-      throw Object.assign(Error("Diese Quest verlangt Bronzevorkommen; andere Ressourcen sind dafür ungültig."), {statusCode:400});
+      throw Object.assign(
+        Error(
+          "Für diese Berufsquest sind die gültigen Sammelgebiete noch nicht ausreichend geprüft.",
+        ),
+        { statusCode: 400 },
+      );
+    if (
+      input.questId === 945 &&
+      (input.resourceIds.length !== 1 ||
+        !dataset.resources.some(
+          (r) => resourceIds.has(r.id) && r.itemId === 442,
+        ))
+    )
+      throw Object.assign(
+        Error(
+          "Diese Quest verlangt Bronzevorkommen; andere Ressourcen sind dafür ungültig.",
+        ),
+        { statusCode: 400 },
+      );
     const areas = input.areaIds && new Set(input.areaIds);
     const nodes = store
       .markers()
@@ -380,4 +412,3 @@ export function registerWorld(
   }));
   return store;
 }
-

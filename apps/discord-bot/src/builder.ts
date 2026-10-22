@@ -27,7 +27,7 @@ export function buildEmbed(summary: BuildSummary) {
   const portrait = classAttachment(build.classId);
   return new EmbedBuilder()
     .setThumbnail(portrait ? `attachment://class-${build.classId}.webp` : null)
-    .setColor(0xb9df82)
+    .setColor(0xd9b96e)
     .setTitle(escapeMarkdown(build.name).slice(0, 256))
     .setDescription(
       `${character ? escapeMarkdown(character.name) : "Unabhängiger Build"} · Klasse ${build.classId} · Stufe ${build.level}\nGeplante Companion-Ausrüstung · DOFUS ${build.gameVersion}`,

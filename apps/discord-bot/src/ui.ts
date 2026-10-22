@@ -10,7 +10,7 @@ import type { Item } from "./api.js";
 import type { Quest } from "@dofus/game-data";
 export const embed = (title: string) =>
   new EmbedBuilder()
-    .setColor(0x9dce71)
+    .setColor(0xd9b96e)
     .setTitle(title.slice(0, 256))
     .setFooter({ text: "DOFUS Companion · externe Spielhilfe" });
 export function itemEmbed(item: Item) {

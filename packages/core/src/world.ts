@@ -61,7 +61,19 @@ export interface WorldMarker {
   observedAt?: string;
   note?: string;
 }
+export interface WorldPoint {
+  id: number;
+  mapId: number;
+  worldId: number;
+  x: number;
+  y: number;
+  name: string;
+  categoryId: number;
+  category: string;
+  kind: "zaap" | "dungeon" | "poi";
+}
 export interface WorldDataset {
+  points?: WorldPoint[];
   schemaVersion: 1;
   version: string;
   importedAt: string;
