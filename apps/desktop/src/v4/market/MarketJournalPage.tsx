@@ -66,6 +66,9 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   const [note, setNote] = useState("");
   const [buyLimit, setBuyLimit] = useState("");
   const [sellLimit, setSellLimit] = useState("");
+  const [planQuantity, setPlanQuantity] = useState("10");
+  const [planUnitPrice, setPlanUnitPrice] = useState("");
+  const [planFeePercent, setPlanFeePercent] = useState("2");
   const [ocrOpen, setOcrOpen] = useState(false);
   const [ocrText, setOcrText] = useState("");
   const [ocrBusy, setOcrBusy] = useState(false);
@@ -476,6 +479,36 @@ export default function MarketJournalPage({ config }: { config: Config }) {
               {unitOffers(latest)[0] ? " günstigster Stückpreis " + fmt(unitOffers(latest)[0].unit) + " K" : " kein Paketpreis"}</p>}
             <AdviceList tips={tips}/>
           </> : <p>Wähle oben ein Item für persönliche Empfehlungen und Preisgrenzen.</p>}
+        </section>
+        <section className="panel"><h3><Wallet size={18}/> Verkaufsplanung & Risiko</h3>
+          <p>Simuliere einen möglichen Verkauf deines dokumentierten Bestands. Die Berechnung ist eine Schätzung; es werden keine Spielaktionen ausgeführt.</p>
+          <div className="market-form-grid">
+            <Field label="Geplante Menge" value={planQuantity} onChange={setPlanQuantity}/>
+            <Field label="Verkaufspreis je Stück (Kamas)" value={planUnitPrice} onChange={setPlanUnitPrice}/>
+            <label>Geschätzte Gebühren in %
+              <input type="number" min="0" max="99" step="0.1" value={planFeePercent} onChange={(e) => setPlanFeePercent(e.target.value)}/>
+            </label>
+          </div>
+          {(() => {
+            const q = Number(planQuantity), price = Number(planUnitPrice), fee = Number(planFeePercent);
+            const valid = !!position && isQuantity(q) && q <= position.quantity &&
+              planUnitPrice !== "" && isMoney(price) && planFeePercent !== "" &&
+              Number.isFinite(fee) && fee >= 0 && fee < 100;
+            if (!valid) return <p>Wähle einen Gegenstand mit ausreichendem Lagerbestand und gib gültige Mengen, Preise und Gebühren (0 bis unter 100 %) ein.</p>;
+            const gross = q * price;
+            const estimatedFees = Math.round(gross * fee / 100);
+            const estimatedCost = Math.round(position!.cost / position!.quantity * q);
+            const net = gross - estimatedFees;
+            const profit = net - estimatedCost;
+            const breakEven = Math.ceil(estimatedCost / q / (1 - fee / 100));
+            return <div className="market-plan-results" aria-live="polite">
+              <div><small>Bruttoerlös</small><strong>{kama(gross)}</strong></div>
+              <div><small>Geschätzte Gebühren</small><strong>{kama(estimatedFees)}</strong></div>
+              <div><small>Geplantes Nettoergebnis</small><strong>{kama(profit)}</strong></div>
+              <div><small>Break-even je Stück</small><strong>{kama(breakEven)}</strong></div>
+              <p>Basierend auf dem durchschnittlichen Einstandswert des aktuellen Bestands. Der tatsächlich gebuchte Gewinn wird beim Verkauf nach FIFO ermittelt. Absatz und Verkaufspreis sind nicht garantiert.</p>
+            </div>;
+          })()}
         </section>
         <section className="panel"><h3><BookOpen size={18}/> Marktmechanismen verstehen</h3>
           <div className="market-guide">
