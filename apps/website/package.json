@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 4173",
-    "build": "tsc --noEmit && vite build && node scripts/postbuild.mjs",
+    "dev": "node scripts/prepare-access.mjs && vite --host 127.0.0.1 --port 4173",
+    "build": "node scripts/prepare-access.mjs && tsc --noEmit && vite build && node scripts/postbuild.mjs",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/lib/*.test.ts",
     "preview": "vite preview --host 127.0.0.1 --port 4174"

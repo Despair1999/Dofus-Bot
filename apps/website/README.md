@@ -1,69 +1,74 @@
-# DOFUS Companion – öffentliche Website
+# DOFUS Companion – geschützte Vorschau (Firebase Spark)
 
-Die Produktwebsite ist Teil des **bestehenden** Repositories unter `apps/website/`. Sie ist eine statische React-19-/Vite-6-/TypeScript-Webanwendung mit eigenem CSS-Designsystem. Sie benötigt keine Functions, kein App Hosting, keine Firebase-Datenbank und kein SSR. Sämtliche Bilder werden aus bereits vorhandenen lokalen Monorepo-Assets beim Build eingebunden. Die lokale Desktop-API und persönliche Daten werden nicht öffentlich bereitgestellt.
+Diese eigenständige statische React-Website liegt **nur im bestehenden DOFUS-Companion-Monorepo** unter `apps/website/`. Desktop-App, lokale SQLite-/Fastify-Daten, Discord-Bot, Windows-Installer und GitHub Releases bleiben eigenständig. Klassisches Firebase Hosting im Spark-Tarif hostet lediglich statische Website-Dateien, keine Functions, keine Datenbank, keine Installer und kein SSR.
 
-## Start und Build
+## Aktueller Stand: Vorschau-Zugang statt öffentlicher Launch
 
-Voraussetzungen: Node.js >=22.15.0 und pnpm 11.25.0.
+Die Startseite zeigt zuerst eine individuell gestaltete DOFUS-inspirierte Passwortmaske. Die React-App wird über `React.lazy` **erst nach erfolgreicher Eingabe geladen und gerendert**. Jede Route verwendet dieselbe Vorschaltseite, auch direkte Deep Links. Nach erfolgreichem Login wird die Freigabe ausschließlich bis zum Schließen der Browser-Session in `sessionStorage` gespeichert. Fehlende oder ungültige Zugangs-Konfiguration blockiert den Login (fail closed). Formular mit Sichtbarkeitsschalter, Tastaturbedienung, Fehlertexten und Responsive-Design.
 
+**Wesentliche Einschränkung:** Ein clientseitiger Passwortschutz auf Firebase Hosting ist **keine echte Zugangskontrolle**. Die Website-Dateien und Bilder sind über ihre öffentlichen Hosting-URLs abrufbar; ein erfahrener Nutzer kann die browserseitige Sperre umgehen. Auch ein gesalzener PBKDF2-Verifier ist öffentlich und unterliegt Offline-Wörterbuchangriffen. Das Passwort bleibt zwar aus dem Quellcode und JavaScript-Klartext heraus, dennoch ist dies nur eine UX-Hürde, **keine Garantie für Privatheit oder rechtliche Befreiung**. Keine geheimen Inhalte, API-Zugänge oder persönliche Daten in den Web-Build einbinden. Wer echte Zugangskontrolle und Zugriffsschutz auf **alle** Assets benötigt, braucht eine andere Architektur mit serverseitiger Zugangskontrolle; die reine Spark-Hosting-Konfiguration leistet das nicht.
+
+Auf Wunsch sind die Impressums- und Datenschutz-Platzhalter der öffentlichen Produktseite im Vorschau-Modus **aus der Navigation und dem Routing entfernt**; beide URLs führen auf die normale 404-Ansicht (nach Passwortfreigabe). **Dies ersetzt keine Rechtsprüfung**: Auch eine per JavaScript passwortgeschützte Webseite kann öffentlich verfügbar sein und Impressums-/Datenschutzpflichten auslösen. Veröffentlichung bleibt deshalb technisch durch `LEGAL_READY == 'true'` gesperrt, bis der Betreiber die Situation geprüft und entschieden hat. Die rechtlichen Angaben für einen künftigen öffentlichen Launch sind separat zu erstellen.
+
+Indexierung ist eingeschränkt durch `robots.txt` (Disallow: /), `noindex`-Meta-Tag sowie `X-Robots-Tag`. Dies ist ein Hinweis an Suchmaschinen, **keine Zugangsbeschränkung**. Es wird bewusst keine Sitemap erstellt.
+
+## Passwort-Konfiguration – kein Klartext im Repository
+
+Das Passwort wurde von dir bereits als **GitHub Repository Secret** `WEBSITE_PASSWORD` gesetzt. Es wird nur für den *Live-Build* in einem abgesicherten GitHub-Actions-Job an `scripts/prepare-access.mjs` übergeben. Der Build erzeugt mit einem zufälligen 128-bit Salt und 310.000 PBKDF2-SHA256-Iterationen ausschließlich `public/access-config.json` (Salt/Verifier) und kopiert die Datei als öffentlich lesbare Vorschau-Konfiguration nach `dist/`. Keine Passwort-Zeichenfolge wird im Quellcode als Default verwendet, kein `VITE_WEBSITE_PASSWORD` in clientseitig gebündeltem JavaScript und kein Passwort in Log-Ausgaben.
+
+**Die Vorschau-Konfiguration ist kein Geheimnis.** Sie ist ein öffentlich abrufbarer Passwort-Verifier, der prinzipbedingt offline angreifbar bleibt.
+
+Bei Pull Requests und CI-Prüfungen wird **niemals** das echte Secret ausgelesen. Der Workflow generiert ein einmaliges zufälliges CI-Passwort nur für den Buildtest. Erst der `publish`-Job auf `main` baut **erneut** mit dem richtigen GitHub-Secret und veröffentlicht danach die Website. Ein fehlendes Secret führt zu einem Abbruch. Die CI-ZIP-Vorschau mit Zufallspasswort wird niemals auf Firebase deployed.
+
+Das generierte `apps/website/public/access-config.json` ist per `.gitignore` ausgeschlossen und darf nicht committet werden.
+
+## Lokale Vorschau
+
+Node.js >= 22.15 und pnpm 11.25.0 vorausgesetzt. Passwort lokal ausschließlich als Umgebungsvariable setzen:
+
+PowerShell:
+```powershell
+$env:WEBSITE_PASSWORD = Read-Host -AsSecureString | ConvertFrom-SecureString -AsPlainText
+pnpm --filter @dofus/website dev
+```
+
+Buildtests:
 ```sh
 pnpm install --frozen-lockfile
-pnpm --filter @dofus/website dev
 pnpm --filter @dofus/website typecheck
 pnpm --filter @dofus/website test
+# WEBSITE_PASSWORD muss gesetzt sein:
 pnpm --filter @dofus/website build
 pnpm --filter @dofus/website preview
 ```
 
-Der produktive statische Build liegt unter `apps/website/dist/`. Deployment erfolgt über die `firebase.json` des Repository-Roots. Ein lokaler Website-Build baut weder Tauri noch Discord neu. Auch der dedizierte Hosting-Workflow installiert nur die Website-Workspace-Abhängigkeiten.
+Ein Build ohne Passwort oder mit einem Passwort kürzer als 12 Zeichen wird verweigert. Keine harte Vorgabe oder Fallback-Passwort.
 
-## Projektseiten
+## Firebase-Einrichtung (einmalig)
 
-- `/`: Startseite, Produktvorschau, Kernmodule und echte Projektkennzahlen
-- `/funktionen`: Feature-Tabs, zoombare/verschiebbare Kartendemonstration und Modulübersicht
-- `/desktop`: Windows-Produktseite, umschaltbare Produktübersicht und Overlay
-- `/discord`: Übersicht, nutzbare Slash-Command-Beispiele und Einladung nur mit gültiger Client-ID
-- `/downloads`: dynamische Releases mit verifizierten Windows-Installer-Assets, Checksums/Portable-ZIP
-- `/changelog`: veröffentlichte GitHub-Releases
-- `/faq`, `/impressum`, `/datenschutz`; beliebige ungültige Seiten erhalten eine 404-Ansicht
+Bereits eingerichtet:
+- Firebase-Projekt `dofus-companion` mit klassischem Hosting im kostenlosen Spark-Tarif.
+- GitHub-Repository-Variablen `FIREBASE_PROJECT_ID=dofus-companion` und `WEBSITE_URL=https://dofus-companion.web.app`.
+- Dediziertes Dienstkonto mit Rollen für Firebase Hosting und ein verschlüsseltes Repository Secret `FIREBASE_SERVICE_ACCOUNT`.
+- Repository Secret `WEBSITE_PASSWORD`.
 
-**Designhinweis:** Die Desktop-Fenstervorschau ist ausdrücklich eine gestaltete Vorschau auf existierende Funktionsbereiche, **kein echter Anwendungsscreenshot**. Das Kartenbild und die Klassenbilder stammen aus dem vorhandenen Repository. Vor einer öffentlichen Veröffentlichung die rechtliche Freigabe der eingesetzten DOFUS-Grafiken prüfen.
+Es werden **keine neuen Repositories** benötigt.
 
-**Live-Daten:** Die Website ruft ausschließlich öffentliche GitHub-Releases im Browser ab. Die API wird nicht für persönliche Profile verwendet. Die Listen werden anhand gültiger SemVer-Tags sortiert; Drafts und Pre-Releases werden ausgeschlossen. Ein Download erscheint nur bei vorhandenem, positiv großem `.exe`-Setup-Asset mit passender GitHub-Release-URL. Bei Rate-Limits oder Netzfehlern wird kein Downloadbutton angezeigt; die GitHub-Releases-Seite bleibt erreichbar. Der Firebase-Spark-Traffic enthält **keine Installer**.
+Optional: `DISCORD_PUBLIC_CLIENT_ID` als Repository Variable mit einer gültigen öffentlichen Discord-Application-ID setzen, sonst zeigt die Website keinen Einladungsbutton.
 
-## Firebase Spark: einmalige Einrichtung
+**Deployment bleibt bewusst deaktiviert.** In GitHub → Settings → Secrets and variables → Actions → Variables steht `LEGAL_READY` zunächst auf `false` (oder fehlt). Erst nach rechtlicher Prüfung und Asset-Rechteklärung kann der Betreiber den Wert ausdrücklich auf `true` setzen. Diese Freigabe nicht zum Umgehen rechtlicher Pflichten nutzen.
 
-1. In der [Firebase Console](https://console.firebase.google.com/) ein Firebase-Projekt im **Spark-Plan** einrichten. Das ist kein Auftrag, ein weiteres GitHub-Repository anzulegen. Unter **Hosting** die statische Hosting-Site aktivieren, NICHT **App Hosting** (App Hosting kann eine andere Abrechnung voraussetzen). Die tatsächliche Projekt-ID aus den Projekteinstellungen notieren.
-2. Für das Hosting ausschließlich `firebase.json` und das bestehende Repository verwenden. `.firebaserc` enthält bewusst keine festgeschriebene Projekt-ID; jedes CLI-Deployment muss `--project <echte-projekt-id>` erhalten.
-3. Eine **eigene Service-Account-Identität** im zugehörigen [Google Cloud Console IAM](https://console.cloud.google.com/iam-admin/serviceaccounts) erzeugen (das bereits bestehende Firebase-Projekt auswählen). Benenne sie beispielsweise `firebase-hosting-github`. Vergib die minimale erforderliche Rolle **Firebase Hosting Admin** (`roles/firebasehosting.admin`); wenn die CLI fehlende API-Key-Leseberechtigungen meldet, auch **API Keys Viewer** (`roles/serviceusage.apiKeysViewer`). Für unsere Live-Website sind keine Cloud-Run- oder Firebase-Auth-Admin-Rechte notwendig. Erzeuge unter **Schlüssel → Schlüssel hinzufügen → Neuen Schlüssel erstellen → JSON** einen privaten Service-Account-Schlüssel.
-   - **Wichtig:** Die JSON-Datei ist ein geheimer Zugangsschlüssel. Niemals im Repository committen, hochladen oder im Chat weitergeben. Sie wird ausschließlich als verschlüsseltes GitHub-Actions-Secret hinterlegt. Wird der Schlüssel offengelegt, im Google-Cloud-IAM sofort widerrufen.
-   - Das offizielle Firebase-GitHub-Hosting-Action unterstützt `firebaseServiceAccount` als Secret. Dieser Ansatz benötigt **keine** Workload Identity Federation und ist mit rein statischem Spark Hosting vereinbar. Google verlangt in seiner WIF-Anleitung ein aktiviertes Billing-Konto; daher verwenden wir für den expliziten Spark-Betrieb hier **keine WIF-Einrichtung**.
-4. Unter **GitHub → Settings → Secrets and variables → Actions** im bestehenden `Despair1999/Dofus-Bot` einrichten:
-   - **Repository secret** `FIREBASE_SERVICE_ACCOUNT`: vollständiger Inhalt der heruntergeladenen privaten JSON-Datei (niemals als Repository-Datei).
-   - **Repository variable** `FIREBASE_PROJECT_ID`: die echte Firebase-Projekt-ID aus den Firebase-Projekteinstellungen.
-   - **Repository variable** `WEBSITE_URL`: öffentliche HTTPS-Adresse deiner Hosting-Site, beispielsweise `https://<deine-tatsächliche-projekt-id>.web.app`. Prüfe die von Firebase angezeigte URL.
-   - **Repository variable** `DISCORD_PUBLIC_CLIENT_ID`: echte öffentliche Discord-Application-ID (optional).
-   - **Repository variable** `LEGAL_READY`: erst `true`, nachdem Impressum/Datenschutz sowie die Bildnutzungsrechte geprüft und korrekt ergänzt sind. Sonst bleibt ein automatischer Live-Deploy bewusst deaktiviert.
-5. Den Branch nach Review in `main` mergen. Bei Website-Änderungen (oder manueller Workflow-Auslösung auf `main`) testet und baut GitHub Actions **nur den Web-Workspace**. Ist die Authentifizierung eingerichtet und `LEGAL_READY=true`, veröffentlicht der `publish`-Job automatisch nach erfolgreichem `website`-Job.
-6. Die Domain unter Firebase Hosting verbinden und HTTPS über Firebase konfigurieren. Die GitHub-Variable `WEBSITE_URL` auf die endgültige Domain setzen. Prüfe die Site in der Firebase-Konsole und ihre Hosting-Nutzung.
+Nach Review der gestapelten Pull Requests in richtiger Reihenfolge in `main` übernehmen (nicht während der Bearbeitung). Die Action `.github/workflows/firebase-hosting.yml` baut die Website isoliert. Sie deployed erst auf `main` mit gültiger Firebase-Projekt-ID und gesetzter `LEGAL_READY=true`. Das Deployment verwendet `FirebaseExtended/action-hosting-deploy@v0` und den JSON-Schlüssel aus GitHub Secrets. Keine Firebase Cloud Functions oder kostenpflichtige Dienste.
 
-### Manuelles Hosting-Deployment
+## Funktionsbereiche
 
-Nach einmaliger lokaler Authentifizierung mit Firebase CLI:
+Die öffentliche Website enthält Startseite, Feature-Tabs, interaktive vereinfachte Kartenvorschau, Windows-/Overlay-Bereich, Discord-Bot-Demo, Downloads, Changelog und FAQ. Das Passwort-Gate ist vorgeschaltet. Bestehende Branding-, Klassen- und Kartenbilder werden beim Vite-Build wiederverwendet; zusätzliche große Desktop-Archive und private Daten werden **nicht** nach Firebase kopiert.
 
-```sh
-pnpm --filter @dofus/website build
-npx firebase-tools@14.22.0 deploy --only hosting --project ECHTE_FIREBASE_PROJEKT_ID
-```
+- **Downloads**: API-Abfrage öffentlicher GitHub Releases, gültige NSIS-Installer und portable ZIPs, klare Fehlerzustände, kein Fake-Downloadbutton
+- **Sicherheit**: bestehende statische HTTP-Sicherheitsheader, CSP, robots Disallow/noindex, kein Analytics-Tracking
+- **Verfügbarkeit**: Firebase-Spark-Kontingente beachten; Installationsdateien bleiben stets bei GitHub
+- **Grenzen**: Die native Desktop-App braucht ihren lokalen Dienst; die Website stellt ihn nicht öffentlich bereit.
 
-**Achtung:** Der automatische Workflow führt absichtlich **kein** kostenpflichtiges Hosting-Backend, Cloud Functions, Firestore, Cloud Storage oder Installer-Upload aus. Firebase Spark besitzt Nutzungslimits (laut offizieller Dokumentation unter anderem 10 GB Hosting-Speicher und 10 GB Transfer pro Monat). Werden sie überschritten, kann die Website vorübergehend deaktiviert werden. Release-Dateien belasten den GitHub-Download, nicht Firebase.
+## Prüfungen
 
-### Veröffentlichungssperren
-
-Eine öffentliche Veröffentlichung darf erst erfolgen, wenn alle tatsächlichen Pflichtangaben in `/impressum` und `/datenschutz` ergänzt und die Nutzungsrechte für sämtliche öffentlich verwendeten Spielbilder geprüft sind. Deshalb ist der Deployment-Job an `LEGAL_READY=true` geknüpft. Ohne den verschlüsselten Service-Account-Schlüssel, die echte Firebase-Projekt-ID oder die rechtliche Freigabe wird **nicht deployed**. Fehlende Discord-Client-ID zeigt einen ehrlichen Konfigurationshinweis statt eines funktionslosen Buttons.
-
-## Wartung und Tests
-
-Der Website-Workflow reagiert auf Website-Dateien und explizit referenzierte Bild-/Konfigurationsänderungen; der Desktop-/Bot-Workflow wird für reine Website-Dateiänderungen durch `paths-ignore` nicht ausgelöst. Der signierte Windows-Release-Workflow bleibt unverändert und ist unabhängig von Firebase.
-
-Vor Veröffentlichung: responsive Layouts im Browser visuell prüfen, `pnpm --filter @dofus/website typecheck`, `test` und `build` durchführen, Downloads nach Aktualisierung echter Releases testen und Firebase Hosting-Domain auf korrekte SPA-Routen und Header kontrollieren. Rechtstexte benötigen reale Betreiberinformationen und rechtliche Prüfung, die nicht automatisiert erfunden werden dürfen.
+Vor dem Merge: Website-Workflow grün (TypeScript, Unit Tests, Produktionsbuild). Zusätzliche manuelle Browserabnahme: Zugang falsch/richtig, Reload in Session, neuer Browser-Sitzungstoken, Deep Links, Sichtbarkeit auf Handy/Desktop, fehlender Verifier, 404 auf deaktivierten rechtlichen URLs. Nach optionalem autorisiertem Deployment echte Firebase-URLs und Response-Header prüfen. Ein erfolgreicher CI-Build allein belegt keinen erfolgreichen Live-Deploy und keine gerichtsfeste rechtliche Einordnung.

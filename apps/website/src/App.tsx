@@ -26,10 +26,7 @@ const meta: Record<string, [string, string]> = {
  "/downloads": ["Windows-Download | DOFUS Companion", "Lade den aktuellen offiziellen Windows-Installer direkt von GitHub Releases."],
  "/faq": ["Häufige Fragen | DOFUS Companion", "Antworten zu Installation, Quellen, Updates, Übersetzer und Discord."],
  "/changelog": ["Versionshistorie | DOFUS Companion", "Veröffentlichte Versionen und Änderungsnotizen von GitHub."],
- "/impressum": ["Impressum | DOFUS Companion", "Angaben zum Betreiber von DOFUS Companion."],
- "/datenschutz": ["Datenschutz | DOFUS Companion", "Informationen über Datenverarbeitung bei DOFUS Companion."],
 };
-const siteUrl = import.meta.env.VITE_SITE_URL?.replace(/\/$/, "");
 const discordId = import.meta.env.VITE_DISCORD_CLIENT_ID || "";
 const invite = /^\d{17,22}$/.test(discordId) ? `https://discord.com/oauth2/authorize?client_id=${discordId}&scope=bot%20applications.commands&permissions=0` : "";
 const modules = [
@@ -65,7 +62,7 @@ function Footer(){return <footer className="footer">
   <div><AppLink href="/" className="brand foot-brand"><img src={logo} alt=""/><span>DOFUS <strong>COMPANION</strong><small>Dein Abenteuer. Deine Tools.</small></span></AppLink><p>Unabhängige Spielhilfe für die Welt der Zwölf. Mit Liebe für strategische Abenteuer entwickelt.</p></div>
   <div><h4>Entdecken</h4><AppLink href="/funktionen">Funktionen</AppLink><AppLink href="/desktop">Desktop-App</AppLink><AppLink href="/discord">Discord-Bot</AppLink><AppLink href="/downloads">Downloads</AppLink></div>
   <div><h4>Informationen</h4><AppLink href="/faq">FAQ</AppLink><AppLink href="/changelog">Changelog</AppLink><AppLink href={repo} external>GitHub <ArrowUpRight size={13}/></AppLink></div>
-  <div><h4>Rechtliches</h4><AppLink href="/impressum">Impressum</AppLink><AppLink href="/datenschutz">Datenschutz</AppLink></div>
+  
  </div>
  <div className="container foot-bottom"><span>© {new Date().getFullYear()} DOFUS Companion</span><span>DOFUS und Ankama sind Marken ihrer jeweiligen Rechteinhaber. Unabhängiges Fanprojekt, nicht mit Ankama verbunden.</span></div>
  </footer>}
@@ -153,14 +150,13 @@ const faqItems = [
  ["Woher stammen die Daten?","Aus dem im Repository dokumentierten Spieldatenkatalog und ergänzenden geprüften Quellen. Die Datenstände und Quellenlücken sind dort dokumentiert."]
 ];
 function Faq(){const [opened,setOpened]=useState<number|null>(0);return <><section className="page-hero container"><Label>GUT ZU WISSEN</Label><h1>Fragen?<br/><span>Hier findest du Antworten.</span></h1><p>Alles Wichtige zu DOFUS Companion, Installation, Datenquellen und der Nutzung der Werkzeuge.</p></section><section className="section section-tight"><div className="container faq-wrap">{faqItems.map(([q,a],i)=><div className="faq-item" key={q}><button type="button" aria-expanded={opened===i} onClick={()=>setOpened(opened===i?null:i)}><span>{q}</span><ChevronDown size={19} className={opened===i?"rotated":""}/></button>{opened===i&&<p>{a}</p>}</div>)}</div></section><BottomCTA/></>}
-function Legal({privacy=false}:{privacy?:boolean}){return <><section className="page-hero container"><Label>RECHTLICHES</Label><h1>{privacy?"Datenschutz":"Impressum"}</h1><p>Informationen zum unabhängigen Projekt DOFUS Companion.</p></section><section className="section section-tight"><div className="container legal-body">{privacy?<><h2>Technischer Betrieb</h2><p>Diese Website wird als statische Anwendung über Firebase Hosting ausgeliefert. Firebase kann technisch erforderliche Zugriffs- und Sicherheitsdaten verarbeiten. Google ist dabei ein externer Hostinganbieter.</p><h2>GitHub Releases</h2><p>Für Versionsinformationen fragt dein Browser die öffentliche GitHub Releases API ab. Klickst du einen Download an, wirst du zu GitHub weitergeleitet. Dabei gelten die Datenschutzinformationen von GitHub.</p><h2>Cookies und Tracking</h2><p>Die Website setzt in ihrer eigenen Implementierung keine Analyse-Cookies und keine Werbetracker ein. Technisch erforderliche Verarbeitung durch die genannten Anbieter bleibt davon unberührt.</p><h2>Verantwortliche Stelle und Kontakt</h2><p className="legal-todo">Vor öffentlicher Veröffentlichung vom Betreiber rechtsverbindlich ergänzen. Kein erfundener Name oder Kontakt.</p></>:<><h2>Angaben gemäß § 5 DDG</h2><p className="legal-todo">Betreiber, ladungsfähige Anschrift und Kontaktmöglichkeiten sind vor öffentlicher Veröffentlichung einzutragen.</p><h2>Hinweis zu Marken und Rechten</h2><p>DOFUS und Ankama sind Marken ihrer jeweiligen Rechteinhaber. DOFUS Companion ist ein unabhängiges Fanprojekt und steht in keiner offiziellen Verbindung zu Ankama.</p><h2>Haftung für externe Links</h2><p>Externe Download- und Projektverweise führen zu GitHub. Für Inhalte Dritter gelten deren jeweilige Bedingungen.</p></>}</div></section></>}
 function NotFound(){return <section className="page-hero container center"><Label>404 · UNBEKANNTE SEITE</Label><h1>Hier endet der Weg.</h1><p>Diese Seite existiert nicht. Starte dein Abenteuer auf der Startseite.</p><AppLink className="button gold big" href="/">Zur Startseite <ArrowRight size={17}/></AppLink></section>}
 export default function App(){
  const path=location.pathname.replace(/\/$/,"")||"/";
  useEffect(()=>{const [title,desc]=meta[path]||["404 | DOFUS Companion","Seite nicht gefunden."];document.title=title;document.documentElement.lang="de";document.querySelector('meta[name="description"]')?.setAttribute("content",desc);
- if(siteUrl){const canonical=document.createElement("link");canonical.rel="canonical";canonical.href=new URL(path,siteUrl).href;document.head.appendChild(canonical);return()=>canonical.remove();}
+ // Private preview: deliberately no canonical or indexable public pages.
  },[path]);
  let page:ReactNode;
- switch(path){case "/":page=<Home/>;break;case "/funktionen":page=<Features/>;break;case "/desktop":page=<Desktop/>;break;case "/discord":page=<Discord/>;break;case "/downloads":page=<Downloads/>;break;case "/faq":page=<Faq/>;break;case "/changelog":page=<Changelog/>;break;case "/impressum":page=<Legal/>;break;case "/datenschutz":page=<Legal privacy/>;break;default:page=<NotFound/>;}
+ switch(path){case "/":page=<Home/>;break;case "/funktionen":page=<Features/>;break;case "/desktop":page=<Desktop/>;break;case "/discord":page=<Discord/>;break;case "/downloads":page=<Downloads/>;break;case "/faq":page=<Faq/>;break;case "/changelog":page=<Changelog/>;break;default:page=<NotFound/>;}
  return <><Header/><main id="main">{page}</main><Footer/></>;
 }

@@ -48,11 +48,14 @@ jobs:
         run: |
           pnpm --filter @dofus/website typecheck
           pnpm --filter @dofus/website test
-      - name: Build static website
+      - name: Validate static production build with ephemeral CI password
         env:
           VITE_SITE_URL: ${{ vars.WEBSITE_URL }}
           VITE_DISCORD_CLIENT_ID: ${{ vars.DISCORD_PUBLIC_CLIENT_ID }}
-        run: pnpm --filter @dofus/website build
+        run: |
+          # PRs must never receive the real password. The CI preview is not deployed.
+          export WEBSITE_PASSWORD="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("hex"))')"
+          pnpm --filter @dofus/website build
       - name: Upload compiled static site
         uses: actions/upload-artifact@v4
         with:
@@ -74,10 +77,24 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          name: website-static
-          path: apps/website/dist/
+          node-version: '22.15.0'
+          cache: pnpm
+      - name: Install website dependencies
+        run: pnpm install --frozen-lockfile --filter @dofus/website...
+      - name: Rebuild with the real password from GitHub Secrets
+        env:
+          WEBSITE_PASSWORD: ${{ secrets.WEBSITE_PASSWORD }}
+          VITE_SITE_URL: ${{ vars.WEBSITE_URL }}
+          VITE_DISCORD_CLIENT_ID: ${{ vars.DISCORD_PUBLIC_CLIENT_ID }}
+        run: |
+          if [ -z "$WEBSITE_PASSWORD" ]; then
+            echo "::error::Missing WEBSITE_PASSWORD repository secret; refusing to deploy."
+            exit 1
+          fi
+          pnpm --filter @dofus/website build
       - name: Deploy only Firebase Hosting (GitHub encrypted secret)
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

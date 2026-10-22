@@ -41,6 +41,10 @@
           {
             "key": "Content-Security-Policy",
             "value": "default-src 'self'; connect-src 'self' https://api.github.com; img-src 'self' data:; font-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+          },
+          {
+            "key": "X-Robots-Tag",
+            "value": "noindex, nofollow, noarchive, nosnippet"
           }
         ]
       },
@@ -68,6 +72,15 @@
           {
             "key": "Cache-Control",
             "value": "public, max-age=3600"
+          }
+        ]
+      },
+      {
+        "source": "/access-config.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store, max-age=0, must-revalidate"
           }
         ]
       }
