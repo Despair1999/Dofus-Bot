@@ -61,34 +61,26 @@ jobs:
           retention-days: 3
 
   publish:
-    name: Deploy static site (Spark, live only)
+    name: Deploy static site (Firebase Spark)
     needs: [website]
     if: >-
       github.event_name != 'pull_request' &&
       github.ref == 'refs/heads/main' &&
       vars.FIREBASE_PROJECT_ID != '' &&
-      vars.FIREBASE_WIF_PROVIDER != '' &&
-      vars.FIREBASE_SERVICE_ACCOUNT != '' &&
       vars.LEGAL_READY == 'true'
     runs-on: ubuntu-latest
     environment: firebase-production
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: website-static
           path: apps/website/dist/
-      - name: Short-lived Google Cloud authentication (OIDC)
-        uses: google-github-actions/auth@v3
+      - name: Deploy only Firebase Hosting (GitHub encrypted secret)
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          workload_identity_provider: ${{ vars.FIREBASE_WIF_PROVIDER }}
-          service_account: ${{ vars.FIREBASE_SERVICE_ACCOUNT }}
-          project_id: ${{ vars.FIREBASE_PROJECT_ID }}
-          create_credentials_file: true
-      - name: Deploy only Firebase Hosting
-        env:
-          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
-        run: npx --yes firebase-tools@14.22.0 deploy --only hosting --project "$FIREBASE_PROJECT_ID" --non-interactive
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          channelId: live

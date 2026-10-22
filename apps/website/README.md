@@ -35,20 +35,15 @@ Der produktive statische Build liegt unter `apps/website/dist/`. Deployment erfo
 
 1. In der [Firebase Console](https://console.firebase.google.com/) ein Firebase-Projekt im **Spark-Plan** einrichten. Das ist kein Auftrag, ein weiteres GitHub-Repository anzulegen. Unter **Hosting** die statische Hosting-Site aktivieren, NICHT **App Hosting** (App Hosting kann eine andere Abrechnung voraussetzen). Die tatsächliche Projekt-ID aus den Projekteinstellungen notieren.
 2. Für das Hosting ausschließlich `firebase.json` und das bestehende Repository verwenden. `.firebaserc` enthält bewusst keine festgeschriebene Projekt-ID; jedes CLI-Deployment muss `--project <echte-projekt-id>` erhalten.
-3. Eine OIDC-Verbindung von **diesem GitHub-Repository** zu Google Cloud einrichten. Empfohlen wird Workload Identity Federation mit einem eigens für Hosting angelegten Service Account:
-   - Service Account mit dem erforderlichen Firebase Hosting Deploy-Recht ausstatten (z. B. `roles/firebasehosting.admin`, bei Bedarf zusätzliche API-Zugriffsrolle gemäß Google IAM).
-   - Workload Identity Pool + GitHub OIDC Provider mit `https://token.actions.githubusercontent.com` als Issuer erstellen.
-   - Attribute `google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref` zuordnen.
-   - Die Provider-Bedingung **explizit** auf `assertion.repository=='Despair1999/Dofus-Bot' && assertion.ref=='refs/heads/main'` einschränken, damit nur die Hauptbranch deployen kann.
-   - `roles/iam.workloadIdentityUser` für den Repository-Principal auf dem Service Account freigeben; keine Service-Account-JSON-Keys in Git speichern.
-   - Details und Befehle: [Google: GitHub WIF](https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines) und [GitHub Action Auth](https://github.com/google-github-actions/auth).
-4. Unter **GitHub → Settings → Secrets and variables → Actions → Variables** im *vorhandenen* `Despair1999/Dofus-Bot` setzen:
-   - `FIREBASE_PROJECT_ID`: deine echte Firebase-Projekt-ID
-   - `FIREBASE_WIF_PROVIDER`: vollständige WIF-Provider-Ressource `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/<POOL>/providers/<PROVIDER>`
-   - `FIREBASE_SERVICE_ACCOUNT`: die wirkliche Service-Account-Mailadresse
-   - `WEBSITE_URL`: tatsächliche HTTPS-URL der Hosting-Site (optional für Canonicals/Sitemap, aber empfohlen)
-   - `DISCORD_PUBLIC_CLIENT_ID`: echte öffentliche Discord-Application-ID (optional)
-   - `LEGAL_READY`: erst `true`, nachdem Impressum/Datenschutz und Asset-Rechte geprüft und richtig ergänzt sind.
+3. Eine **eigene Service-Account-Identität** im zugehörigen [Google Cloud Console IAM](https://console.cloud.google.com/iam-admin/serviceaccounts) erzeugen (das bereits bestehende Firebase-Projekt auswählen). Benenne sie beispielsweise `firebase-hosting-github`. Vergib die minimale erforderliche Rolle **Firebase Hosting Admin** (`roles/firebasehosting.admin`); wenn die CLI fehlende API-Key-Leseberechtigungen meldet, auch **API Keys Viewer** (`roles/serviceusage.apiKeysViewer`). Für unsere Live-Website sind keine Cloud-Run- oder Firebase-Auth-Admin-Rechte notwendig. Erzeuge unter **Schlüssel → Schlüssel hinzufügen → Neuen Schlüssel erstellen → JSON** einen privaten Service-Account-Schlüssel.
+   - **Wichtig:** Die JSON-Datei ist ein geheimer Zugangsschlüssel. Niemals im Repository committen, hochladen oder im Chat weitergeben. Sie wird ausschließlich als verschlüsseltes GitHub-Actions-Secret hinterlegt. Wird der Schlüssel offengelegt, im Google-Cloud-IAM sofort widerrufen.
+   - Das offizielle Firebase-GitHub-Hosting-Action unterstützt `firebaseServiceAccount` als Secret. Dieser Ansatz benötigt **keine** Workload Identity Federation und ist mit rein statischem Spark Hosting vereinbar. Google verlangt in seiner WIF-Anleitung ein aktiviertes Billing-Konto; daher verwenden wir für den expliziten Spark-Betrieb hier **keine WIF-Einrichtung**.
+4. Unter **GitHub → Settings → Secrets and variables → Actions** im bestehenden `Despair1999/Dofus-Bot` einrichten:
+   - **Repository secret** `FIREBASE_SERVICE_ACCOUNT`: vollständiger Inhalt der heruntergeladenen privaten JSON-Datei (niemals als Repository-Datei).
+   - **Repository variable** `FIREBASE_PROJECT_ID`: die echte Firebase-Projekt-ID aus den Firebase-Projekteinstellungen.
+   - **Repository variable** `WEBSITE_URL`: öffentliche HTTPS-Adresse deiner Hosting-Site, beispielsweise `https://<deine-tatsächliche-projekt-id>.web.app`. Prüfe die von Firebase angezeigte URL.
+   - **Repository variable** `DISCORD_PUBLIC_CLIENT_ID`: echte öffentliche Discord-Application-ID (optional).
+   - **Repository variable** `LEGAL_READY`: erst `true`, nachdem Impressum/Datenschutz sowie die Bildnutzungsrechte geprüft und korrekt ergänzt sind. Sonst bleibt ein automatischer Live-Deploy bewusst deaktiviert.
 5. Den Branch nach Review in `main` mergen. Bei Website-Änderungen (oder manueller Workflow-Auslösung auf `main`) testet und baut GitHub Actions **nur den Web-Workspace**. Ist die Authentifizierung eingerichtet und `LEGAL_READY=true`, veröffentlicht der `publish`-Job automatisch nach erfolgreichem `website`-Job.
 6. Die Domain unter Firebase Hosting verbinden und HTTPS über Firebase konfigurieren. Die GitHub-Variable `WEBSITE_URL` auf die endgültige Domain setzen. Prüfe die Site in der Firebase-Konsole und ihre Hosting-Nutzung.
 
@@ -65,7 +60,7 @@ npx firebase-tools@14.22.0 deploy --only hosting --project ECHTE_FIREBASE_PROJEK
 
 ### Veröffentlichungssperren
 
-Eine öffentliche Veröffentlichung darf erst erfolgen, wenn alle tatsächlichen Pflichtangaben in `/impressum` und `/datenschutz` ergänzt und die Nutzungsrechte für sämtliche öffentlich verwendeten Spielbilder geprüft sind. Deshalb ist der Deployment-Job an `LEGAL_READY=true` geknüpft. Ohne WIF-Konfiguration, echte Firebase-Projekt-ID oder diese Freigabe wird **nicht deployed**. Fehlende Discord-Client-ID zeigt einen ehrlichen Konfigurationshinweis statt eines funktionslosen Buttons.
+Eine öffentliche Veröffentlichung darf erst erfolgen, wenn alle tatsächlichen Pflichtangaben in `/impressum` und `/datenschutz` ergänzt und die Nutzungsrechte für sämtliche öffentlich verwendeten Spielbilder geprüft sind. Deshalb ist der Deployment-Job an `LEGAL_READY=true` geknüpft. Ohne den verschlüsselten Service-Account-Schlüssel, die echte Firebase-Projekt-ID oder die rechtliche Freigabe wird **nicht deployed**. Fehlende Discord-Client-ID zeigt einen ehrlichen Konfigurationshinweis statt eines funktionslosen Buttons.
 
 ## Wartung und Tests
 
