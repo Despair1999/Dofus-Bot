@@ -1310,7 +1310,8 @@ function MainApp() {
               onNotice={setNotice}
             />
           )}
-          {tab === "characters" && (
+          {tab === "market" && <MarketJournalPage config={config} />}
+           {tab === "characters" && (
             <CharactersPage
               key={catalogRevision}
               config={config}
