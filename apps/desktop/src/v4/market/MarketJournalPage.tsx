@@ -75,6 +75,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   const [ocrStatus, setOcrStatus] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
     let active = true;
@@ -92,19 +93,19 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   }, []);
   useEffect(() => {
     if (!ready) return;
-    void write(STORAGE_KEY, journal)
-      .catch((error) => setMessage("Speichern fehlgeschlagen: " + String(error)));
+    saveQueue.current = saveQueue.current.catch(() => {}).then(() => write(STORAGE_KEY, journal));
+    void saveQueue.current.catch((error) => setMessage("Speichern fehlgeschlagen: " + String(error)));
   }, [journal, ready]);
 
   const positions = useMemo(() => portfolio(journal.trades), [journal.trades]);
   const items = useMemo(() => {
     const unique = new Map<string, ItemRef>();
-    for (const ob of journal.observations) unique.set(itemKey(ob.item, ob.server), ob.item);
-    for (const trade of journal.trades) unique.set(itemKey(trade.item, trade.server), trade.item);
-    for (const n of journal.notes) if (n.item) unique.set(itemKey(n.item, server), n.item);
-    if (item) unique.set(itemKey(item, server), item);
+    for (const ob of journal.observations) unique.set(itemKey(ob.item, ""), ob.item);
+    for (const trade of journal.trades) unique.set(itemKey(trade.item, ""), trade.item);
+    for (const n of journal.notes) if (n.item) unique.set(itemKey(n.item, ""), n.item);
+    if (item) unique.set(itemKey(item, ""), item);
     return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name));
-  }, [journal, item, server]);
+  }, [journal, item]);
   const selectedKey = item ? itemKey(item, server) : "";
   const relevant = useMemo(
     () => journal.observations.filter((o) => item && itemKey(o.item, o.server) === selectedKey)
@@ -345,7 +346,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
         </div>
         <section className="panel"><h3>Letzte Marktbeobachtungen</h3>
           <ObservationTable entries={journal.observations.slice(0, 8)}
-            onSelect={pick} onRemove={(id) => remove("observations", id)}/>
+            onSelect={(entry) => { setServer(entry.server); pick(entry.item); }} onRemove={(id) => remove("observations", id)}/>
         </section>
       </>}
 
@@ -408,7 +409,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
         </section>}
         <section className="panel"><h3>Marktpreis-Historie</h3>
           <ObservationTable entries={item ? relevant : journal.observations}
-            onSelect={pick} onRemove={(id) => remove("observations", id)}/>
+            onSelect={(entry) => { setServer(entry.server); pick(entry.item); }} onRemove={(id) => remove("observations", id)}/>
         </section>
       </>}
 
@@ -565,14 +566,14 @@ function AdviceList({ tips }: { tips: ReturnType<typeof marketAdvice> }) {
   </div>;
 }
 function ObservationTable({ entries, onSelect, onRemove }: {
-  entries: Observation[]; onSelect: (item: ItemRef) => void; onRemove: (id: string) => void;
+  entries: Observation[]; onSelect: (entry: Observation) => void; onRemove: (id: string) => void;
 }) {
   return entries.length ? <div className="market-scroll"><table><thead><tr>
     <th>Datum</th><th>Item</th><th>Server</th><th>Günstigstes Angebot</th><th>Ø gemeldet</th><th>Quelle</th><th/>
   </tr></thead><tbody>{entries.map((o) => {
     const offer = unitOffers(o)[0];
     return <tr key={o.id}><td>{new Date(o.at).toLocaleString("de-DE")}</td>
-      <td><button className="market-item-button" onClick={() => onSelect(o.item)}>
+      <td><button className="market-item-button" onClick={() => onSelect(o)}>
         <ItemImage item={o.item} size={28}/>{o.item.name}</button></td>
       <td>{o.server}</td><td>{offer ? fmt(offer.unit) + " K/Stk (×" + offer.size + ")" : "–"}</td>
       <td>{o.average === undefined ? "–" : kama(o.average)}</td><td>{o.source === "ocr" ? "OCR, geprüft" : "Manuell"}</td>
