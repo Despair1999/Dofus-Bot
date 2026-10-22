@@ -60,7 +60,11 @@ Der gebündelte Dienstwechsel 0.5.0 → 0.6.0 erhält im isolierten SQLite-Test 
 
 Die Einzelbelege stehen in den maschinenlesbaren `*-v6-*.json`-/`REDESIGN_VALIDATION.json`-Berichten. Produktionsprüfungen verwenden den tatsächlich gebauten Vite-Code mit einem isolierten Backend; externe Bildserver sind dabei gesperrt. Lokale Benutzerprofile werden von Entwicklungs- und Browsertests nicht verwendet.
 
+Die signierte Version ist im [Release v0.6.0](https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.6.0) veröffentlicht. Der öffentliche bisherige Update-Endpunkt liefert nachweislich dieselbe Version und Signatur wie das geprüfte lokale Paket. Aktualisierung in der Anwendung: Einstellungen → Nach Updates suchen; nach dem Update liegen die Updateoptionen unter Daten & Updates. Eine automatische Installation über eine laufende Benutzerinstanz wurde nicht durchgeführt.
+
 ## 9. Dateien und Commits
+
+[Pull Request #2](https://github.com/Despair1999/Dofus-Bot/pull/2) baut auf dem noch offenen v0.5-PR #1 auf. Die vollständige Dateiliste steht in `REDESIGN_CHANGED_FILES.txt`.
 
 Die ersten beiden Implementierungscommits sind `09ec42f` (gemeinsamer Workspace/Suche) und `7a19dcb` (Kartenhinweise/Panels/Discord-Bilder). Weitere Commits dokumentieren Tests und Release-Abnahme. Die Änderungen sind auf dem Entwicklungsbranch nachvollziehbar getrennt: Oberfläche/Navigation/Suche, Daten-/Kartenintegration, Tests/Audit und Release-Abnahme. Betroffene Hauptpfade sind `apps/desktop/src/ui/`, `App.tsx`, Items-/Dungeon-/Weltkartenansichten, drei ergänzte GET-API-Bereiche, Bot-Darstellung, `packages/core/src/world.ts` und der zusätzliche Kartenhinweisimport. Persönliche Profile und bestehende Spielrecord-IDs wurden nicht migriert oder ersetzt. Die Versionsnummer ist 0.6.0; Endpunkt und Signierschlüssel des bestehenden Updaters bleiben erhalten.
 

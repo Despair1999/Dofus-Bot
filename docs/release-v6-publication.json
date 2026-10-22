@@ -1,0 +1,10 @@
+{
+  "version": "0.6.0",
+  "testedAt": "2026-10-22T16:02:59.906Z",
+  "published": true,
+  "release": "https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.6.0",
+  "updateEndpoint": "https://github.com/Despair1999/Dofus-Bot/releases/latest/download/latest.json",
+  "publicManifestMatchesSignedLocalPackage": true,
+  "publicInstallerBytes": 134863060,
+  "installerSignatureMatchesLocal": true
+}
