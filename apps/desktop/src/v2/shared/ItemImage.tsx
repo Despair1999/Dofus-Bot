@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { recordAssetFailure } from "../../ui/assetDiagnostics";
 import { Package } from "lucide-react";
 import { useGameAssets } from "../../gameAssets";
 export default function ItemImage({
@@ -22,16 +23,24 @@ export default function ItemImage({
     iconId ??
     (itemId ? assets?.itemIcons[String(itemId)] : undefined) ??
     Number(original?.match(/\/img\/item\/(\d+)-/)?.[1]);
-  const url =
-    assets?.items[String(icon)] ??
-    original ??
-    (icon
-      ? `https://api.dofusdu.de/dofus3/v1/img/item/${icon}-64.png`
-      : undefined);
+  const candidates = [
+    ...new Set(
+      [
+        assets?.items[String(icon)],
+        original,
+        icon
+          ? `https://api.dofusdu.de/dofus3/v1/img/item/${icon}-64.png`
+          : undefined,
+      ].filter((v): v is string => !!v),
+    ),
+  ];
+  const key = candidates.join("|");
+  const [attempt, setAttempt] = useState({ key, index: 0 });
+  const index = attempt.key === key ? attempt.index : 0;
+  const url = candidates[index];
   const name = explicitName ?? item?.name ?? "";
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [url]);
-  return url && !failed ? (
+  useEffect(() => setAttempt({ key, index: 0 }), [key]);
+  return url ? (
     <img
       className="v2-item-image"
       src={url}
@@ -39,7 +48,10 @@ export default function ItemImage({
       width={size}
       height={size}
       loading="lazy"
-      onError={() => setFailed(true)}
+      onError={() => {
+        recordAssetFailure(url);
+        setAttempt({ key, index: index + 1 });
+      }}
     />
   ) : (
     <span

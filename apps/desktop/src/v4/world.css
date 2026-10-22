@@ -431,3 +431,120 @@
     display: none;
   }
 }
+.world-layout {
+  position: relative;
+  grid-template-columns: var(--world-left-width, 250px) minmax(280px, 1fr) var(
+      --world-right-width,
+      285px
+    );
+}
+.world-hide-left .world-layout {
+  grid-template-columns: minmax(280px, 1fr) var(--world-right-width, 285px);
+}
+.world-hide-right .world-layout {
+  grid-template-columns: var(--world-left-width, 250px) minmax(280px, 1fr);
+}
+.world-hide-left.world-hide-right .world-layout {
+  grid-template-columns: minmax(280px, 1fr);
+}
+.ui-world-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  z-index: 6;
+  cursor: col-resize;
+  touch-action: none;
+  outline-offset: -2px;
+}
+.ui-world-resizer-left {
+  left: calc(var(--world-left-width) - 5px);
+}
+.ui-world-resizer-right {
+  right: calc(var(--world-right-width) - 5px);
+}
+.ui-world-resizer:hover,
+.ui-world-resizer:focus-visible {
+  background: color-mix(in srgb, var(--green) 35%, transparent);
+}
+.ui-point-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.ui-point-filters label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+.ui-point-dot {
+  display: inline-block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #a5b3c9;
+}
+.ui-point-dot.zaap {
+  background: #50c6c9;
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+.ui-point-dot.dungeon {
+  background: #d9b96e;
+  border-radius: 1px;
+}
+.ui-point-list {
+  max-height: 170px;
+  overflow: auto;
+  margin: 12px 0;
+}
+.ui-point-list button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 9px;
+  text-align: left;
+  font-size: 11px;
+}
+.ui-point-list small {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.ui-world-points summary {
+  font-weight: 600;
+  cursor: pointer;
+}
+@media (max-width: 1100px) {
+  .ui-world-resizer {
+    display: none;
+  }
+  .world-layout,
+  .world-hide-left .world-layout,
+  .world-hide-right .world-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .world-side {
+    max-height: 440px;
+  }
+  .world-stage {
+    min-height: 560px;
+  }
+}
+
+.world-side .ui-point-filters label {
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+}
+.world-side .ui-point-filters input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+}
+.ui-point-filters {
+  gap: 9px;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type {
   WorldPosition,
+  WorldPoint,
   WorldMarker,
 } from "../../../../packages/core/src/world";
 
@@ -13,6 +14,8 @@ export interface Camera {
 }
 export default function WorldCanvas({
   artwork,
+  points = [],
+  onPoint,
   maps,
   markers,
   selected,
@@ -25,6 +28,8 @@ export default function WorldCanvas({
   onViewport,
 }: {
   artwork?: WorldArtwork;
+  points?: WorldPoint[];
+  onPoint?: (point: WorldPoint) => void;
   maps: WorldPosition[];
   markers: WorldMarker[];
   selected?: number;
@@ -229,6 +234,30 @@ export default function WorldCanvas({
       drawing = true;
     }
     ctx.stroke();
+    for (const point of points) {
+      const [x, y] = project(point.x, point.y);
+      if (x < 0 || y < 0 || x > size.width || y > size.height) continue;
+      ctx.fillStyle =
+        point.kind === "zaap"
+          ? "#50c6c9"
+          : point.kind === "dungeon"
+            ? "#d9b96e"
+            : "#a5b3c9";
+      ctx.strokeStyle = "#101622";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (point.kind === "dungeon") {
+        ctx.rect(x - 5, y - 5, 10, 10);
+      } else if (point.kind === "zaap") {
+        ctx.moveTo(x, y - 7);
+        ctx.lineTo(x + 6, y);
+        ctx.lineTo(x, y + 7);
+        ctx.lineTo(x - 6, y);
+        ctx.closePath();
+      } else ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
     for (const marker of markers) {
       const map = byId.get(marker.mapId);
       if (!map) continue;
@@ -266,6 +295,7 @@ export default function WorldCanvas({
       }
     }
   }, [
+    points,
     maps,
     markers,
     selected,
@@ -370,6 +400,20 @@ export default function WorldCanvas({
         onPointerUp={(e) => {
           if (drag.current && !drag.current.moved) {
             const p = position(e.clientX, e.clientY);
+            const hit = points.find(
+              (v) =>
+                Math.round(v.x) === Math.round(p.x) &&
+                Math.round(v.y) === Math.round(p.y) &&
+                Math.hypot(
+                  (v.x - p.x) * camera.scale,
+                  (v.y - p.y) * camera.scale * aspect,
+                ) < 10,
+            );
+            if (hit && onPoint) {
+              onPoint(hit);
+              drag.current = null;
+              return;
+            }
             const found = maps.filter(
               (m) =>
                 Math.abs(m.x - p.x) < Math.max(0.5, 8 / camera.scale) &&

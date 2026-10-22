@@ -1,0 +1,41 @@
+{
+  "version": "0.6.0",
+  "testedAt": "2026-10-22T15:59:38.828Z",
+  "unitTests": 108,
+  "browserTests": 44,
+  "typecheckPassed": true,
+  "lintPassed": true,
+  "windowsInstallerBuilt": true,
+  "releasePackagesVerified": true,
+  "productionUiPassed": true,
+  "productionUiChecks": 9,
+  "existingUpdaterKeyPreserved": true,
+  "serviceUpgradePassed": true,
+  "assetAuditPassed": true,
+  "assetFiles": 14519,
+  "catalogRows": 21554,
+  "missingLocalCatalogImages": 4,
+  "installerSha256": "309f270f7283d379cdb2fd0569cd96073eaab4c7a100e9e1f21915b9946ce99e",
+  "nativeUi": {
+    "isolatedProfile": true,
+    "applicationId": "fr.dofus.companion.qa.v6",
+    "passed": [
+      "packaged loopback backend matches version and bundled translator runtime/models are ready",
+      "embedded original world artwork loads in packaged WebView and interior quest target keeps its map identity",
+      "appearance preset is persisted by native SQLite and reapplied after reload",
+      "packaged builder keeps AP BP LP semantic colors in an alternate theme",
+      "both packaged WebView translator cards execute real local FR→DE and DE→FR model inference",
+      "all six directions through packaged service and bundled Python runtime",
+      "independent native overlay contains both cards, real local translation, route coordinates and progress snapshot"
+    ],
+    "ownedProcessesStopped": true,
+    "scope": "Same release source and frontend, separate native application identifier to protect productive SQLite/settings profiles; installer executable is validated separately by signature and ZIP checks."
+  },
+  "limitations": [
+    "Incomplete patch-verified strategy coverage",
+    "Four cosmetic catalog icons and historical asset references remain unavailable locally",
+    "Redistribution permissions for existing game assets are not independently established; no new game images downloaded",
+    "Native runtime exercised through a separate QA application identifier; production installer separately signed and payload-checked",
+    "Live Discord OAuth, physical DOFUS coexistence and all monitor/DPI combinations remain environment-dependent"
+  ]
+}

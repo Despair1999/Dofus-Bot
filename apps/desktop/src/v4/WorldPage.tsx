@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   Compass,
   MapPin,
@@ -8,11 +15,13 @@ import {
   Save,
   Maximize2,
   PanelLeftClose,
+  PanelRightClose,
   Copy,
   Trash2,
 } from "lucide-react";
 import type {
   WorldMap,
+  WorldPoint,
   WorldPosition,
   WorldMarker,
   WorldRoute,
@@ -22,6 +31,7 @@ import { estimateFarmValue } from "@dofus/core";
 import { api, type Config } from "../client";
 import { request, message } from "../v2/shared/request";
 import { read, write } from "../storage";
+import { useRoute } from "../v2/routing";
 import WorldCanvas, { type Camera } from "./WorldCanvas";
 import ItemImage from "../v2/shared/ItemImage";
 import "./world.css";
@@ -51,7 +61,18 @@ export default function WorldPage({
   characterId?: string;
 }) {
   const assets = useGameAssets();
-  const params = new URLSearchParams(location.hash.split("?")[1] ?? "");
+  const locationRoute = useRoute();
+  const [rightVisible, setRightVisible] = useState(true);
+  const [panelWidths, setPanelWidths] = useState({ left: 250, right: 285 });
+  const [layoutReady, setLayoutReady] = useState(false);
+  const params = new URLSearchParams(locationRoute.path.split("?")[1] ?? "");
+  const [points, setPoints] = useState<WorldPoint[]>([]);
+  const [pointKinds, setPointKinds] = useState({
+    zaap: true,
+    dungeon: true,
+    poi: false,
+  });
+  const [pointQuery, setPointQuery] = useState("");
   const [worlds, setWorlds] = useState<WorldMap[]>([]),
     [worldId, setWorldId] = useState(1);
   const [maps, setMaps] = useState<WorldPosition[]>([]),
@@ -114,6 +135,81 @@ export default function WorldPage({
     [presetName, setPresetName] = useState("");
   const [viewportTotal, setViewportTotal] = useState(0);
   const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (activity) {
+      setLayoutReady(true);
+      return;
+    }
+    void read("ui:world-layout", {
+      left: true,
+      right: true,
+      widths: { left: 250, right: 285 },
+    }).then((saved) => {
+      setLeftVisible(saved.left);
+      setRightVisible(saved.right);
+      setPanelWidths({
+        left: Math.max(200, Math.min(380, saved.widths.left)),
+        right: Math.max(220, Math.min(400, saved.widths.right)),
+      });
+      setLayoutReady(true);
+    });
+  }, [activity]);
+  useEffect(() => {
+    if (layoutReady && !activity)
+      void write("ui:world-layout", {
+        left: leftVisible,
+        right: rightVisible,
+        widths: panelWidths,
+      });
+  }, [layoutReady, activity, leftVisible, rightVisible, panelWidths]);
+  function resizePanel(side: "left" | "right", value: number) {
+    setPanelWidths((v) => ({
+      ...v,
+      [side]: Math.max(
+        side === "left" ? 200 : 220,
+        Math.min(side === "left" ? 380 : 400, value),
+      ),
+    }));
+  }
+  function panelHandle(side: "left" | "right") {
+    return (
+      <div
+        className={`ui-world-resizer ui-world-resizer-${side}`}
+        role="separator"
+        aria-label={side === "left" ? "Filterbreite" : "Detailbreite"}
+        aria-orientation="vertical"
+        aria-valuemin={side === "left" ? 200 : 220}
+        aria-valuemax={side === "left" ? 380 : 400}
+        aria-valuenow={panelWidths[side]}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            e.preventDefault();
+            resizePanel(
+              side,
+              panelWidths[side] +
+                (e.key === "ArrowRight" ? 1 : -1) *
+                  (side === "left" ? 16 : -16),
+            );
+          }
+          if (e.key === "Home") resizePanel(side, side === "left" ? 250 : 285);
+        }}
+        onPointerDown={(e) => {
+          e.currentTarget.setPointerCapture(e.pointerId);
+          e.preventDefault();
+        }}
+        onPointerMove={(e) => {
+          if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+          const box = e.currentTarget.parentElement!.getBoundingClientRect();
+          resizePanel(
+            side,
+            side === "left" ? e.clientX - box.left : box.right - e.clientX,
+          );
+        }}
+        onPointerUp={(e) => e.currentTarget.releasePointerCapture(e.pointerId)}
+      />
+    );
+  }
   function fitWorld(id: number) {
     const art = assets?.worlds[String(id)];
     if (!art) return { x: 0, y: 0, scale: 15 };
@@ -233,6 +329,19 @@ export default function WorldPage({
     // The world list is loaded once per backend connection.
   }, [config.url, config.token, activity]);
   useEffect(() => {
+    const c = new AbortController();
+    void request<WorldPoint[]>(
+      `/api/world/points?worldId=${worldId}`,
+      config,
+      c.signal,
+    )
+      .then((r) => setPoints(r.data))
+      .catch((e) => {
+        if (!c.signal.aborted) setError(message(e));
+      });
+    return () => c.abort();
+  }, [config, worldId]);
+  useEffect(() => {
     const c = new AbortController(),
       search = new URLSearchParams({
         worldId: String(worldId),
@@ -323,7 +432,53 @@ export default function WorldPage({
         if (!c.signal.aborted) setError(message(e));
       });
     return () => c.abort();
-  }, [config.url]);
+  }, [config.url, locationRoute.path]);
+  useEffect(() => {
+    const subArea = locationRoute.params.get("subAreaId");
+    if (!subArea || !/^\d+$/.test(subArea)) return;
+    const c = new AbortController();
+    void request<WorldPosition[]>(
+      `/api/world/maps?subAreaId=${subArea}&limit=2500`,
+      config,
+      c.signal,
+    )
+      .then((r) => {
+        setResults(r.data);
+        const map = r.data.find((m) => !m.interior) ?? r.data[0];
+        if (map) {
+          choose(map);
+          setCamera({ x: map.x, y: map.y, scale: 24 });
+          setNotice(
+            `${r.total ?? r.data.length} Karten im Untergebiet ${map.subAreaName}.`,
+          );
+        } else
+          setNotice("Für dieses Untergebiet sind keine Karten hinterlegt.");
+      })
+      .catch((e) => {
+        if (!c.signal.aborted) setError(message(e));
+      });
+    return () => c.abort();
+  }, [config, locationRoute.path]);
+  useEffect(() => {
+    if (activity) return;
+    const id = locationRoute.params.get("routeId"),
+      saved = savedRoutes.find((r) => r.id === id);
+    if (!saved) return;
+    setRoute(saved.route);
+    setStartId(String(saved.route.mapIds[0] ?? ""));
+    setTargetIds(saved.route.mapIds.slice(1));
+    setTargetText(saved.route.mapIds.slice(1).join(", "));
+    void request<WorldPosition>(
+      `/api/world/maps/${saved.route.mapIds[0]}`,
+      config,
+    )
+      .then((r) => {
+        choose(r.data);
+        setCamera({ x: r.data.x, y: r.data.y, scale: 32 });
+      })
+      .catch((e) => setError(message(e)));
+    setNotice(`Route geladen: ${saved.name}`);
+  }, [activity, savedRoutes, locationRoute.path, config]);
   useEffect(() => {
     if (sharedState) {
       setWorldId(sharedState.worldId);
@@ -477,7 +632,13 @@ export default function WorldPage({
   return (
     <div
       ref={root}
-      className={`world-page ${leftVisible ? "" : "world-hide-left"}`}
+      className={`world-page ${leftVisible ? "" : "world-hide-left"} ${rightVisible ? "" : "world-hide-right"}`}
+      style={
+        {
+          "--world-left-width": `${panelWidths.left}px`,
+          "--world-right-width": `${panelWidths.right}px`,
+        } as CSSProperties
+      }
     >
       <div className="world-toolbar">
         <div className="world-title">
@@ -497,10 +658,20 @@ export default function WorldPage({
         <div className="toolbar">
           <button
             className="secondary"
+            aria-label="Filter ein-/ausblenden"
+            aria-expanded={leftVisible}
             title="Filter ein-/ausblenden"
             onClick={() => setLeftVisible((v) => !v)}
           >
             <PanelLeftClose size={16} />
+          </button>
+          <button
+            className="secondary"
+            aria-label="Details ein-/ausblenden"
+            aria-expanded={rightVisible}
+            onClick={() => setRightVisible((v) => !v)}
+          >
+            <PanelRightClose size={16} />
           </button>
           <select
             aria-label="Weltkarte"
@@ -551,8 +722,80 @@ export default function WorldPage({
         </div>
       )}
       <div className="world-layout">
+        {leftVisible && panelHandle("left")}
+        {rightVisible && panelHandle("right")}
         {leftVisible && (
           <aside className="world-side world-filters">
+            <details className="ui-world-points" open>
+              <summary>Kartenobjekte & Legende</summary>
+              <div className="ui-point-filters">
+                {(["zaap", "dungeon", "poi"] as const).map((kind) => (
+                  <label key={kind}>
+                    <input
+                      type="checkbox"
+                      checked={pointKinds[kind]}
+                      onChange={(e) =>
+                        setPointKinds((v) => ({
+                          ...v,
+                          [kind]: e.target.checked,
+                        }))
+                      }
+                    />
+                    <span className={`ui-point-dot ${kind}`} />
+                    {kind === "zaap"
+                      ? "Zaaps"
+                      : kind === "dungeon"
+                        ? "Dungeons"
+                        : "Weitere Orte"}
+                  </label>
+                ))}
+              </div>
+              <label>
+                Orte suchen
+                <input
+                  aria-label="Kartenobjekte suchen"
+                  value={pointQuery}
+                  onChange={(e) => setPointQuery(e.target.value)}
+                  placeholder="Zaap, Werkstatt, Verkaufsstand …"
+                />
+              </label>
+              <div className="ui-point-list">
+                {points
+                  .filter(
+                    (p) =>
+                      pointKinds[p.kind] &&
+                      `${p.name} ${p.category}`
+                        .toLocaleLowerCase()
+                        .includes(pointQuery.toLocaleLowerCase()),
+                  )
+                  .map((p) => (
+                    <button
+                      className="text-button"
+                      key={p.id}
+                      onClick={() =>
+                        void run(async () => {
+                          const r = await request<WorldPosition>(
+                            `/api/world/maps/${p.mapId}`,
+                            config,
+                          );
+                          choose(r.data);
+                          setCamera({ x: p.x, y: p.y, scale: 32 });
+                          setNotice(
+                            `${p.name} · [${p.x}, ${p.y}] · Original-Kartenhinweis #${p.id}`,
+                          );
+                        })
+                      }
+                    >
+                      <span className={`ui-point-dot ${p.kind}`} />
+                      {p.name}
+                      <small>
+                        [{p.x}, {p.y}]
+                      </small>
+                    </button>
+                  ))}
+              </div>
+              <small>Original-Kartenhinweise; keine Ressourcen-Spawns.</small>
+            </details>
             <span className="eyebrow">DEIN ATLAS</span>
             <h2>Ein Ziel vor Augen.</h2>
             <label className="world-search">
@@ -827,6 +1070,23 @@ export default function WorldPage({
                 );
             });
           }}
+          points={points.filter(
+            (p) =>
+              pointKinds[p.kind] &&
+              `${p.name} ${p.category}`
+                .toLocaleLowerCase()
+                .includes(pointQuery.toLocaleLowerCase()),
+          )}
+          onPoint={(p) =>
+            void run(async () => {
+              const r = await request<WorldPosition>(
+                `/api/world/maps/${p.mapId}`,
+                config,
+              );
+              choose(r.data);
+              setNotice(`${p.name} · Original-Kartenhinweis #${p.id}`);
+            })
+          }
           artwork={assets?.worlds[String(worldId)]}
           maps={displayedMaps}
           markers={showMarkers ? markers : []}
@@ -841,375 +1101,376 @@ export default function WorldPage({
           }}
           onViewport={onViewport}
         />
-        <aside className="world-side world-details">
-          <span className="eyebrow">DEIN NÄCHSTER SCHRITT</span>
-          {selected ? (
-            <>
-              <h2>
-                [{selected.x}, {selected.y}]
-              </h2>
-              <p>
-                {selected.subAreaName}
-                <br />
-                {selected.areaName}
-              </p>
-              <small>
-                Map-ID {selected.id} {selected.interior ? "· Innenkarte" : ""} ·
-                Welt {selected.worldId}
-              </small>
-              {choices.length > 1 && (
-                <label>
-                  Ebene / Karte
-                  <select
-                    aria-label="Karte bei gleichen Koordinaten"
-                    value={selected.id}
-                    onChange={(e) =>
-                      setSelected(
-                        choices.find((c) => c.id === Number(e.target.value))!,
-                      )
-                    }
-                  >
-                    {choices.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name || m.subAreaName} · {m.id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <div className="world-actions">
-                <button
-                  className="secondary"
-                  onClick={() => setStartId(String(selected.id))}
-                >
-                  <Flag size={14} /> Als Start
-                </button>
-                <button
-                  onClick={() => {
-                    const next = [...new Set([...targetIds, selected.id])];
-                    setTargetIds(next);
-                    setTargetText(next.join(", "));
-                  }}
-                >
-                  <MapPin size={14} /> Zum Ziel
-                </button>
-                <button
-                  className="text-button"
-                  onClick={() =>
-                    void run(async () => {
-                      await navigator.clipboard.writeText(
-                        `[${selected.x},${selected.y}]`,
-                      );
-                      setNotice("Koordinaten kopiert.");
-                    })
-                  }
-                >
-                  <Copy size={14} /> Koordinaten kopieren
-                </button>
-              </div>
-              {!activity && (
-                <>
-                  <input
-                    aria-label="Name der Markierung"
-                    placeholder="Name deiner Markierung"
-                    maxLength={100}
-                    value={markerName}
-                    onChange={(e) => setMarkerName(e.target.value)}
-                  />
+        {rightVisible && (
+          <aside className="world-side world-details">
+            <span className="eyebrow">DEIN NÄCHSTER SCHRITT</span>
+            {selected ? (
+              <>
+                <h2>
+                  [{selected.x}, {selected.y}]
+                </h2>
+                <p>
+                  {selected.subAreaName}
+                  <br />
+                  {selected.areaName}
+                </p>
+                <small>
+                  Map-ID {selected.id} {selected.interior ? "· Innenkarte" : ""}{" "}
+                  · Welt {selected.worldId}
+                </small>
+                {choices.length > 1 && (
+                  <label>
+                    Ebene / Karte
+                    <select
+                      aria-label="Karte bei gleichen Koordinaten"
+                      value={selected.id}
+                      onChange={(e) =>
+                        setSelected(
+                          choices.find((c) => c.id === Number(e.target.value))!,
+                        )
+                      }
+                    >
+                      {choices.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name || m.subAreaName} · {m.id}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <div className="world-actions">
                   <button
                     className="secondary"
-                    onClick={() => void saveMarker()}
+                    onClick={() => setStartId(String(selected.id))}
                   >
-                    Wegpunkt merken
+                    <Flag size={14} /> Als Start
                   </button>
-                  {!!resourceIds.length && (
+                  <button
+                    onClick={() => {
+                      const next = [...new Set([...targetIds, selected.id])];
+                      setTargetIds(next);
+                      setTargetText(next.join(", "));
+                    }}
+                  >
+                    <MapPin size={14} /> Zum Ziel
+                  </button>
+                  <button
+                    className="text-button"
+                    onClick={() =>
+                      void run(async () => {
+                        await navigator.clipboard.writeText(
+                          `[${selected.x},${selected.y}]`,
+                        );
+                        setNotice("Koordinaten kopiert.");
+                      })
+                    }
+                  >
+                    <Copy size={14} /> Koordinaten kopieren
+                  </button>
+                </div>
+                {!activity && (
+                  <>
+                    <input
+                      aria-label="Name der Markierung"
+                      placeholder="Name deiner Markierung"
+                      maxLength={100}
+                      value={markerName}
+                      onChange={(e) => setMarkerName(e.target.value)}
+                    />
                     <button
                       className="secondary"
-                      onClick={() => void saveMarker(true)}
+                      onClick={() => void saveMarker()}
                     >
-                      Ressourcenfund bestätigen
+                      Wegpunkt merken
                     </button>
-                  )}
-                </>
-              )}
-            </>
-          ) : (
-            <div className="world-selection-empty">
-              <MapPin size={30} />
-              <h3>Wohin zieht es dich?</h3>
-              <p>
-                Wähle eine Karte aus oder suche nach einem Gebiet und seinen
-                Karten.
-              </p>
-            </div>
-          )}
-          {!!selectedResources.length && (
-            <details open>
-              <summary>Bekannte Ressourcenregionen</summary>
-              {selectedResources.map((r) => (
-                <div key={r.id}>
-                  <strong>{r.name}</strong>
-                  <small>
-                    {r.regions.map((v) => v.name).join(" · ") ||
-                      "Keine Region zugeordnet"}
-                  </small>
-                </div>
-              ))}
-              <p>
-                Gebietsangaben belegen keine einzelnen Vorkommen auf diesen
-                Karten.
-              </p>
-            </details>
-          )}
-          <details open>
-            <summary>
-              <Route size={16} /> Route planen
-            </summary>
-            <label>
-              Start · Map-ID
-              <input
-                inputMode="numeric"
-                aria-label="Start Map-ID"
-                value={startId}
-                onChange={(e) => setStartId(e.target.value)}
-              />
-            </label>
-            <label>
-              Ziele · Map-IDs
-              <input
-                aria-label="Ziel Map-IDs"
-                placeholder="Mit Komma trennen"
-                value={targetText}
-                onChange={(e) => {
-                  setTargetText(e.target.value);
-                  setTargetIds(
-                    e.target.value
-                      .split(/[,\s]+/)
-                      .filter((v) => /^\d+$/.test(v))
-                      .map(Number),
-                  );
-                }}
-              />
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={roundTrip}
-                onChange={(e) => setRoundTrip(e.target.checked)}
-              />{" "}
-              Zum Start zurückkehren
-            </label>
-            <div className="world-actions">
-              <button
-                disabled={busy || !Number(startId) || !targetIds.length}
-                onClick={() => void calculate()}
-              >
-                <Route size={14} /> Route berechnen
-              </button>
-              {farming && (
-                <button
-                  className="secondary"
-                  disabled={busy || !Number(startId) || !resourceIds.length}
-                  onClick={() => void calculate(true)}
-                >
-                  Eigene Fundorte verbinden
-                </button>
-              )}
-            </div>
-          </details>
-          {route && (
-            <div className="world-route">
-              <strong>{route.steps} Kartenwechsel</strong>
-              <p>{route.warning}</p>
-              {!route.complete && (
-                <p className="world-warning">
-                  Nicht erreichbar: {route.unreachableMapIds.join(", ")}. Der
-                  lokale Übergangsgraph ist unvollständig.
+                    {!!resourceIds.length && (
+                      <button
+                        className="secondary"
+                        onClick={() => void saveMarker(true)}
+                      >
+                        Ressourcenfund bestätigen
+                      </button>
+                    )}
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="world-selection-empty">
+                <MapPin size={30} />
+                <h3>Wohin zieht es dich?</h3>
+                <p>
+                  Wähle eine Karte aus oder suche nach einem Gebiet und seinen
+                  Karten.
                 </p>
-              )}
-              <ol>
-                {route.mapIds.map((id, index) => (
-                  <li key={`${id}:${index}`}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={completed.includes(index)}
-                        onChange={(e) =>
-                          setCompleted((v) =>
-                            e.target.checked
-                              ? [...v, index]
-                              : v.filter((x) => x !== index),
-                          )
-                        }
-                      />
-                      <span>
-                        Karte {id}
-                        <small>
-                          {index < route.transitions.length
-                            ? route.transitions[index].direction
-                            : "Ziel"}
-                        </small>
-                      </span>
-                    </label>
-                  </li>
+              </div>
+            )}
+            {!!selectedResources.length && (
+              <details open>
+                <summary>Bekannte Ressourcenregionen</summary>
+                {selectedResources.map((r) => (
+                  <div key={r.id}>
+                    <strong>{r.name}</strong>
+                    <small>
+                      {r.regions.map((v) => v.name).join(" · ") ||
+                        "Keine Region zugeordnet"}
+                    </small>
+                  </div>
                 ))}
-              </ol>
-              {!activity && (
-                <button
-                  className="secondary"
-                  onClick={() =>
-                    void run(async () => {
-                      await api("/api/world/personal/routes", config, {
-                        name: `Route ${new Date().toLocaleDateString("de-DE")}`,
-                        startMapId: route.mapIds[0],
-                        targetMapIds: [...new Set(route.mapIds.slice(1))].slice(
-                          0,
-                          60,
-                        ),
-                        roundTrip,
-                      });
-                      setSavedRoutes(
-                        (
-                          await request<
-                            { id: string; name: string; route: WorldRoute }[]
-                          >("/api/world/personal/routes", config)
-                        ).data,
-                      );
-                      setNotice("Route lokal gespeichert.");
-                    })
-                  }
-                >
-                  <Save size={14} /> Route speichern
-                </button>
-              )}
-              {onShare && (
-                <button
-                  onClick={() =>
-                    void run(async () => {
-                      await onShare({
-                        worldId,
-                        mapIds: route.mapIds,
-                        resourceIds,
-                        title: "Gemeinsame Farmroute",
-                      });
-                      setNotice("Route in dieser Discord-Sitzung geteilt.");
-                    })
-                  }
-                >
-                  Route ausdrücklich teilen
-                </button>
-              )}
-            </div>
-          )}
-          {!!savedRoutes.length && (
-            <details>
-              <summary>Gespeicherte Routen ({savedRoutes.length})</summary>
-              {savedRoutes.map((r) => (
-                <button
-                  key={r.id}
-                  className="text-button"
-                  onClick={() => {
-                    setRoute(r.route);
-                    setCompleted([]);
-                  }}
-                >
-                  {r.name} · {r.route.steps} Schritte
-                </button>
-              ))}
-            </details>
-          )}
-          {farming && (
+                <p>
+                  Gebietsangaben belegen keine einzelnen Vorkommen auf diesen
+                  Karten.
+                </p>
+              </details>
+            )}
             <details open>
-              <summary>Farmwert · eigene Annahmen</summary>
+              <summary>
+                <Route size={16} /> Route planen
+              </summary>
               <label>
-                Zielmenge
+                Start · Map-ID
                 <input
-                  type="number"
-                  min={1}
-                  max={1000000}
-                  value={quantity}
-                  onChange={(e) =>
-                    setQuantity(Math.max(1, Number(e.target.value)))
-                  }
+                  inputMode="numeric"
+                  aria-label="Start Map-ID"
+                  value={startId}
+                  onChange={(e) => setStartId(e.target.value)}
                 />
               </label>
               <label>
-                Ausbeute pro Fund
+                Ziele · Map-IDs
                 <input
-                  type="number"
-                  min={0}
-                  max={1000}
-                  value={yieldPerNode}
-                  onChange={(e) =>
-                    setYieldPerNode(Math.max(0, Number(e.target.value)))
-                  }
+                  aria-label="Ziel Map-IDs"
+                  placeholder="Mit Komma trennen"
+                  value={targetText}
+                  onChange={(e) => {
+                    setTargetText(e.target.value);
+                    setTargetIds(
+                      e.target.value
+                        .split(/[,\s]+/)
+                        .filter((v) => /^\d+$/.test(v))
+                        .map(Number),
+                    );
+                  }}
                 />
               </label>
               <label>
-                Verfügbarkeit · Anteil 0–1
                 <input
-                  type="number"
-                  step={0.1}
-                  min={0}
-                  max={1}
-                  value={fraction}
-                  onChange={(e) =>
-                    setFraction(
-                      Math.max(0, Math.min(1, Number(e.target.value))),
-                    )
-                  }
-                />
+                  type="checkbox"
+                  checked={roundTrip}
+                  onChange={(e) => setRoundTrip(e.target.checked)}
+                />{" "}
+                Zum Start zurückkehren
               </label>
-              <label>
-                Sammelzeit · Sekunden
-                <input
-                  type="number"
-                  min={0}
-                  value={gatherSeconds}
-                  onChange={(e) =>
-                    setGatherSeconds(Math.max(0, Number(e.target.value)))
-                  }
-                />
-              </label>
-              <label>
-                Kartenwechsel · Sekunden
-                <input
-                  type="number"
-                  min={0}
-                  value={walkSeconds}
-                  onChange={(e) =>
-                    setWalkSeconds(Math.max(0, Number(e.target.value)))
-                  }
-                />
-              </label>
-              <label>
-                Eigener Stückpreis · Kamas
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Unbekannt"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                />
-              </label>
-              <div className="world-estimate">
-                <strong>
-                  {estimate.quantity.toLocaleString("de-DE")} / {quantity}{" "}
-                  Ressourcen
-                </strong>
-                <span>
-                  Schätzung aus {estimate.assumptions.nodeCount} eigenen Funden
-                  · {(estimate.seconds / 60).toFixed(1)} Min.
-                </span>
-                <span>
-                  {estimate.value === null
-                    ? "Kein Marktpreis hinterlegt"
-                    : `${estimate.value.toLocaleString("de-DE")} K · ${Math.round(estimate.kamasPerHour ?? 0).toLocaleString("de-DE")} K/h`}
-                </span>
+              <div className="world-actions">
+                <button
+                  disabled={busy || !Number(startId) || !targetIds.length}
+                  onClick={() => void calculate()}
+                >
+                  <Route size={14} /> Route berechnen
+                </button>
+                {farming && (
+                  <button
+                    className="secondary"
+                    disabled={busy || !Number(startId) || !resourceIds.length}
+                    onClick={() => void calculate(true)}
+                  >
+                    Eigene Fundorte verbinden
+                  </button>
+                )}
               </div>
             </details>
-          )}
-        </aside>
+            {route && (
+              <div className="world-route">
+                <strong>{route.steps} Kartenwechsel</strong>
+                <p>{route.warning}</p>
+                {!route.complete && (
+                  <p className="world-warning">
+                    Nicht erreichbar: {route.unreachableMapIds.join(", ")}. Der
+                    lokale Übergangsgraph ist unvollständig.
+                  </p>
+                )}
+                <ol>
+                  {route.mapIds.map((id, index) => (
+                    <li key={`${id}:${index}`}>
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={completed.includes(index)}
+                          onChange={(e) =>
+                            setCompleted((v) =>
+                              e.target.checked
+                                ? [...v, index]
+                                : v.filter((x) => x !== index),
+                            )
+                          }
+                        />
+                        <span>
+                          Karte {id}
+                          <small>
+                            {index < route.transitions.length
+                              ? route.transitions[index].direction
+                              : "Ziel"}
+                          </small>
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ol>
+                {!activity && (
+                  <button
+                    className="secondary"
+                    onClick={() =>
+                      void run(async () => {
+                        await api("/api/world/personal/routes", config, {
+                          name: `Route ${new Date().toLocaleDateString("de-DE")}`,
+                          startMapId: route.mapIds[0],
+                          targetMapIds: [
+                            ...new Set(route.mapIds.slice(1)),
+                          ].slice(0, 60),
+                          roundTrip,
+                        });
+                        setSavedRoutes(
+                          (
+                            await request<
+                              { id: string; name: string; route: WorldRoute }[]
+                            >("/api/world/personal/routes", config)
+                          ).data,
+                        );
+                        setNotice("Route lokal gespeichert.");
+                      })
+                    }
+                  >
+                    <Save size={14} /> Route speichern
+                  </button>
+                )}
+                {onShare && (
+                  <button
+                    onClick={() =>
+                      void run(async () => {
+                        await onShare({
+                          worldId,
+                          mapIds: route.mapIds,
+                          resourceIds,
+                          title: "Gemeinsame Farmroute",
+                        });
+                        setNotice("Route in dieser Discord-Sitzung geteilt.");
+                      })
+                    }
+                  >
+                    Route ausdrücklich teilen
+                  </button>
+                )}
+              </div>
+            )}
+            {!!savedRoutes.length && (
+              <details>
+                <summary>Gespeicherte Routen ({savedRoutes.length})</summary>
+                {savedRoutes.map((r) => (
+                  <button
+                    key={r.id}
+                    className="text-button"
+                    onClick={() => {
+                      setRoute(r.route);
+                      setCompleted([]);
+                    }}
+                  >
+                    {r.name} · {r.route.steps} Schritte
+                  </button>
+                ))}
+              </details>
+            )}
+            {farming && (
+              <details open>
+                <summary>Farmwert · eigene Annahmen</summary>
+                <label>
+                  Zielmenge
+                  <input
+                    type="number"
+                    min={1}
+                    max={1000000}
+                    value={quantity}
+                    onChange={(e) =>
+                      setQuantity(Math.max(1, Number(e.target.value)))
+                    }
+                  />
+                </label>
+                <label>
+                  Ausbeute pro Fund
+                  <input
+                    type="number"
+                    min={0}
+                    max={1000}
+                    value={yieldPerNode}
+                    onChange={(e) =>
+                      setYieldPerNode(Math.max(0, Number(e.target.value)))
+                    }
+                  />
+                </label>
+                <label>
+                  Verfügbarkeit · Anteil 0–1
+                  <input
+                    type="number"
+                    step={0.1}
+                    min={0}
+                    max={1}
+                    value={fraction}
+                    onChange={(e) =>
+                      setFraction(
+                        Math.max(0, Math.min(1, Number(e.target.value))),
+                      )
+                    }
+                  />
+                </label>
+                <label>
+                  Sammelzeit · Sekunden
+                  <input
+                    type="number"
+                    min={0}
+                    value={gatherSeconds}
+                    onChange={(e) =>
+                      setGatherSeconds(Math.max(0, Number(e.target.value)))
+                    }
+                  />
+                </label>
+                <label>
+                  Kartenwechsel · Sekunden
+                  <input
+                    type="number"
+                    min={0}
+                    value={walkSeconds}
+                    onChange={(e) =>
+                      setWalkSeconds(Math.max(0, Number(e.target.value)))
+                    }
+                  />
+                </label>
+                <label>
+                  Eigener Stückpreis · Kamas
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Unbekannt"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
+                </label>
+                <div className="world-estimate">
+                  <strong>
+                    {estimate.quantity.toLocaleString("de-DE")} / {quantity}{" "}
+                    Ressourcen
+                  </strong>
+                  <span>
+                    Schätzung aus {estimate.assumptions.nodeCount} eigenen
+                    Funden · {(estimate.seconds / 60).toFixed(1)} Min.
+                  </span>
+                  <span>
+                    {estimate.value === null
+                      ? "Kein Marktpreis hinterlegt"
+                      : `${estimate.value.toLocaleString("de-DE")} K · ${Math.round(estimate.kamasPerHour ?? 0).toLocaleString("de-DE")} K/h`}
+                  </span>
+                </div>
+              </details>
+            )}
+          </aside>
+        )}
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ import type {
   WorldRoute,
 } from "@dofus/core";
 import { Backend } from "./api.js";
+import { monsterAttachment } from "./artwork.js";
 import { embed } from "./ui.js";
 
 export const intelligenceCommands = [
@@ -194,6 +195,9 @@ export function dungeonMessage(d: DungeonDetail, tab = "info", page = 0) {
   const value = embed(d.name).setDescription(
     `**${d.bossNames.join(" · ") || "Bosszuordnung offen"}**\nStufe ${d.level} · ${d.region || "Region unbekannt"}\n${d.entrance ? `[${d.entrance.x},${d.entrance.y}] · Map-ID ${d.entrance.mapId}` : "Eingangsposition nicht aufgelöst"}`,
   );
+  const artwork = monsterAttachment(
+    d.illustrationMonsterId ?? boss[0]?.id ?? 0,
+  );
   const lines: string[] = [];
   if (["info", "boss"].includes(tab))
     for (const m of boss) {
@@ -276,7 +280,9 @@ export function dungeonMessage(d: DungeonDetail, tab = "info", page = 0) {
   value.setFooter({
     text: `DOFUS ${d.version} · ${d.status} · ${current + 1}/${pages} · Quelle: dofus-sqlite`,
   });
-  if (boss[0]?.image?.startsWith("https://")) value.setThumbnail(boss[0].image);
+  if (artwork) value.setThumbnail(artwork.url);
+  else if (boss[0]?.image?.startsWith("https://"))
+    value.setThumbnail(boss[0].image);
   const rows = [
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       ...["mechanik", "monster", "strategie", "raeume", "drops"].map((t) =>
@@ -312,6 +318,7 @@ export function dungeonMessage(d: DungeonDetail, tab = "info", page = 0) {
     );
   return {
     embeds: [value],
+    files: artwork ? [artwork.file] : [],
     components: rows,
     allowedMentions: { parse: [] as never[] },
   };

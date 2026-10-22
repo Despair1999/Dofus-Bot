@@ -7,9 +7,12 @@ import {
   RefreshCw,
   Search,
   SlidersHorizontal,
+  List,
+  Grid2X2,
 } from "lucide-react";
 import type { Config } from "../../client";
 import { request, message, type PageEnvelope } from "../shared/request";
+import { read, write } from "../../storage";
 import ItemImage from "../shared/ItemImage";
 import ItemSearchBar, { queryParams } from "./ItemSearchBar";
 import ItemSummaryCard from "./ItemSummaryCard";
@@ -66,6 +69,10 @@ export default function ItemsPage({
     [detail, setDetail] = useState<CatalogDetail | null>(null),
     [loading, setLoading] = useState(false),
     [error, setError] = useState("");
+  const [display, setDisplay] = useState("grid");
+  useEffect(() => {
+    void read("ui:items-view", "grid").then(setDisplay);
+  }, []);
   const filterKey = JSON.stringify(filters);
   const routeFilterKey = JSON.stringify(initialFilters ?? defaultFilters);
   useEffect(() => {
@@ -403,12 +410,42 @@ export default function ItemsPage({
                 {results.stale ? " · Gespeicherter Stand" : ""}
               </small>
             </div>
-            <span>{results.version ?? ""}</span>
+            <div
+              className="ui-view-switch"
+              role="group"
+              aria-label="Gegenstandansicht"
+            >
+              <button
+                className="secondary"
+                aria-label="Rasteransicht"
+                aria-pressed={display === "grid"}
+                onClick={() => {
+                  setDisplay("grid");
+                  void write("ui:items-view", "grid");
+                }}
+              >
+                <Grid2X2 size={17} />
+              </button>
+              <button
+                className="secondary"
+                aria-label="Listenansicht"
+                aria-pressed={display === "list"}
+                onClick={() => {
+                  setDisplay("list");
+                  void write("ui:items-view", "list");
+                }}
+              >
+                <List size={17} />
+              </button>
+              <small>{results.version ?? ""}</small>
+            </div>
           </div>
           {loading ? (
             <Loading />
           ) : results.data.length ? (
-            <div className="v2-item-grid">
+            <div
+              className={`v2-item-grid ${display === "list" ? "ui-items-list" : ""}`}
+            >
               {results.data.map((i) => (
                 <button
                   className="v2-item-card"
@@ -416,7 +453,12 @@ export default function ItemsPage({
                   onClick={() => navigateItem(i.id, i.category)}
                 >
                   <div className="v2-item-card-top">
-                    <ItemImage url={i.imageUrl} name="" size={64} />
+                    <ItemImage
+                      url={i.imageUrl}
+                      itemId={i.id}
+                      name={i.name}
+                      size={64}
+                    />
                     <span className="v2-level">{i.level}</span>
                   </div>
                   <strong>{i.name}</strong>

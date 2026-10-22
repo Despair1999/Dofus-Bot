@@ -6,7 +6,12 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(async () => {
     const { write } = await import("/src/storage.ts");
     await write("onboarded", true);
-    await write("navigation:tools-open", false);
+    await write("ui:navigation-groups", {
+      Entdecken: true,
+      Planen: true,
+      Tools: false,
+      Persönlich: true,
+    });
   });
 });
 
@@ -15,12 +20,12 @@ test("Tools collapses, persists and keeps every navigation item reachable in a s
 }) => {
   await page.reload();
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
-  await expect(nav.getByRole("button")).toHaveCount(6);
+  await expect(nav.getByRole("button")).toHaveCount(18);
   await expect(
-    nav.getByRole("button", { name: "Builder", exact: true }),
+    nav.getByRole("button", { name: "Übersetzer", exact: true }),
   ).toHaveCount(0);
   await nav.getByRole("button", { name: "Tools", exact: true }).click();
-  await expect(nav.getByRole("button")).toHaveCount(16);
+  await expect(nav.getByRole("button")).toHaveCount(21);
   await page.reload();
   await expect(
     nav.getByRole("button", { name: "Tools", exact: true }),
@@ -28,20 +33,26 @@ test("Tools collapses, persists and keeps every navigation item reachable in a s
   await page.setViewportSize({ width: 1200, height: 650 });
   await nav.getByRole("button", { name: "Einstellungen", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Erscheinungsbild" }),
+    page.getByRole("heading", { name: "Anzeige & Bedienkomfort" }),
   ).toBeVisible();
   await nav.getByRole("button", { name: "Tools", exact: true }).click();
-  await expect(nav.getByRole("button")).toHaveCount(6);
+  await expect(nav.getByRole("button")).toHaveCount(18);
   await page.screenshot({ path: "artifacts/v5-navigation.png" });
 });
 
-test("all four themes change page surfaces and persist while AP BP LP retain semantic colors", async ({
+test("all five themes change page surfaces and persist while AP BP LP retain semantic colors", async ({
   page,
 }) => {
-  await page.goto("/#/settings");
+  await page.goto("/#/settings?section=appearance");
   await page.reload();
   const backgrounds = new Set<string>();
-  for (const name of ["Wald der Zwölf", "Sufokia", "Zwielicht", "Brâkmar"]) {
+  for (const name of [
+    "Obsidian & Gold",
+    "Wald der Zwölf",
+    "Sufokia",
+    "Zwielicht",
+    "Brâkmar",
+  ]) {
     const button = page.getByRole("button", { name: new RegExp(name) });
     await button.click();
     await expect(button).toHaveAttribute("aria-pressed", "true");
@@ -51,7 +62,7 @@ test("all four themes change page surfaces and persist while AP BP LP retain sem
         .evaluate((el) => getComputedStyle(el).backgroundColor),
     );
   }
-  expect(backgrounds.size).toBe(4);
+  expect(backgrounds.size).toBe(5);
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "ember");
   await page.goto("/#/builder");
@@ -66,7 +77,7 @@ test("all four themes change page surfaces and persist while AP BP LP retain sem
   }
   await expect(page.locator(".stat-bp").first()).toContainText("BP");
   await page.screenshot({ path: "artifacts/v5-builder.png", fullPage: true });
-  await page.goto("/#/settings");
+  await page.goto("/#/settings?section=appearance");
   await page.getByRole("button", { name: /Sufokia/ }).click();
   await page.screenshot({ path: "artifacts/v5-themes.png", fullPage: true });
 });
@@ -80,7 +91,9 @@ test("interior quest map preserves identity on the original background and coord
     "Interaktive DOFUS-Weltkarte mit Originalkarten",
   );
   await expect(canvas).toHaveAttribute("data-background", "loaded");
-  await expect(page.getByLabel("Weltkarte", { exact: true })).toHaveValue("1");
+  await expect(
+    page.getByRole("combobox", { name: "Weltkarte", exact: true }),
+  ).toHaveValue("1");
   await expect(page.locator(".world-details")).toContainText("99353610");
   await expect(page.locator(".world-details")).toContainText("Innenkarte");
   await expect(page.locator(".world-details h2")).toContainText("[-1, 2]");

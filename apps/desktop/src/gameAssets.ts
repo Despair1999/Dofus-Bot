@@ -27,7 +27,16 @@ export function useGameAssets() {
         if (!r.ok) throw Error("Bildkatalog nicht verfügbar");
         return r.json() as Promise<Assets>;
       })
-      .then((value) => (cached = value))
+      .then(async (value) => {
+        const response = await fetch("/game-assets/retained-index.json");
+        if (response.ok) {
+          const retained = (await response.json()) as {
+            spells: Record<string, string>;
+          };
+          value = { ...value, spells: { ...retained.spells, ...value.spells } };
+        }
+        return (cached = value);
+      })
       .catch((e) => {
         pending = undefined;
         throw e;

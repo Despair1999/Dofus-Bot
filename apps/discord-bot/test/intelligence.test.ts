@@ -77,6 +77,9 @@ test("Actual dungeon embeds paginate, fit component/field limits and withhold un
   d.editorial.strategy = ["UNREVIEWED_PRIVATE_DRAFT"];
   const initial = dungeonMessage(d, "strategie");
   const json = initial.embeds[0].toJSON();
+  assert.equal(json.color, 0xd9b96e);
+  assert.match(json.thumbnail!.url, /^attachment:\/\/monster-\d+\.webp$/);
+  assert.equal(initial.files.length, 1);
   assert.equal(json.title!.length, 256);
   assert.ok(!JSON.stringify(json).includes("UNREVIEWED_PRIVATE_DRAFT"));
   assert.match(json.fields![0].value, /Prüfung ausstehend/);

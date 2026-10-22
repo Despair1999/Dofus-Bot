@@ -145,6 +145,68 @@ export function registerDungeons(
   const store = new DungeonStore(personal, path);
   const queryVersion = (value: unknown) =>
     z.object({ version: versionSchema }).parse(value).version;
+  // Read-only projections of the existing versioned dataset; no IDs or stored data change.
+  app.get("/api/monsters", (request) => {
+    const f = z
+      .object({
+        version: versionSchema,
+        q: z.string().max(150).default(""),
+        minLevel: z.coerce.number().int().min(0).max(200).default(0),
+        maxLevel: z.coerce.number().int().min(0).max(200).default(200),
+        page: z.coerce.number().int().min(1).default(1),
+        pageSize: z.coerce.number().int().min(1).max(100).default(30),
+      })
+      .parse(request.query);
+    const values = store
+      .version(f.version)
+      .monsters.filter(
+        (m) =>
+          normalize(`${m.name} ${m.nameFr} ${m.nameEn} ${m.id}`).includes(
+            normalize(f.q),
+          ) &&
+          m.grades.some((g) => g.level >= f.minLevel && g.level <= f.maxLevel),
+      );
+    return {
+      data: values
+        .slice((f.page - 1) * f.pageSize, f.page * f.pageSize)
+        .map((m) => ({
+          id: m.id,
+          name: m.name,
+          nameFr: m.nameFr,
+          image: m.image,
+          gfxId: m.gfxId,
+          level: m.grades[0]?.level ?? 0,
+        })),
+      total: values.length,
+      version: f.version,
+      page: f.page,
+      pageSize: f.pageSize,
+    };
+  });
+  app.get("/api/monsters/:id", (request, reply) => {
+    const id = z.coerce
+        .number()
+        .int()
+        .positive()
+        .parse((request.params as { id: string }).id),
+      version = queryVersion(request.query),
+      data = store.version(version).monsters.find((m) => m.id === id);
+    return data
+      ? {
+          data: {
+            ...data,
+            dungeons: store
+              .version(version)
+              .dungeons.filter((d) => d.monsterIds.includes(id))
+              .map((d) => ({ id: d.id, name: d.name, entrance: d.entrance })),
+            version,
+          },
+          version,
+        }
+      : reply
+          .code(404)
+          .send({ error: "Monster ist in diesem Datenstand nicht enthalten." });
+  });
   app.get("/api/dungeons/versions", () => ({
     data: Object.keys(store.dataset.versions),
   }));

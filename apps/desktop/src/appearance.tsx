@@ -6,6 +6,12 @@ import "./appearance.css";
 
 export const themes = [
   {
+    id: "mythic",
+    name: "Obsidian & Gold",
+    description: "Dark Fantasy · Gold & Türkis",
+    colors: ["#10141e", "#d6b479", "#72c6c1"],
+  },
+  {
     id: "forest",
     name: "Wald der Zwölf",
     description: "Moosgrün & warmes Dunkel",
@@ -34,12 +40,12 @@ type Theme = (typeof themes)[number]["id"];
 const validTheme = (value: unknown): value is Theme =>
   themes.some((t) => t.id === value);
 function apply(value: unknown) {
-  document.documentElement.dataset.theme = validTheme(value) ? value : "forest";
+  document.documentElement.dataset.theme = validTheme(value) ? value : "mythic";
 }
 export function AppearanceSync() {
   useEffect(() => {
     let active = true;
-    void read("appearance:theme", "forest").then((v) => {
+    void read("appearance:theme", "mythic").then((v) => {
       if (active) apply(v);
     });
     let unlisten: (() => void) | undefined;
@@ -59,7 +65,7 @@ export function AppearanceSync() {
 }
 export function AppearanceSettings() {
   const [theme, setTheme] = useState(
-    document.documentElement.dataset.theme ?? "forest",
+    document.documentElement.dataset.theme ?? "mythic",
   );
   const [error, setError] = useState("");
   async function select(value: Theme) {

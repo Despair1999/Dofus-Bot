@@ -86,7 +86,7 @@ function MonsterImage({
     />
   );
 }
-function MonsterCard({ monster }: { monster: DungeonMonster }) {
+export function MonsterCard({ monster }: { monster: DungeonMonster }) {
   const assets = useGameAssets();
   const [grade, setGrade] = useState(0),
     g = monster.grades[grade];
