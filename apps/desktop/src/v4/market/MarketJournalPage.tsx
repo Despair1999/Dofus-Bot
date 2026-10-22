@@ -439,7 +439,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
         </section>}
         <section className="panel"><h3>Marktpreis-Historie</h3>
           <ObservationTable entries={item ? relevant : journal.observations}
-            onSelect={(entry) => { setServer(entry.server); pick(entry.item); }} onRemove={(id) => remove("observations", id)}/>
+            onSelect={(entry) => { setServer(entry.server); pick(entry.item); }} onEdit={editObservation} onRemove={(id) => remove("observations", id)}/>
         </section>
       </>}
 
