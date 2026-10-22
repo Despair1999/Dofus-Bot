@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Hammer, Sparkles, Sprout, BookOpen } from "lucide-react";
 import { api, type Config } from "../client";
 import { request, message } from "../v2/shared/request";
@@ -19,11 +19,14 @@ export default function ProfessionLevels({
   characterId: string;
   onChange?: () => void;
 }) {
+  const generation = useRef(0);
   const [jobs, setJobs] = useState<{ id: number; name: string }[]>([]),
     [levels, setLevels] = useState<{ jobId: number; level: number }[]>([]),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   useEffect(() => {
+    generation.current++;
+    setBusy(false);
     setLevels([]);
     setError("");
     const c = new AbortController();
@@ -47,6 +50,7 @@ export default function ProfessionLevels({
     return () => c.abort();
   }, [config, characterId]);
   async function save(jobId: number, value: string) {
+    const revision = generation.current;
     const level = value === "" ? null : Number(value);
     if (
       level !== null &&
@@ -63,6 +67,7 @@ export default function ProfessionLevels({
         { jobId, level },
         "PUT",
       );
+      if (revision !== generation.current) return;
       setLevels((p) => [
         ...p.filter((x) => x.jobId !== jobId),
         ...(level === null ? [] : [{ jobId, level }]),
@@ -70,9 +75,9 @@ export default function ProfessionLevels({
       setError("");
       onChange?.();
     } catch (e) {
-      setError(message(e));
+      if (revision === generation.current) setError(message(e));
     } finally {
-      setBusy(false);
+      if (revision === generation.current) setBusy(false);
     }
   }
   return (

@@ -1203,7 +1203,12 @@ export default function WorldPage({
           gatheringResources={resources}
           clusterResources={clusterResources}
           onResource={(nodes) => {
+            setRightVisible(true);
             setResourceDetails(nodes);
+            requestAnimationFrame(() => {
+              const panel = root.current?.querySelector(".world-details");
+              if (panel) panel.scrollTop = 0;
+            });
             if (new Set(nodes.map((n) => n.mapId)).size > 1) {
               setResourceDetails([]);
               setCamera((c) => ({
@@ -1272,6 +1277,61 @@ export default function WorldPage({
         />
         {rightVisible && (
           <aside className="world-side world-details">
+            {!!resourceDetails.length && (
+              <section className="resource-map-details">
+                <h3>Sammelstellen</h3>
+                {[...new Set(resourceDetails.map((n) => n.resourceId))].map(
+                  (id) => {
+                    const resource = resources.find((r) => r.id === id);
+                    return resource ? (
+                      <div key={id}>
+                        <ItemImage
+                          item={{ name: resource.name }}
+                          iconId={resource.iconId}
+                          itemId={resource.itemId}
+                          size={40}
+                        />
+                        <strong>{resource.name}</strong>
+                        <p>
+                          {resource.jobName} · Stufe {resource.level}
+                        </p>
+                      </div>
+                    ) : null;
+                  },
+                )}
+                <p>
+                  [{resourceDetails[0].x}, {resourceDetails[0].y}] · Karte{" "}
+                  {resourceDetails[0].mapId}
+                </p>
+                <p>
+                  {resourceDetails.length} dokumentierte Zellen · Quellenpatch{" "}
+                  {resourceDetails[0].sourceVersion}
+                </p>
+                <strong>
+                  {resourceDetails[0].verification === "verified"
+                    ? "Quellenstand bestätigt"
+                    : resourceDetails[0].verification === "personal-observation"
+                      ? "Persönliche Beobachtung · kein Echtzeit-Spawn"
+                      : "Aktueller Patch unbestätigt"}
+                </strong>
+                <button
+                  onClick={() => {
+                    const id = resourceDetails[0].mapId;
+                    setTargetIds((v) => [...new Set([...v, id])]);
+                    setTargetText((v) =>
+                      [
+                        ...new Set([
+                          ...v.split(",").filter(Boolean),
+                          String(id),
+                        ]),
+                      ].join(", "),
+                    );
+                  }}
+                >
+                  Als Routenziel übernehmen
+                </button>
+              </section>
+            )}
             <span className="eyebrow">DEIN NÄCHSTER SCHRITT</span>
             {selected ? (
               <>
@@ -1467,61 +1527,6 @@ export default function WorldPage({
                 )}
               </div>
             </details>
-            {!!resourceDetails.length && (
-              <section className="resource-map-details">
-                <h3>Sammelstellen</h3>
-                {[...new Set(resourceDetails.map((n) => n.resourceId))].map(
-                  (id) => {
-                    const resource = resources.find((r) => r.id === id);
-                    return resource ? (
-                      <div key={id}>
-                        <ItemImage
-                          item={{ name: resource.name }}
-                          iconId={resource.iconId}
-                          itemId={resource.itemId}
-                          size={40}
-                        />
-                        <strong>{resource.name}</strong>
-                        <p>
-                          {resource.jobName} · Stufe {resource.level}
-                        </p>
-                      </div>
-                    ) : null;
-                  },
-                )}
-                <p>
-                  [{resourceDetails[0].x}, {resourceDetails[0].y}] · Karte{" "}
-                  {resourceDetails[0].mapId}
-                </p>
-                <p>
-                  {resourceDetails.length} dokumentierte Zellen · Quellenpatch{" "}
-                  {resourceDetails[0].sourceVersion}
-                </p>
-                <strong>
-                  {resourceDetails[0].verification === "verified"
-                    ? "Quellenstand bestätigt"
-                    : resourceDetails[0].verification === "personal-observation"
-                      ? "Persönliche Beobachtung · kein Echtzeit-Spawn"
-                      : "Aktueller Patch unbestätigt"}
-                </strong>
-                <button
-                  onClick={() => {
-                    const id = resourceDetails[0].mapId;
-                    setTargetIds((v) => [...new Set([...v, id])]);
-                    setTargetText((v) =>
-                      [
-                        ...new Set([
-                          ...v.split(",").filter(Boolean),
-                          String(id),
-                        ]),
-                      ].join(", "),
-                    );
-                  }}
-                >
-                  Als Routenziel übernehmen
-                </button>
-              </section>
-            )}
             {!!estimatedOrder.length && (
               <section aria-label="Geschätzte Fundortreihenfolge">
                 <h3>Geschätzte Besuchsreihenfolge</h3>

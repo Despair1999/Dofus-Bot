@@ -143,7 +143,8 @@ export default function CraftingPage({
           setItem(r.data);
       })
       .catch((e) => {
-        if (!c.signal.aborted) setError(message(e));
+        if (!c.signal.aborted && revision === selectionRevision.current)
+          setError(message(e));
       });
     return () => c.abort();
   }, [item?.id, item?.category, config.url, config.token]);

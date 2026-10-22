@@ -95,6 +95,7 @@ test("documented fishing markers require opt-in, expose patch provenance and ret
     )
     .toBe(true);
   await marker.click();
+  await expect(page.locator(".resource-map-details")).toBeInViewport();
   await expect(page.locator(".resource-map-details")).toContainText(
     "Aktueller Patch unbestätigt",
   );
