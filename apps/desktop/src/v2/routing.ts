@@ -13,6 +13,7 @@ export type View =
   | "quests"
   | "scanner"
   | "craft"
+  | "market"
   | "characters"
   | "almanax"
   | "favorites"

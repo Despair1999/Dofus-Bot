@@ -72,6 +72,7 @@ import WorldPage from "./v4/WorldPage";
 import DungeonsPage from "./v4/DungeonsPage";
 import ProfessionsPage from "./v4/ProfessionsPage";
 import TranslatorPanel from "./v4/translator/TranslatorPanel";
+import MarketJournalPage from "./v4/market/MarketJournalPage";
 import { useRoute, navigatePath, type View } from "./v2/routing";
 import { AppearanceSettings } from "./appearance";
 import SideNavigation from "./ui/SideNavigation";
@@ -912,6 +913,8 @@ function MainApp() {
                           "Geschichten entdecken und jeden bestätigten Schritt im Blick behalten.",
                         craft:
                           "Von der Idee zum fertigen Gegenstand. Mit deinem persönlichen Materialplan.",
+                        market:
+                          "Deine Preisbeobachtungen, Handelsbuch und Kamas-Strategie – ganz ohne OCR-Zwang.",
                         characters:
                           "Deine Charaktere, Klassen und Fortschritte – übersichtlich verbunden.",
                         almanax:
@@ -1307,7 +1310,8 @@ function MainApp() {
               onNotice={setNotice}
             />
           )}
-          {tab === "characters" && (
+          {tab === "market" && <MarketJournalPage config={config} />}
+           {tab === "characters" && (
             <CharactersPage
               key={catalogRevision}
               config={config}

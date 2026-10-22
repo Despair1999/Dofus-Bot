@@ -260,6 +260,9 @@ export default function CraftingPage({
           Rezepte aus dem vollständigen Katalog. Dein Bestand, deine Preise und
           eine ehrliche Kalkulation.
         </p>
+        <button className="secondary" onClick={() => navigatePath("/market")}>
+          <ArrowUpRight size={16} /> Marktjournal & Kamas öffnen
+        </button>
       </div>
       <ItemSearchBar
         config={config}

@@ -109,6 +109,13 @@ export const navigationItems: {
     description: "Materialbedarf und eigene Preise",
   },
   {
+    id: "market",
+    label: "Marktjournal & Kamas",
+    icon: BookOpen,
+    group: "Planen",
+    description: "Dein persönliches Markt- und Handelsbuch",
+  },
+  {
     id: "translator",
     label: "Übersetzer",
     icon: Languages,
