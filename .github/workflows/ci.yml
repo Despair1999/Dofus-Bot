@@ -1,7 +1,19 @@
 name: Quality checks
 on:
   push:
+    paths-ignore:
+      - 'apps/website/**'
+      - 'firebase.json'
+      - '.firebaserc'
+      - 'docs/WEBSITE_DEPLOYMENT.md'
+      - '.github/workflows/firebase-hosting.yml'
   pull_request:
+    paths-ignore:
+      - 'apps/website/**'
+      - 'firebase.json'
+      - '.firebaserc'
+      - 'docs/WEBSITE_DEPLOYMENT.md'
+      - '.github/workflows/firebase-hosting.yml'
 permissions:
   contents: read
 jobs:

@@ -1,0 +1,1 @@
+# Firebase Website\n\nDie vollständige Einrichtungsanleitung für Spark-Hosting, WIF, GitHub Actions und Downloads steht in [apps/website/README.md](../apps/website/README.md).\n
