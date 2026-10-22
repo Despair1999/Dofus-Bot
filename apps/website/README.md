@@ -76,3 +76,19 @@ Vor dem Merge: Website-Workflow grün (TypeScript, Unit Tests, Produktionsbuild)
 ## Veröffentlichungsvorgang
 
 Die erste passwortgeschützte Firebase-Hosting-Vorschau wird über den dedizierten GitHub-Actions-Workflow aus `main` veröffentlicht. Das Website-Build muss erfolgreich sein und der Deployment-Job muss anschließend als erfolgreich bestätigt werden; ein erfolgreicher Commit oder Merge allein beweist noch keine Bereitstellung. Bei fehlendem Workflow-Lauf kann der Workflow in GitHub Actions manuell über `Run workflow` auf Branch `main` gestartet werden.
+
+## Troubleshooting: Firebase Hosting 403 bei GitHub Actions
+
+Falls der Build erfolgreich ist, der Deploy-Job aber mit `HTTP 403` und `permission: serviceusage.services.get` fehlschlägt, sind die Hosting-Dateien **nicht** defekt. Der Service Account besitzt dann zwar `roles/firebasehosting.admin`, kann aber nicht den Aktivierungsstatus einer Google Cloud API abrufen.
+
+**Einmalige IAM-Korrektur (Projekt `dofus-companion`):**
+
+1. Öffne [Google Cloud IAM](https://console.cloud.google.com/iam-admin/iam?project=dofus-companion).
+2. Bearbeite das bestehende Mitglied `firebase-hosting-github@dofus-companion.iam.gserviceaccount.com`.
+3. Rolle hinzufügen: **Service Usage Viewer** (`roles/serviceusage.serviceUsageViewer`). Diese Rolle enthält `serviceusage.services.get`, aktiviert jedoch keine neuen APIs.
+4. Bestehende Firebase Hosting Admin- und API Keys Viewer-Rollen beibehalten. **Keine** Projektinhaber-/Editor- oder Service Usage Admin-Rolle notwendig.
+5. Nach Speichern und kurzer IAM-Propagation in GitHub Actions den fehlgeschlagenen Firebase-Hosting-Workflow unter dem neuesten Lauf via `Re-run failed jobs` erneut ausführen. Nicht noch einmal den Browser-CI-Job verändern.
+
+Der Workflow verwendet eine bewusst festgelegte Firebase-CLI-Version `14.22.0`, damit ein unbeabsichtigtes Upgrade von `latest` keine überraschenden Deployment-Änderungen verursacht.
+
+Beachte weiterhin, dass Firebase-Spark-Hosting öffentlich erreichbare statische Dateien ausliefert: Das Vorschau-Passwort ist nur eine browserseitige Zugangshürde.
