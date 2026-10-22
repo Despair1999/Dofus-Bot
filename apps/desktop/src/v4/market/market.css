@@ -1,0 +1,67 @@
+.market-page{display:grid;gap:18px;min-width:0;padding-bottom:40px;color:var(--text)}
+.market-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:10px 0 4px}
+.market-hero h2{margin:7px 0 8px;font-size:25px;font-family:Manrope,sans-serif}
+.market-hero p{color:var(--muted);margin:0;line-height:1.55;font-size:12px}
+.market-actions,.market-action-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.market-actions button,.market-action-row button{display:inline-flex;gap:7px;align-items:center}
+.market-context{display:grid;grid-template-columns:minmax(260px,1fr) 170px auto;gap:16px;align-items:end}
+.market-context label,.market-form-grid label{display:grid;gap:7px;font-size:11px;color:var(--muted)}
+.market-context input,.market-form-grid input,.market-form-grid select{width:100%;min-height:40px}
+.market-item-search{min-width:0}
+.market-item-search small{display:block;margin-top:6px;color:var(--muted)}
+.market-selected{display:flex;align-items:center;gap:8px;min-width:190px;border:1px solid var(--border);border-radius:8px;padding:5px 8px;background:var(--surface-1)}
+.market-selected span{min-width:0;flex:1}
+.market-selected strong{font-size:12px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.market-selected small{display:block;font-size:10px;color:var(--muted)}
+.market-saved-items{display:flex;flex-wrap:wrap;gap:7px}
+.market-saved-items button{padding:6px 10px;border:1px solid var(--border);border-radius:20px;background:var(--surface-1);color:var(--muted);font-size:11px;min-height:30px}
+.market-saved-items button.is-current{color:#f1ca89;border-color:#c9a364;background:#382f27}
+.market-message{border:1px solid #b79b61;background:#2c2720;color:#f1d49f;border-radius:8px;padding:10px 13px;font-size:12px}
+.market-tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:8px}
+.market-tabs button{background:transparent;color:var(--muted);padding:11px 14px;border:1px solid transparent;border-radius:8px;font-size:12px}
+.market-tabs button.selected{background:#34302b;color:#eac487;border-color:#655642}
+.market-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.market-metric{min-width:0;border:1px solid var(--border);border-radius:12px;background:var(--surface-1);padding:18px}
+.market-metric>div{display:flex;gap:8px;align-items:center;color:#d4ae70}
+.market-metric strong{display:block;font-family:Manrope,sans-serif;font-size:21px;margin-top:12px;overflow-wrap:anywhere}
+.market-metric small{font-size:10px;color:var(--muted);line-height:1.5}
+.market-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.market-page .panel{min-width:0}
+.market-page .panel h3{display:flex;align-items:center;gap:8px;margin:0 0 13px;font-size:16px}
+.market-page .panel h4{margin:0 0 10px;font-size:14px}
+.market-page .panel p,.market-page .panel>small{color:var(--muted);font-size:12px;line-height:1.6}
+.market-page .panel label{display:grid;gap:8px;color:var(--muted);font-size:11px}
+.market-page .panel textarea{width:100%;resize:vertical;line-height:1.55;margin:6px 0 14px}
+.market-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:18px 0}
+.market-scroll{max-width:100%;overflow:auto}
+.market-scroll table{width:100%;border-collapse:collapse;min-width:650px}
+.market-scroll th{text-align:left;color:var(--muted);font-size:10px;padding:10px;white-space:nowrap;border-bottom:1px solid var(--border)}
+.market-scroll td{border-bottom:1px solid var(--border);padding:12px 10px;font-size:11px;white-space:nowrap;vertical-align:middle}
+.market-scroll td small{display:block;margin-top:3px;color:var(--muted)}
+.market-item-button{display:inline-flex;gap:8px;align-items:center;background:transparent;border:none;padding:0;color:#e7c38b;min-height:30px;text-align:left;font-size:11px}
+.market-chart{margin:15px 0;min-height:175px;overflow:hidden;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,.15);padding:10px}
+.market-chart svg{display:block;width:100%;height:175px}
+.market-advice-list{display:grid;gap:10px;margin-top:16px}
+.market-tip{display:flex;align-items:start;gap:11px;border:1px solid var(--border);border-radius:9px;padding:13px;background:var(--surface-1)}
+.market-tip svg{flex-shrink:0;color:#99adbf}
+.market-tip.warning{border-color:#6c543a}
+.market-tip.warning svg{color:#e6ad67}
+.market-tip.positive{border-color:#456e5d}
+.market-tip.positive svg{color:#7ecda7}
+.market-tip strong{font-size:12px}
+.market-tip p{margin:5px 0 0;font-size:11px;line-height:1.6}
+.market-guide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.market-guide article{border:1px solid var(--border);background:var(--surface-1);padding:14px;border-radius:9px}
+.market-guide strong{font-size:12px;color:#e8c186}
+.market-guide p{margin:7px 0 0}
+.market-disclaimer{display:flex;gap:9px;align-items:center;font-size:11px;line-height:1.6;color:var(--muted);margin-top:18px}
+.market-disclaimer svg{flex-shrink:0}
+.market-ocr{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
+.market-note-head{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.market-note-head small{color:var(--muted)}
+.market-notes{display:grid;gap:12px}
+.market-notes .panel p{white-space:pre-wrap}
+.market-page button:focus-visible,.market-page input:focus-visible,.market-page textarea:focus-visible{outline:2px solid #e7ba73;outline-offset:2px}
+@media(max-width:1100px){.market-context{grid-template-columns:minmax(220px,1fr) 170px}.market-selected{grid-column:1/-1}.market-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.market-context,.market-grid,.market-guide{grid-template-columns:1fr}.market-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.market-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.market-metric{padding:12px}.market-metric strong{font-size:16px}.market-tabs button{padding:9px 11px}.market-hero h2{font-size:20px}}
+@media(max-width:440px){.market-form-grid,.market-metrics{grid-template-columns:1fr}}
