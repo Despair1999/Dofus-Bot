@@ -1,0 +1,103 @@
+name: Website · Firebase Hosting (Spark)
+
+on:
+  pull_request:
+    paths:
+      - 'apps/website/**'
+      - 'apps/desktop/public/branding/**'
+      - 'apps/desktop/public/classes/**'
+      - 'apps/desktop/public/game-assets/worlds/1.webp'
+      - 'firebase.json'
+      - '.firebaserc'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/firebase-hosting.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/website/**'
+      - 'apps/desktop/public/branding/**'
+      - 'apps/desktop/public/classes/**'
+      - 'apps/desktop/public/game-assets/worlds/1.webp'
+      - 'firebase.json'
+      - '.firebaserc'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/firebase-hosting.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  website:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+          cache: pnpm
+      - name: Install website packages only
+        run: pnpm install --frozen-lockfile --filter @dofus/website...
+      - name: Validate website
+        run: |
+          pnpm --filter @dofus/website typecheck
+          pnpm --filter @dofus/website test
+      - name: Validate static production build with ephemeral CI password
+        env:
+          VITE_SITE_URL: ${{ vars.WEBSITE_URL }}
+          VITE_DISCORD_CLIENT_ID: ${{ vars.DISCORD_PUBLIC_CLIENT_ID }}
+        run: |
+          # PRs must never receive the real password. The CI preview is not deployed.
+          export WEBSITE_PASSWORD="$(node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("hex"))')"
+          pnpm --filter @dofus/website build
+      - name: Upload compiled static site
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-static
+          path: apps/website/dist/
+          retention-days: 3
+
+  publish:
+    name: Deploy password-gated preview (Firebase Spark)
+    needs: [website]
+    if: >-
+      github.event_name != 'pull_request' &&
+      github.ref == 'refs/heads/main' &&
+      vars.FIREBASE_PROJECT_ID != '' &&
+      vars.FIREBASE_PROJECT_ID == 'dofus-companion'
+    runs-on: ubuntu-latest
+    environment: firebase-production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+          cache: pnpm
+      - name: Install website dependencies
+        run: pnpm install --frozen-lockfile --filter @dofus/website...
+      - name: Rebuild with the real password from GitHub Secrets
+        env:
+          WEBSITE_PASSWORD: ${{ secrets.WEBSITE_PASSWORD }}
+          VITE_SITE_URL: ${{ vars.WEBSITE_URL }}
+          VITE_DISCORD_CLIENT_ID: ${{ vars.DISCORD_PUBLIC_CLIENT_ID }}
+        run: |
+          if [ -z "$WEBSITE_PASSWORD" ]; then
+            echo "::error::Missing WEBSITE_PASSWORD repository secret; refusing to deploy."
+            exit 1
+          fi
+          pnpm --filter @dofus/website build
+      - name: Deploy only Firebase Hosting (GitHub encrypted secret)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ vars.FIREBASE_PROJECT_ID }}
+          channelId: live

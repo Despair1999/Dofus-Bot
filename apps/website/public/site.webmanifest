@@ -1,0 +1,10 @@
+{
+  "name": "DOFUS Companion",
+  "short_name": "Companion",
+  "description": "Unabhängige DOFUS-Spielhilfe",
+  "lang": "de",
+  "display": "standalone",
+  "start_url": "/",
+  "background_color": "#0e1817",
+  "theme_color": "#0e1817"
+}

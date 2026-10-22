@@ -19,3 +19,6 @@ playwright-report/
 *.log
 apps/desktop/src-tauri/resources/
 apps/desktop/src-tauri/gen/
+
+# Generated from the deployment secret; never commit this verifier
+apps/website/public/access-config.json
