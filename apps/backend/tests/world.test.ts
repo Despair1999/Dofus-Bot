@@ -4,6 +4,37 @@ import Fastify from "fastify";
 import { PersonalStore } from "../src/store.js";
 import { registerWorld, WorldStore } from "../src/world.js";
 
+test("map landmarks retain source identity, exact Zaap classification and world filtering", async () => {
+  const personal = new PersonalStore(":memory:"),
+    app = Fastify();
+  const store = registerWorld(app, personal);
+  try {
+    const all = (await app.inject({ url: "/api/world/points" })).json().data;
+    assert.equal(all.length, 834);
+    assert.equal(
+      new Set(all.map((p: { id: number }) => p.id)).size,
+      all.length,
+    );
+    for (const p of all) {
+      assert.ok(store.maps.has(p.mapId));
+      assert.ok(store.dataset.worlds.some((w) => w.id === p.worldId));
+    }
+    const zaaps = (
+      await app.inject({ url: "/api/world/points?kind=zaap&worldId=1" })
+    ).json().data;
+    assert.ok(zaaps.length > 0);
+    assert.ok(
+      zaaps.every(
+        (p: { name: string; worldId: number; categoryId: number }) =>
+          p.name === "Zaap" && p.worldId === 1 && p.categoryId === 9,
+      ),
+    );
+  } finally {
+    await app.close();
+    personal.close();
+  }
+});
+
 test("interior quest targets inherit their documented parent atlas without merging map identity", async () => {
   const personal = new PersonalStore(":memory:"),
     app = Fastify();

@@ -181,7 +181,7 @@ for (const width of [600, 1366, 1920, 2560, 3440]) {
 test("hotkey recorder captures actual keys and persists the selected combination", async ({
   page,
 }) => {
-  await page.goto("/#/settings");
+  await page.goto("/#/settings?section=overlay");
   const recorder = page.getByRole("button", {
     name: "Overlay ein-/ausblenden aufnehmen",
   });

@@ -15,6 +15,34 @@ const token = "builder-integration-test-token-0000000000000",
   headers = { authorization: "Bearer " + token };
 let app: Awaited<ReturnType<typeof createApp>>, store: BuilderStore;
 let build: Build;
+
+test("set search paginates without dropping entries and details retain original item IDs", async () => {
+  const first = (
+    await app.inject({ url: "/api/builder/sets?limit=10&page=1" })
+  ).json();
+  const second = (
+    await app.inject({ url: "/api/builder/sets?limit=10&page=2" })
+  ).json();
+  assert.equal(first.data.length, 10);
+  assert.ok(first.total > 20);
+  assert.ok(
+    first.data.every(
+      (s: { id: number }) =>
+        !second.data.some((v: { id: number }) => v.id === s.id),
+    ),
+  );
+  const detail = (
+    await app.inject({ url: `/api/builder/sets/${first.data[0].id}` })
+  ).json().data;
+  assert.deepEqual(
+    detail.items.map((i: { id: number }) => i.id),
+    first.data[0].items.map((i: { id: number }) => i.id),
+  );
+  assert.equal(
+    (await app.inject({ url: "/api/builder/sets?page=0" })).statusCode,
+    400,
+  );
+});
 const character = personal.createCharacter({
   name: "Builder-Test",
   server: "Fixture",

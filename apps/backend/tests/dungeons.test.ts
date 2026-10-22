@@ -19,6 +19,26 @@ const character = personal.createCharacter({
   level: 200,
 });
 let app: Awaited<ReturnType<typeof createApp>>;
+
+test("monster browser uses version-isolated real records and rejects unavailable identities", async () => {
+  for (const version of ["3.6.12.16", "3.7.12.12"]) {
+    const r = (
+      await app.inject({ url: `/api/monsters?q=147&version=${version}` })
+    ).json();
+    const monster = r.data.find((m: { id: number }) => m.id === 147);
+    assert.ok(monster);
+    const detail = (
+      await app.inject({ url: `/api/monsters/147?version=${version}` })
+    ).json();
+    assert.equal(detail.data.id, 147);
+    assert.equal(detail.version, version);
+    assert.ok(detail.data.grades.length > 0);
+  }
+  assert.equal(
+    (await app.inject({ url: "/api/monsters/999999999" })).statusCode,
+    404,
+  );
+});
 before(async () => {
   app = await createApp({ personal, game, token });
   await app.ready();
