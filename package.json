@@ -13,10 +13,11 @@
     "test:ocr": "tsx tests/ocr/smoke.ts",
     "bundle:backend": "node infrastructure/scripts/bundle-backend.mjs",
     "dev": "pnpm --parallel --filter @dofus/backend --filter @dofus/desktop dev",
-    "build": "pnpm -r --if-present build",
+    "build": "pnpm --filter '!@dofus/website' -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "desktop": "pnpm --filter @dofus/desktop tauri dev"
+    "desktop": "pnpm --filter @dofus/desktop tauri dev",
+    "build:website": "pnpm --filter @dofus/website build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
