@@ -31,3 +31,9 @@
 @media (max-width:720px){.gate-topbar,.gate-frame,.gate-footer{width:calc(100% - 32px)}.gate-topbar{height:76px}.gate-brand{font-size:12px}.gate-brand>img{height:38px;width:38px}.gate-top-status{font-size:8px;letter-spacing:0}.gate-frame{grid-template-columns:1fr;min-height:0}.gate-visual{height:175px;min-height:0;border-right:0;border-bottom:1px solid #d4bd7a52}.gate-character{height:235px;top:-10px;left:49%;opacity:.8}.gate-rune-outer{width:280px;height:280px;top:55%}.gate-rune-inner{width:208px;height:208px;top:55%}.gate-crest{display:none}.gate-art-caption{bottom:18px;left:25px;right:25px;padding-top:10px}.gate-art-caption strong{font-size:16px}.gate-art-caption span{font-size:8px}.gate-panel{padding:22px 28px 27px}.gate-ornament{display:none}.gate-panel h1{font-size:34px;margin:13px 0}.gate-copy{font-size:12px}.gate-divider{margin:18px 0}.gate-bottom-line{margin-top:22px}.gate-footer{flex-direction:column;gap:7px;text-align:center;padding:18px 0}}
 @media (max-width:390px){.gate-top-status{font-size:0}.gate-top-status span{width:8px;height:8px}.gate-panel{padding:20px}.gate-panel h1{font-size:30px}.gate-visual{height:140px}.gate-art-caption strong{font-size:13px}.gate-topbar{height:66px}}
 @media (prefers-reduced-motion:reduce){.gate-shell *, .gate-shell *:before, .gate-shell *:after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+
+/* Branded welcome portal: use the actual Companion logo, not a class portrait. */
+.gate-brand-emblem{width:min(74%,390px);height:auto;max-height:70%;top:46%;transform:translate(-50%,-50%);object-fit:contain;border-radius:20%;filter:drop-shadow(0 32px 55px #020b09ba) drop-shadow(0 0 48px #b9e18753);opacity:1}
+@media(max-width:950px){.gate-brand-emblem{width:79%;height:auto;max-height:64%;top:45%}}
+@media(max-width:720px){.gate-brand-emblem{width:150px;height:150px;max-height:none;top:50%;left:51%}}
+@media(max-width:390px){.gate-brand-emblem{width:115px;height:115px;top:46%}}

@@ -16,3 +16,16 @@
 /* Preview mode: legal placeholders are intentionally not linked. */
 .foot-main{grid-template-columns:2fr 1fr 1fr}
 @media(max-width:970px){.foot-main>div:last-child{grid-column:auto}}
+
+/* DOFUS Companion branding consistency and compact changelog navigation */
+.nav{gap:16px}
+.hero-emblem{position:absolute;width:min(260px,54%);height:auto;right:9%;top:-3%;object-fit:contain;filter:drop-shadow(0 0 38px #cbe38b40);opacity:.94}
+.builder-preview-symbol{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:100%;height:100%;color:var(--gold);background:radial-gradient(ellipse at center,#35473799,#101e19 70%)}
+.builder-preview-symbol>img{height:100px;width:100px;object-fit:contain;filter:drop-shadow(0 0 18px #9de28935)}
+.builder-preview-symbol>span{font:800 9px Manrope,sans-serif;letter-spacing:.14em;color:#cabd8b;text-align:center}
+.class-gallery{display:flex;flex-direction:column;gap:14px;color:var(--gold);background:radial-gradient(circle at center,#344b3c,#0e1b18)}
+.class-gallery>span{font:800 10px Manrope,sans-serif;letter-spacing:.12em}
+@media(max-width:1180px){.nav{gap:10px}.nav>a:not(.button){font-size:10px}}
+@media(max-width:970px){.nav{gap:16px}.nav>a:not(.button){font-size:14px}}
+@media(max-width:700px){.hero-emblem{width:170px;right:5%;top:-12px}}
+@media(max-width:450px){.hero-emblem{width:115px;top:-15px;right:0}.product-window.compact .builder-preview-symbol>img{height:55px;width:55px}}

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, Check, Eye, EyeOff, KeyRound, LockKeyhole, ShieldCheck, Sparkles, XCircle } from "lucide-react";
 import logo from "../../desktop/public/branding/icon.png";
-import hero from "../../desktop/public/classes/7.webp";
 import { loadAccessConfig, savePreviewSession, verifyPreviewPassword, type AccessConfig } from "./lib/access";
 import "./access.css";
 
@@ -50,7 +49,7 @@ export default function PreviewGate({onUnlock}:{onUnlock:()=>void}) {
       <div className="gate-visual" aria-hidden="true">
         <div className="gate-rune gate-rune-outer"/><div className="gate-rune gate-rune-inner"/><div className="gate-visual-glow"/>
         <div className="gate-crest">✦ <span>✧</span> ✦</div>
-        <img className="gate-character" src={hero} alt=""/>
+        <img className="gate-character gate-brand-emblem" src={logo} alt=""/>
         <div className="gate-art-caption"><span>01 / PORTAL DER ABENTEUER</span><strong>Die Welt der Zwölf wartet.</strong></div>
       </div>
       <div className="gate-panel">

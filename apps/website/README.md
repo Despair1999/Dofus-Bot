@@ -92,3 +92,11 @@ Falls der Build erfolgreich ist, der Deploy-Job aber mit `HTTP 403` und `permiss
 Der Workflow verwendet eine bewusst festgelegte Firebase-CLI-Version `14.22.0`, damit ein unbeabsichtigtes Upgrade von `latest` keine überraschenden Deployment-Änderungen verursacht.
 
 Beachte weiterhin, dass Firebase-Spark-Hosting öffentlich erreichbare statische Dateien ausliefert: Das Vorschau-Passwort ist nur eine browserseitige Zugangshürde.
+
+## Website-Design & Patchnotes (Stand 22.10.2026)
+
+- Website-Markenbild: einheitliches Companion-Logo aus `apps/desktop/public/branding/icon.png` statt eines Eniripsa-Porträts auf dem Passwort-Gate und hinter der Startseiten-Preview.
+- Der Ausrüstungs-Builder verwendet ebenfalls ein einheitliches Builder-Symbol und keine Charakterporträts mehr; die Windows-App bleibt in ihren Originalbildern unverändert.
+- Keine sichtbaren Quellcode-, Repository- oder externen Release-Notes-Verweise in Header, Desktop-Seite, Footer und Changelog. Downloads führen weiterhin **direkt zur GitHub-Release-Datei**, weil Hosting im kostenlosen Spark-Tarif keine Installer hostet. **Die Repository-Herkunft bleibt technisch am Downloadziel und über die Release-API ersichtlich; dieser Umbau kann ein öffentliches Repository nicht geheim halten.**
+- `/changelog` enthält bewusst **redaktionell von Hand gepflegte** Versionseinträge aus den tatsächlichen Releasebeschreibungen, Stand v0.8.0 bis v0.2.2. Neuversionen müssen in `src/lib/changelog.ts` ergänzt werden; veröffentlichte Draft-Releases werden nicht angezeigt. Die Downloadliste bleibt dynamisch und bietet ausschließlich valide Installer an.
+- Nach Website-Änderungen baut und veröffentlicht `.github/workflows/firebase-hosting.yml` unabhängig von Windows-Installer und Discord-Bot. Für spätere Changelog-Erweiterungen reicht ein Website-Commit auf `main`.
