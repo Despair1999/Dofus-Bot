@@ -56,9 +56,9 @@ Es werden **keine neuen Repositories** benötigt.
 
 Optional: `DISCORD_PUBLIC_CLIENT_ID` als Repository Variable mit einer gültigen öffentlichen Discord-Application-ID setzen, sonst zeigt die Website keinen Einladungsbutton.
 
-**Deployment bleibt bewusst deaktiviert.** In GitHub → Settings → Secrets and variables → Actions → Variables steht `LEGAL_READY` zunächst auf `false` (oder fehlt). Erst nach rechtlicher Prüfung und Asset-Rechteklärung kann der Betreiber den Wert ausdrücklich auf `true` setzen. Diese Freigabe nicht zum Umgehen rechtlicher Pflichten nutzen.
+**Vorschau-Veröffentlichung nach Nutzerauftrag aktivierbar:** Nach dem Merge auf `main` veröffentlicht die GitHub Action automatisch, wenn die tatsächliche Firebase-Projekt-ID `dofus-companion` ist. `LEGAL_READY` wird nicht als rechtliche Unbedenklichkeit fingiert. Der User hat ausdrücklich die Veröffentlichung der passwortgeschützten Vorschau angeordnet. **Rechtlicher Hinweis:** Das Entfernen der Pflichtangaben und ein clientseitiges Passwort können weiterhin rechtliche Pflichten auslösen. Öffentliches Hosting kann nur mit korrekt geprüften Rechts- und Bildnutzungsfragen zuverlässig betrieben werden. Die publizierten statischen Assets sind technisch öffentlich erreichbar.
 
-Nach Review der gestapelten Pull Requests in richtiger Reihenfolge in `main` übernehmen (nicht während der Bearbeitung). Die Action `.github/workflows/firebase-hosting.yml` baut die Website isoliert. Sie deployed erst auf `main` mit gültiger Firebase-Projekt-ID und gesetzter `LEGAL_READY=true`. Das Deployment verwendet `FirebaseExtended/action-hosting-deploy@v0` und den JSON-Schlüssel aus GitHub Secrets. Keine Firebase Cloud Functions oder kostenpflichtige Dienste.
+Nach Review der gestapelten Pull Requests in richtiger Reihenfolge in `main` übernehmen (nicht während der Bearbeitung). Die Action `.github/workflows/firebase-hosting.yml` baut die Website isoliert. Sie deployed nach einem Merge auf `main` beim Projekt `dofus-companion`. Das ist eine technische Bereitstellung, keine Aussage zur rechtlichen Zulässigkeit. Das Deployment verwendet `FirebaseExtended/action-hosting-deploy@v0` und den JSON-Schlüssel aus GitHub Secrets. Keine Firebase Cloud Functions oder kostenpflichtige Dienste.
 
 ## Funktionsbereiche
 

@@ -64,13 +64,13 @@ jobs:
           retention-days: 3
 
   publish:
-    name: Deploy static site (Firebase Spark)
+    name: Deploy password-gated preview (Firebase Spark)
     needs: [website]
     if: >-
       github.event_name != 'pull_request' &&
       github.ref == 'refs/heads/main' &&
       vars.FIREBASE_PROJECT_ID != '' &&
-      vars.LEGAL_READY == 'true'
+      vars.FIREBASE_PROJECT_ID == 'dofus-companion'
     runs-on: ubuntu-latest
     environment: firebase-production
     permissions:
