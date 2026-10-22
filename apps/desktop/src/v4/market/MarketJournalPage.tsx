@@ -58,6 +58,8 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   const [volume, setVolume] = useState("");
   const [observationNote, setObservationNote] = useState("");
   const [fromOcr, setFromOcr] = useState(false);
+  const [observationAt, setObservationAt] = useState("");
+  const [editingObservationId, setEditingObservationId] = useState<string | null>(null);
   const [kind, setKind] = useState<"buy" | "sell">("buy");
   const [quantity, setQuantity] = useState("1");
   const [total, setTotal] = useState("");
@@ -122,6 +124,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   }, [selectedKey, target?.buyBelow, target?.sellAbove]);
   function pick(next: ItemRef) {
     setItem(next);
+    setEditingObservationId(null);
     setSearch("");
     setMessage("");
   }
@@ -129,6 +132,22 @@ export default function MarketJournalPage({ config }: { config: Config }) {
     const name = search.trim();
     if (name.length < 2) { setMessage("Bitte einen Gegenstandsnamen eingeben."); return; }
     pick({ name });
+  }
+  function editObservation(entry: Observation) {
+    setItem(entry.item);
+    setServer(entry.server);
+    setPack1(entry.packs["1"] === undefined ? "" : String(entry.packs["1"]));
+    setPack10(entry.packs["10"] === undefined ? "" : String(entry.packs["10"]));
+    setPack100(entry.packs["100"] === undefined ? "" : String(entry.packs["100"]));
+    setAverage(entry.average === undefined ? "" : String(entry.average));
+    setVolume(entry.volume === undefined ? "" : String(entry.volume));
+    setObservationNote(entry.note);
+    setFromOcr(entry.source === "ocr");
+    const time = new Date(entry.at);
+    setObservationAt(new Date(time.getTime() - time.getTimezoneOffset() * 60_000).toISOString().slice(0, 16));
+    setEditingObservationId(entry.id);
+    setTab("observations");
+    setMessage("Marktbeobachtung bearbeiten: " + entry.item.name);
   }
   function saveObservation() {
     if (!item || !server.trim()) { setMessage("Gegenstand und Server wählen."); return; }
@@ -146,13 +165,20 @@ export default function MarketJournalPage({ config }: { config: Config }) {
     if (!Object.keys(packs).length && avg === undefined) {
       setMessage("Mindestens einen Angebotspreis oder Durchschnitt eintragen."); return;
     }
+    const date = observationAt ? new Date(observationAt) : new Date();
+    if (!Number.isFinite(date.getTime())) { setMessage("Ungültiges Beobachtungsdatum."); return; }
     const entry: Observation = {
-      id: newId(), at: now(), item, server: server.trim(), packs, average: avg,
+      id: editingObservationId ?? newId(), at: date.toISOString(), item, server: server.trim(), packs, average: avg,
       volume: vol, note: observationNote.trim(), source: fromOcr ? "ocr" : "manual",
     };
-    setJournal((prev) => ({ ...prev, observations: [entry, ...prev.observations] }));
+    setJournal((prev) => ({ ...prev, observations: editingObservationId
+      ? prev.observations.map((old) => old.id === editingObservationId ? entry : old)
+      : [entry, ...prev.observations],
+    }));
     setPack1(""); setPack10(""); setPack100(""); setAverage("");
-    setVolume(""); setObservationNote(""); setFromOcr(false); setMessage("Marktbeobachtung gespeichert.");
+    setVolume(""); setObservationNote(""); setFromOcr(false); setObservationAt("");
+    setMessage(editingObservationId ? "Marktbeobachtung aktualisiert." : "Marktbeobachtung gespeichert.");
+    setEditingObservationId(null);
   }
   function saveTrade() {
     if (!item || !server.trim()) { setMessage("Gegenstand und Server wählen."); return; }
@@ -346,7 +372,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
         </div>
         <section className="panel"><h3>Letzte Marktbeobachtungen</h3>
           <ObservationTable entries={journal.observations.slice(0, 8)}
-            onSelect={(entry) => { setServer(entry.server); pick(entry.item); }} onRemove={(id) => remove("observations", id)}/>
+            onSelect={(entry) => { setServer(entry.server); pick(entry.item); }} onEdit={editObservation} onRemove={(id) => remove("observations", id)}/>
         </section>
       </>}
 
@@ -360,13 +386,17 @@ export default function MarketJournalPage({ config }: { config: Config }) {
             <Field label="Angezeigter Ø-Preis (Kamas)" value={average} onChange={setAverage}/>
             <Field label="Angezeigtes Handelsvolumen" value={volume} onChange={setVolume}/>
           </div>
+          <label>Beobachtungsdatum (optional, sonst jetzt)
+            <input type="datetime-local" value={observationAt} onChange={(e) => setObservationAt(e.target.value)}/>
+          </label>
           <label>Persönliche Notiz
             <textarea rows={2} value={observationNote} maxLength={2000}
               onChange={(e) => setObservationNote(e.target.value)}
               placeholder="Was ist dir bei diesem Marktpreis aufgefallen?"/>
           </label>
           <div className="market-action-row">
-            <button disabled={!item} onClick={saveObservation}><Save size={16}/> Beobachtung speichern</button>
+            <button disabled={!item} onClick={saveObservation}><Save size={16}/> {editingObservationId ? "Änderungen speichern" : "Beobachtung speichern"}</button>
+            {editingObservationId && <button className="secondary" onClick={() => { setEditingObservationId(null); setObservationAt(""); setMessage("Bearbeitung abgebrochen."); }}>Abbrechen</button>}
             <button className="secondary" onClick={() => setOcrOpen(!ocrOpen)}>
               <ScanLine size={16}/> OCR optional {ocrOpen ? "ausblenden" : "öffnen"}
             </button>
@@ -565,8 +595,8 @@ function AdviceList({ tips }: { tips: ReturnType<typeof marketAdvice> }) {
     </article>)}
   </div>;
 }
-function ObservationTable({ entries, onSelect, onRemove }: {
-  entries: Observation[]; onSelect: (entry: Observation) => void; onRemove: (id: string) => void;
+function ObservationTable({ entries, onSelect, onEdit, onRemove }: {
+  entries: Observation[]; onSelect: (entry: Observation) => void; onEdit: (entry: Observation) => void; onRemove: (id: string) => void;
 }) {
   return entries.length ? <div className="market-scroll"><table><thead><tr>
     <th>Datum</th><th>Item</th><th>Server</th><th>Günstigstes Angebot</th><th>Ø gemeldet</th><th>Quelle</th><th/>
@@ -577,7 +607,8 @@ function ObservationTable({ entries, onSelect, onRemove }: {
         <ItemImage item={o.item} size={28}/>{o.item.name}</button></td>
       <td>{o.server}</td><td>{offer ? fmt(offer.unit) + " K/Stk (×" + offer.size + ")" : "–"}</td>
       <td>{o.average === undefined ? "–" : kama(o.average)}</td><td>{o.source === "ocr" ? "OCR, geprüft" : "Manuell"}</td>
-      <td><button className="icon-button" aria-label="Beobachtung löschen" onClick={() => onRemove(o.id)}><Trash2 size={15}/></button></td>
+      <td><button className="secondary" onClick={() => onEdit(o)}>Bearbeiten</button>
+        <button className="icon-button" aria-label="Beobachtung löschen" onClick={() => onRemove(o.id)}><Trash2 size={15}/></button></td>
     </tr>;
   })}</tbody></table></div> : <p>Noch keine Marktbeobachtungen vorhanden.</p>;
 }
