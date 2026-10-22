@@ -15,7 +15,7 @@ const assets = [
   `Dofus-Companion-${version}-portable.zip`,
   `game-catalog-v${version}.sqlite`,
 ];
-const notes = ["0.4.0", "0.5.0", "0.6.0"].includes(version)
+const notes = ["0.4.0", "0.5.0", "0.6.0", "0.7.0"].includes(version)
   ? await readFile(`docs/RELEASE_v${version}.md`, "utf8")
   : "Neuer Ausrüstungs-Builder mit echten Items, gemeinsamen Attributfiltern, Setboni, individuellen Rolls und Exomagie, Charakter-Sets, Vergleichen und Hintergrund-Optimierer. Klassenbilder aus der bereitgestellten ZIP. Getrennte Zauberkataloge für DOFUS 3.6.12.16 und 3.7.12.12 mit lokalen Icons. Schadensvorschau für unterstützte direkte Effekte; komplexe Mechaniken werden ausdrücklich markiert. Offline-Entwürfe und Synchronisierung, JSON-Austausch und private Discord-Builder-Funktionen. Bestehende Daten und der signierte Updatekanal bleiben erhalten. Details und Grenzen: BUILDER_TEST_REPORT.md und DAMAGE_ENGINE_SPEC.md.";
 const signature = (
@@ -29,21 +29,50 @@ if (
   throw new Error("Missing Minisign signature");
 const nativeReport = JSON.parse(
   await readFile(
-    version === "0.6.0"
-      ? "docs/native-v6-test.json"
-      : version === "0.5.0"
-        ? "docs/native-v5-test.json"
-        : version === "0.4.0"
-          ? "docs/native-v4-test.json"
-          : "docs/native-v2-test.json",
+    version === "0.7.0"
+      ? "docs/native-v7-test.json"
+      : version === "0.6.0"
+        ? "docs/native-v6-test.json"
+        : version === "0.5.0"
+          ? "docs/native-v5-test.json"
+          : version === "0.4.0"
+            ? "docs/native-v4-test.json"
+            : "docs/native-v2-test.json",
     "utf8",
   ),
 );
 if (
-  !["0.5.0", "0.6.0"].includes(version) &&
+  !["0.5.0", "0.6.0", "0.7.0"].includes(version) &&
   nativeReport.passed.length < (version === "0.4.0" ? 4 : 7)
 )
   throw new Error("Native release validation is incomplete");
+if (version === "0.7.0") {
+  const check = JSON.parse(
+    await readFile("docs/PROFILE_UI_VALIDATION.json", "utf8"),
+  );
+  const binary = await readFile(resolve("artifacts", installer));
+  if (
+    check.version !== version ||
+    check.unitTests !== 112 ||
+    check.browserTests !== 49 ||
+    !check.typecheckPassed ||
+    !check.lintPassed ||
+    !check.monorepoBuildPassed ||
+    !check.windowsInstallerBuilt ||
+    !check.releasePackagesVerified ||
+    !check.productionUiPassed ||
+    !check.existingUpdaterKeyPreserved ||
+    !check.serviceUpgradePassed ||
+    !check.assetAuditPassed ||
+    !check.existingAssetsAndCoreUnchanged ||
+    nativeReport.version !== version ||
+    (nativeReport.skipped
+      ? !/Existing user Companion process or listener/.test(nativeReport.reason)
+      : nativeReport.passed.length < 7) ||
+    check.installerSha256 !== createHash("sha256").update(binary).digest("hex")
+  )
+    throw Error("Profile and game UI release acceptance is incomplete");
+}
 if (version === "0.6.0") {
   const check = JSON.parse(
     await readFile("docs/REDESIGN_VALIDATION.json", "utf8"),

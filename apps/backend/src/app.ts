@@ -136,7 +136,8 @@ export async function createApp(options: AppOptions) {
     page: z.coerce.number().int().min(1).max(100000).default(1),
     pageSize: z.coerce.number().int().min(1).max(100).default(30),
   };
-  registerBuilder(app, new BuilderStore(personal, game));
+  const builderStore = new BuilderStore(personal, game);
+  registerBuilder(app, builderStore);
   const world = registerWorld(app, personal);
   registerMapPreview(app, world);
   registerDungeons(app, personal);
@@ -193,10 +194,52 @@ export async function createApp(options: AppOptions) {
     const id = idSchema.parse((request.params as { id: string }).id);
     const local = game.getItem(id);
     const query = z
-      .object({ category: categorySchema.optional(), lang: languageSchema })
+      .object({
+        category: categorySchema.optional(),
+        lang: languageSchema,
+        version: z.enum(["3.6.12.16", "3.7.12.12"]).optional(),
+      })
       .parse(request.query);
-    if (local)
-      return { data: local, source: local.source, version: local.version };
+    if (
+      query.version &&
+      query.version !== local?.version?.replace(/^v6\.0_/, "")
+    ) {
+      const item = builderStore.dataset.versions[query.version]?.items.find(
+        (i) => i.id === id,
+      );
+      if (!item)
+        return reply
+          .code(404)
+          .send({
+            error: "Gegenstand ist in diesem Datenstand nicht enthalten.",
+          });
+      return {
+        data: {
+          ...item,
+          category: "equipment",
+          description:
+            "Historischer Ausrüstungsdatensatz. Rezeptdaten sind für diesen Stand nicht enthalten.",
+          effects: item.effects.map((e) => e.label),
+          numericEffects: item.effects,
+          recipe: [],
+          source: "dofus-sqlite",
+          version: query.version,
+        },
+        version: query.version,
+      };
+    }
+    if (local) {
+      const version = local.version?.replace(/^v6\.0_/, ""),
+        dataset = version ? builderStore.dataset.versions[version] : undefined;
+      const numericEffects =
+        dataset?.items.find((i) => i.id === id)?.effects ??
+        dataset?.catalogEffects?.find((i) => i.itemId === id)?.effects;
+      return {
+        data: { ...local, ...(numericEffects ? { numericEffects } : {}) },
+        source: local.source,
+        version: local.version,
+      };
+    }
     if (query.category) return api.itemDetail(id, query.category, query.lang);
     return reply.code(404).send({
       error:

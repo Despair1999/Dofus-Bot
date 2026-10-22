@@ -1,3 +1,4 @@
+import ClassArtwork from "./ui/ClassArtwork";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Package,
@@ -762,11 +763,19 @@ function MainApp() {
               </div>
               <button
                 className="profile"
-                onClick={() => navigate("characters")}
+                onClick={() =>
+                  navigatePath(
+                    character ? `/characters/${character.id}` : "/characters",
+                  )
+                }
               >
                 <div className="avatar">
                   {gameClass ? (
-                    <img src={gameClass.icon} alt="" />
+                    <ClassArtwork
+                      classId={gameClass.id}
+                      name={gameClass.nameDe}
+                      size={34}
+                    />
                   ) : (
                     character?.name.slice(0, 2).toUpperCase() || "＋"
                   )}
@@ -885,64 +894,65 @@ function MainApp() {
           )}
           {!["builder", "dungeons", "professions", "monsters", "sets"].includes(
             tab,
-          ) && (
-            <div className="page-heading">
-              <div>
-                <span className="eyebrow">
-                  DOFUS COMPANION / DIE WELT DER ZWÖLF AN DEINER SEITE
-                </span>
-                <h1>
-                  {tab === "dashboard" ? (
-                    <>
-                      Dein nächstes <em>Abenteuer wartet.</em>
-                    </>
-                  ) : (
-                    tabs.find((entry) => entry.id === tab)?.label
-                  )}
-                </h1>
-                <p>
-                  {
-                    (
-                      {
-                        dashboard:
-                          "Mehr Überblick. Weniger Umwege. Dein persönlicher Begleiter für DOFUS.",
-                        items:
-                          "Die Enzyklopädie für Ausrüstung, Ressourcen und deine nächsten Ideen.",
-                        quests:
-                          "Geschichten entdecken und jeden bestätigten Schritt im Blick behalten.",
-                        craft:
-                          "Von der Idee zum fertigen Gegenstand. Mit deinem persönlichen Materialplan.",
-                        characters:
-                          "Deine Charaktere, Klassen und Fortschritte – übersichtlich verbunden.",
-                        almanax:
-                          "Plane deine Opfergaben und entdecke die nächsten Tagesboni.",
-                        scanner:
-                          "Deine Aufnahme. Lokale Erkennung. Du bestätigst das Ergebnis.",
-                        favorites:
-                          "Deine wichtigsten Gegenstände und Quests direkt griffbereit.",
-                        settings: "Dein Companion, so wie du ihn brauchst.",
-                        builder: "Deine Ausrüstung. Dein Plan.",
-                        world:
-                          "Ein gemeinsamer Atlas für deine Ziele, Ressourcen und nächsten Wege.",
-                        farming:
-                          "Plane deine Sammelrunde mit echten Spieldaten und persönlichen Fundorten.",
-                        dungeons:
-                          "Bosse, Monsterwerte und Quellen – getrennt nach Spielversion.",
-                        professions:
-                          "Deine Sammelberufe, täglichen Quests und bestätigten Fortschritte.",
-                        translator:
-                          "Nachrichten verstehen und Antworten schreiben. Vollständig lokal.",
-                      } as Record<View, string>
-                    )[tab]
-                  }
-                </p>
+          ) &&
+            !(tab === "characters" && route.entityId) && (
+              <div className="page-heading">
+                <div>
+                  <span className="eyebrow">
+                    DOFUS COMPANION / DIE WELT DER ZWÖLF AN DEINER SEITE
+                  </span>
+                  <h1>
+                    {tab === "dashboard" ? (
+                      <>
+                        Dein nächstes <em>Abenteuer wartet.</em>
+                      </>
+                    ) : (
+                      tabs.find((entry) => entry.id === tab)?.label
+                    )}
+                  </h1>
+                  <p>
+                    {
+                      (
+                        {
+                          dashboard:
+                            "Mehr Überblick. Weniger Umwege. Dein persönlicher Begleiter für DOFUS.",
+                          items:
+                            "Die Enzyklopädie für Ausrüstung, Ressourcen und deine nächsten Ideen.",
+                          quests:
+                            "Geschichten entdecken und jeden bestätigten Schritt im Blick behalten.",
+                          craft:
+                            "Von der Idee zum fertigen Gegenstand. Mit deinem persönlichen Materialplan.",
+                          characters:
+                            "Deine Charaktere, Klassen und Fortschritte – übersichtlich verbunden.",
+                          almanax:
+                            "Plane deine Opfergaben und entdecke die nächsten Tagesboni.",
+                          scanner:
+                            "Deine Aufnahme. Lokale Erkennung. Du bestätigst das Ergebnis.",
+                          favorites:
+                            "Deine wichtigsten Gegenstände und Quests direkt griffbereit.",
+                          settings: "Dein Companion, so wie du ihn brauchst.",
+                          builder: "Deine Ausrüstung. Dein Plan.",
+                          world:
+                            "Ein gemeinsamer Atlas für deine Ziele, Ressourcen und nächsten Wege.",
+                          farming:
+                            "Plane deine Sammelrunde mit echten Spieldaten und persönlichen Fundorten.",
+                          dungeons:
+                            "Bosse, Monsterwerte und Quellen – getrennt nach Spielversion.",
+                          professions:
+                            "Deine Sammelberufe, täglichen Quests und bestätigten Fortschritte.",
+                          translator:
+                            "Nachrichten verstehen und Antworten schreiben. Vollständig lokal.",
+                        } as Record<View, string>
+                      )[tab]
+                    }
+                  </p>
+                </div>
+                <div className="version">
+                  v{appPackage.version}
+                  <span>COMMUNITY</span>
+                </div>
               </div>
-              <div className="version">
-                v{appPackage.version}
-                <span>COMMUNITY</span>
-              </div>
-            </div>
-          )}
+            )}
           {onboarding && tab === "dashboard" && (
             <section className="onboarding">
               <Compass size={24} />
@@ -975,10 +985,30 @@ function MainApp() {
           )}
           {tab === "dashboard" && (
             <div className="v2-dashboard">
+              {character && (
+                <button
+                  className="dashboard-character-banner"
+                  onClick={() => navigatePath(`/characters/${character.id}`)}
+                >
+                  <ClassArtwork
+                    classId={character.classId}
+                    name={character.className}
+                    size={66}
+                  />
+                  <span>
+                    <small>AKTIVER CHARAKTER</small>
+                    <strong>{character.name}</strong>
+                    <span>
+                      {character.className} · Stufe {character.level} ·{" "}
+                      {character.server}
+                    </span>
+                  </span>
+                  <span>Profil öffnen ↗</span>
+                </button>
+              )}
               <WorkspaceHome config={config} />
               <section className="panel v2-dashboard-search">
-                <span className="eyebrow">SCHNELL GEFUNDEN</span>
-                <h2>Wonach suchst du heute?</h2>
+                <span className="sr-only">Gegenstände direkt suchen</span>
                 <ItemSearchBar
                   config={config}
                   value={dashboardQuery}
@@ -1217,6 +1247,7 @@ function MainApp() {
           )}
           {tab === "items" && (
             <ItemsPage
+              dataVersion={route.params.get("version") ?? undefined}
               config={config}
               query={route.params.get("q") || ""}
               itemId={route.id}

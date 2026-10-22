@@ -1,0 +1,12 @@
+{
+  "testedAt": "2026-10-22T17:40:42.958Z",
+  "version": "0.7.0",
+  "algorithm": "ED",
+  "releaseSignatureVerified": true,
+  "trustedCommentVerified": true,
+  "tamperedInstallerRejected": true,
+  "existingUpdaterKeyPreserved": true,
+  "installerBytes": 134871417,
+  "sha256": "f177f38ef773e753d18fdfaf54ae999544a9afedc8e3a83ccab9f7d9cf059d05",
+  "scope": "Independent Node Ed25519/Minisign verification; does not claim a downloaded installed-updater transition"
+}

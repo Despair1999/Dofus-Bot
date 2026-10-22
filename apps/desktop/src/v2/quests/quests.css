@@ -488,3 +488,38 @@
     padding-left: 8px;
   }
 }
+
+/* Coordinate actions need their own neutral surface: global primary buttons are green. */
+.v2-quest-step > div:last-child {
+  min-width: 0;
+  flex: 1;
+}
+.v2-quest-step li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+.v2-objective-text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.v2-quest-detail .v2-quest-coordinate {
+  position: static;
+  display: inline-flex;
+  flex: none;
+  max-width: 100%;
+  white-space: normal;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 7px 10px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.v2-quest-coordinate:hover {
+  border-color: var(--green);
+}

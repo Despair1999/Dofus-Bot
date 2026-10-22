@@ -1,0 +1,22 @@
+{
+  "version": "0.7.0",
+  "testedAt": "2026-10-22T17:32:18.120Z",
+  "runtime": "Chromium / exact Vite production frontend / real isolated loopback backend",
+  "externalRequestsBlocked": true,
+  "passed": [
+    "built frontend loads original world artwork and resolves an interior quest target with external requests blocked",
+    "boss artwork and original-grade combat plan load from the production bundle",
+    "all six profession quest illustrations load while external image hosts are blocked",
+    "all five production themes work and the chosen theme survives reload",
+    "AP BP LP retain their semantic colors in the production builder",
+    "new monster details reuse original boss artwork, grades and spell records",
+    "complete set catalog supports paging, real item artwork and per-tier bonuses",
+    "production command palette searches actual item records with external hosts blocked",
+    "all sixteen empty equipment slots use category-specific glyphs",
+    "production item effects use exact characteristic IDs and shared formatted rows",
+    "production character profile retains original class artwork and fits at 420px",
+    "remaining module shells and Activity error state render in the exact production bundle"
+  ],
+  "errors": [],
+  "missingAssets": []
+}

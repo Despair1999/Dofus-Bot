@@ -543,8 +543,10 @@ export default function QuestsPage({
                       <ul>
                         {step.objectives.map((objective) => (
                           <li key={objective.id}>
-                            {objective.description ||
-                              "Für dieses Ziel ist kein übersetzter Text hinterlegt."}
+                            <span className="v2-objective-text">
+                              {objective.description ||
+                                "Für dieses Ziel ist kein übersetzter Text hinterlegt."}
+                            </span>
                             {objective.coordinates && (
                               <button
                                 className="v2-quest-coordinate"
@@ -558,20 +560,20 @@ export default function QuestsPage({
                                 }
                               >
                                 <MapPin size={12} />[{objective.coordinates.x},{" "}
-                                {objective.coordinates.y}]
+                                {objective.coordinates.y}] · Auf Weltkarte
+                                anzeigen
                               </button>
                             )}
-                            {(objective.mapId || objective.coordinates) && (
+                            {objective.mapId && !objective.coordinates && (
                               <button
-                                className="text-button"
+                                className="v2-quest-coordinate"
                                 onClick={() =>
                                   navigatePath(
-                                    objective.mapId
-                                      ? `/world?mapId=${objective.mapId}`
-                                      : `/world?x=${objective.coordinates!.x}&y=${objective.coordinates!.y}`,
+                                    `/world?mapId=${objective.mapId}`,
                                   )
                                 }
                               >
+                                <MapPin size={14} />
                                 Auf Weltkarte anzeigen
                               </button>
                             )}

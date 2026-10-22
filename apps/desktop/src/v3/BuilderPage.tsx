@@ -1,3 +1,13 @@
+import ClassArtwork from "../ui/ClassArtwork";
+import { Eye } from "lucide-react";
+import GameGlyph, { slotGlyph } from "../ui/GameGlyph";
+import {
+  AttributeGroups,
+  AttributeName,
+  EffectRows,
+  formatAttribute,
+  attribute,
+} from "../ui/attributes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Shield,
@@ -11,7 +21,6 @@ import {
   Download,
   Upload,
   RefreshCw,
-  WandSparkles,
   Swords,
   SlidersHorizontal,
   Check,
@@ -551,9 +560,10 @@ export default function BuilderPage({
       <div className="builder-layout">
         <aside className="panel builder-character">
           <div className="builder-class-heading">
-            <img
-              src={classAssets[draft.classId]?.icon}
-              alt={gameClass?.nameDe ?? "Klasse"}
+            <ClassArtwork
+              classId={draft.classId}
+              name={gameClass?.nameDe ?? "Klasse"}
+              size={48}
             />
             <div>
               <strong>{gameClass?.nameDe ?? "Klasse " + draft.classId}</strong>
@@ -673,7 +683,7 @@ export default function BuilderPage({
             </summary>
             {[9, 10, 45, 13, 22, 36].map((id) => (
               <div key={id}>
-                <strong>{statDefinitions.find((s) => s[0] === id)?.[1]}</strong>
+                <strong>{attribute(id)?.label}</strong>
                 <label>
                   Verteilter Wert
                   <input
@@ -712,23 +722,7 @@ export default function BuilderPage({
             ))}
           </details>
           <div className="builder-stat-groups">
-            {[...new Set(statDefinitions.map((s) => s[2]))].map((group) => (
-              <details key={group} open={group === "Grundwerte"}>
-                <summary>{group}</summary>
-                {statDefinitions
-                  .filter((s) => s[2] === group)
-                  .map(([id, label]) => (
-                    <div
-                      className={`builder-stat-row ${id === 12 ? "stat-ap" : id === 8 ? "stat-bp" : ""}`}
-                      key={id}
-                      title={`Basis ${calculated.base[id] ?? 0} · Items ${calculated.equipment[id] ?? 0} · Sets ${calculated.bonuses[id] ?? 0} · Buffs ${calculated.buffs[id] ?? 0}`}
-                    >
-                      <span>{id === 8 ? "BP" : label}</span>
-                      <strong>{calculated.total[id] ?? 0}</strong>
-                    </div>
-                  ))}
-              </details>
-            ))}
+            <AttributeGroups stats={calculated.total} showZero collapsible />
           </div>
         </aside>
         <main className="builder-workspace">
@@ -745,9 +739,10 @@ export default function BuilderPage({
                 </div>
                 <div className="equipment-stage">
                   <div className="builder-portrait">
-                    <img
-                      src={classAssets[draft.classId]?.portrait}
-                      alt={gameClass?.nameDe ?? "Klassenbild"}
+                    <ClassArtwork
+                      classId={draft.classId}
+                      name={gameClass?.nameDe ?? "Klasse"}
+                      hero
                     />
                     <span>{gameClass?.nameDe}</span>
                     <small>{draft.level}</small>
@@ -784,12 +779,10 @@ export default function BuilderPage({
                             {item ? (
                               <ItemImage item={item} />
                             ) : (
-                              <Shield size={32} />
+                              <GameGlyph name={slotGlyph(slot)} size={36} />
                             )}
                             <span>{item?.name ?? label}</span>
-                            <small>
-                              {item ? "Stufe " + item.level : label}
-                            </small>
+                            {item && <small>Stufe {item.level}</small>}
                             {instance &&
                               (Object.keys(instance.rolls).length > 0 ||
                                 Object.keys(instance.exos).length > 0) && (
@@ -799,6 +792,18 @@ export default function BuilderPage({
                           {item && (
                             <div className="slot-tools">
                               <button
+                                aria-label={label + " Itemdetails"}
+                                title="Itemdetails öffnen"
+                                onClick={() =>
+                                  navigatePath(
+                                    `/items/${item.id}?version=${draft.gameVersion}`,
+                                  )
+                                }
+                              >
+                                <Eye size={13} />
+                              </button>
+                              <button
+                                title={label + " bearbeiten"}
                                 aria-label={label + " bearbeiten"}
                                 onClick={() =>
                                   setEditor(editor === slot ? null : slot)
@@ -807,6 +812,7 @@ export default function BuilderPage({
                                 <Pencil size={13} />
                               </button>
                               <button
+                                title={label + " entfernen"}
                                 aria-label={label + " entfernen"}
                                 onClick={() => unequip(slot)}
                               >
@@ -838,19 +844,32 @@ export default function BuilderPage({
                             {item ? (
                               <ItemImage item={item} />
                             ) : (
-                              <WandSparkles size={25} />
+                              <GameGlyph name={slotGlyph(slot)} size={28} />
                             )}
                             <span>{item?.name ?? label}</span>
                           </button>
                           {item && (
                             <div className="slot-tools">
                               <button
+                                aria-label={label + " Itemdetails"}
+                                title="Itemdetails öffnen"
+                                onClick={() =>
+                                  navigatePath(
+                                    `/items/${item.id}?version=${draft.gameVersion}`,
+                                  )
+                                }
+                              >
+                                <Eye size={13} />
+                              </button>
+                              <button
+                                title={label + " bearbeiten"}
                                 aria-label={label + " bearbeiten"}
                                 onClick={() => setEditor(slot)}
                               >
                                 <Pencil size={13} />
                               </button>
                               <button
+                                title={label + " entfernen"}
                                 aria-label={label + " entfernen"}
                                 onClick={() => unequip(slot)}
                               >
@@ -974,14 +993,7 @@ export default function BuilderPage({
                         {s.name} · {s.count} Teile
                       </strong>
                       <div>
-                        {s.effects.map((e, i) => (
-                          <span
-                            className={e.max < 0 ? "negative" : "positive"}
-                            key={i}
-                          >
-                            {e.label}
-                          </span>
-                        ))}
+                        <EffectRows effects={s.effects} />
                       </div>
                     </article>
                   ))
@@ -1241,10 +1253,8 @@ export default function BuilderPage({
                   {[0, 45, 13, 22, 36].map((id) => (
                     <div key={id}>
                       <label>
-                        {id === 0
-                          ? "Neutral"
-                          : statDefinitions.find((s) => s[0] === id)?.[1]}{" "}
-                        Resistenz %
+                        {id === 0 ? "Neutral" : attribute(id)?.label} Resistenz
+                        %
                         <input
                           type="number"
                           min="-100"
@@ -1501,10 +1511,17 @@ export default function BuilderPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {statDefinitions.map(([id, label]) => (
+                    {statDefinitions.map(([id]) => (
                       <tr key={id}>
-                        <td>{label}</td>
-                        <td>{calculated.total[id] ?? 0}</td>
+                        <td>
+                          <AttributeName id={id} />
+                        </td>
+                        <td>
+                          {formatAttribute(
+                            calculated.total[id] ?? 0,
+                            attribute(id)?.unit,
+                          )}
+                        </td>
                         {saved
                           .filter((b) => compare.includes(b.id))
                           .map((b) => {
@@ -1532,7 +1549,7 @@ export default function BuilderPage({
                                       : ""
                                 }
                               >
-                                {value}{" "}
+                                {formatAttribute(value, attribute(id)?.unit)}{" "}
                                 <small>
                                   ({delta > 0 ? "+" : ""}
                                   {delta})
@@ -1597,7 +1614,7 @@ export default function BuilderPage({
           <div className="builder-summary-elements">
             {[45, 13, 22, 36].map((id) => (
               <div key={id}>
-                <span>{statDefinitions.find((s) => s[0] === id)?.[1]}</span>
+                <span>{attribute(id)?.label}</span>
                 <strong>{calculated.total[id] ?? 0}</strong>
               </div>
             ))}

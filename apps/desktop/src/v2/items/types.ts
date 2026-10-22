@@ -8,6 +8,7 @@ export type CatalogItem = BaseItem & {
 };
 export type Material = CatalogItem & { itemId: number; quantity: number };
 export type CatalogDetail = ItemDetail & {
+  numericEffects?: import("@dofus/core").NumericEffect[];
   typeId?: number;
   mainGroup?: string;
   nameFr?: string;
