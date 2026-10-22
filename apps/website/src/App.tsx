@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import {
  ArrowRight, ArrowUpRight, BookOpen, Boxes, Check, ChevronDown, ChevronRight,
- CircleHelp, Compass, Copy, Download, ExternalLink, Gem, Globe2, Hammer,
+ CircleHelp, Compass, Copy, Download, Gem, Globe2, Hammer,
  HardDriveDownload, Languages, Layers3, Map, MapPinned, Menu, MonitorDown, PackageSearch,
  Search, ShieldCheck, Sparkles, Swords, Terminal, Users, X, ZoomIn, ZoomOut
 } from "lucide-react";
