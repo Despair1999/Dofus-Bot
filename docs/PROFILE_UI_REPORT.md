@@ -1,5 +1,7 @@
 # DOFUS Companion 0.7.0 – Profil und Spieloberfläche
 
+Veröffentlicht am 22. Oktober 2026: [Release v0.7.0](https://github.com/Despair1999/Dofus-Bot/releases/tag/v0.7.0), [PR #4](https://github.com/Despair1999/Dofus-Bot/pull/4). Der öffentliche bestehende Update-Endpunkt liefert 0.7.0 mit der lokal geprüften Signatur aus; Nachweis: `UPDATE_v0.7.0_PUBLIC.json`. Abruf in der Anwendung: Einstellungen → Daten & Updates → Nach Updates suchen. Es wurde kein Update in der laufenden Benutzerinstanz installiert.
+
 Gezielte Weiterentwicklung des bestehenden grünen Dark-Mode-Designs. Grundlage ist der Benutzerauftrag vom 22. Oktober 2026 mit den neun Bildreferenzen. Bestehende Spielkataloge, Charakter-IDs, Klassen-IDs und Berechnungen bleiben erhalten.
 
 ## 1. Behobene Fehler — vollständig
@@ -73,7 +75,7 @@ Neue Tests prüfen Kartenrad und Seitenscrollen, Questkoordinaten in unterschied
 
 Implementierung: `WorldCanvas.tsx`, `WorldPage.tsx`, Questkomponenten/-CSS, `BuilderPage.tsx`, Item- und Setansichten, `CharactersPage.tsx`, `ClassSelector.tsx`, `CharacterProfile.tsx`, `ClassArtwork.tsx`, `attributes.tsx`, `GameGlyph.tsx`, `PinnedModules.tsx`, `App.tsx`, Navigation, Dashboard und Design-CSS. Das Backend ergänzt ausschließlich strukturierte versionsgebundene Itemeffekte. Versionen und Releaseprüfungen werden für 0.7.0 fortgeschrieben.
 
-Tests und Paketierung: `game-ui.test.ts`, `profile-game-ui.spec.ts`, Produktions-/Signatur-/Paket-/Upgradeprüfungen unter `infrastructure/scripts/`. Implementierungscommit: `4bb262d` auf `codex/profile-and-game-ui`. Die finale Quellrevision und Datei-SHA256 stehen in `BUILD_v0.7.0_SHA256.json`. Die Abnahme prüft zusätzlich unveränderte vorhandene Assets und Berechnungsdateien gegenüber `d1736db`.
+Tests und Paketierung: `game-ui.test.ts`, `profile-game-ui.spec.ts`, Produktions-/Signatur-/Paket-/Upgradeprüfungen unter `infrastructure/scripts/`. Implementierungscommit: `4bb262d`, Abnahme und Paketierung: `c611187` auf `codex/profile-and-game-ui`. Die finale Quellrevision und Datei-SHA256 stehen in `BUILD_v0.7.0_SHA256.json`. Die Abnahme prüft zusätzlich unveränderte vorhandene Assets und Berechnungsdateien gegenüber `d1736db`.
 
 ## 13. Verbleibende Einschränkungen
 
