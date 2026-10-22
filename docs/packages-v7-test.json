@@ -1,0 +1,20 @@
+{
+  "version": "0.7.0",
+  "testedAt": "2026-10-22T17:40:45.190641+00:00",
+  "archives": [
+    {
+      "name": "Dofus-Companion-0.7.0-setup.zip",
+      "entries": 3,
+      "bytes": 134894303,
+      "crcVerified": true
+    },
+    {
+      "name": "Dofus-Companion-0.7.0-portable.zip",
+      "entries": 4948,
+      "bytes": 175588846,
+      "crcVerified": true
+    }
+  ],
+  "exactExecutableAndServicePayloadVerified": true,
+  "setupContainsExactSignedInstaller": true
+}

@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.9.0 — 22.10.2026
+
+- Vereinigt veröffentlichte Verbesserungen aus v0.8.0 mit allen Änderungen in main, insbesondere der neuen Website und dem Marktjournal.
+- Neues offline nutzbares Marktjournal & Kamas: manuelle Preisbeobachtungen, Losgrößenvergleich, Preisverlauf und Notizbuch.
+- Handelsbuch mit Gebühren, FIFO-Bestand, Einkaufs-/Verkaufslimits, Verkaufsplanung und regelbasierten Hinweisen.
+- Freiwilliger lokaler OCR-Import, JSON-Backup und CSV-Export; keine automatischen Handelsaktionen im Spiel.
+- Signierter Windows-Updatekanal mit unverändertem öffentlichen Schlüssel.
+
 ## 0.4.0 — 21.10.2026
 
 - Weltkarte mit echten Kartenpositionen, Ressourcenregionen, privaten Wegpunkten, Berufsfiltern und gespeicherten Filterauswahlen. Schematische Darstellung ohne fremde Kartenkacheln.

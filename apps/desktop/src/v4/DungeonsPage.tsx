@@ -1,3 +1,4 @@
+import SourceLink from "../ui/SourceLink";
 import { useEffect, useState } from "react";
 import {
   Castle,
@@ -759,12 +760,15 @@ export default function DungeonsPage({
                   )}
                   <div className="dungeon-guide-links">
                     {detail.guideUrls?.map((url) => (
-                      <a key={url} href={url} target="_blank" rel="noreferrer">
-                        {url.includes("dofuspourlesnoobs")
-                          ? "Dofus pour les Noobs – vollständiger Guide"
-                          : "Weiterer Detailguide"}{" "}
-                        ↗
-                      </a>
+                      <SourceLink
+                        key={url}
+                        url={url}
+                        label={
+                          url.includes("dofuspourlesnoobs")
+                            ? "DofusPourLesNoobs"
+                            : "Detailguide"
+                        }
+                      />
                     ))}
                   </div>
                 </div>

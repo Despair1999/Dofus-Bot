@@ -1,0 +1,44 @@
+{
+  "datasetVersion": "3.7.12.12",
+  "source": {
+    "url": "https://api.dofusdb.fr/recoltables2",
+    "version": "3.7.4.4",
+    "fetchedAt": "2026-10-22T18:20:37.628538+00:00",
+    "sha256": "2f3421ebde039e4a16cfd92388e47a9bfdad2c7650fc8c0b8bb24ef4f427b3e6"
+  },
+  "counts": {
+    "sourceMaps": 4999,
+    "sourceResourceCells": 15842,
+    "validatedMapResourceReferences": 13987,
+    "unconfirmedPatch": 13987,
+    "fishingCells": 3527,
+    "unmatchedItem": 548,
+    "worldMismatch": 1303,
+    "duplicates": 4
+  },
+  "resources": 124,
+  "regions": 1467,
+  "byJob": {
+    "36": 3527,
+    "26": 2850,
+    "2": 3878,
+    "28": 2836,
+    "24": 896
+  },
+  "policy": "Exact map/cell/item references validated, not region-expanded. Different source patch is unconfirmed, hidden by default and excluded from verified farm routes. No spawn coordinates or walkable edges inferred.",
+  "skillCrossCheck": {
+    "source": "https://api.dofusdb.fr/skills",
+    "sourceVersion": "3.7.4.4",
+    "checked": 124,
+    "matchingJobItemLevel": 124,
+    "differingSkillIds": []
+  },
+  "canonicalProfessionResourcesByJob": {
+    "24": 16,
+    "26": 13,
+    "36": 23,
+    "2": 20,
+    "28": 13
+  },
+  "sourceVerifiedCurrentPatch": 0
+}

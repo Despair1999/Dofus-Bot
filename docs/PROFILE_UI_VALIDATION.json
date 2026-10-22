@@ -1,0 +1,33 @@
+{
+  "version": "0.7.0",
+  "testedAt": "2026-10-22T17:40:45.694Z",
+  "baseline": "d1736db",
+  "unitTests": 112,
+  "browserTests": 49,
+  "typecheckPassed": true,
+  "lintPassed": true,
+  "monorepoBuildPassed": true,
+  "windowsInstallerBuilt": true,
+  "releasePackagesVerified": true,
+  "productionUiPassed": true,
+  "productionUiChecks": 12,
+  "existingUpdaterKeyPreserved": true,
+  "serviceUpgradePassed": true,
+  "assetAuditPassed": true,
+  "existingAssetsAndCoreUnchanged": true,
+  "newImagesDownloaded": 0,
+  "installerSha256": "f177f38ef773e753d18fdfaf54ae999544a9afedc8e3a83ccab9f7d9cf059d05",
+  "nativeUi": {
+    "version": "0.7.0",
+    "testedAt": "2026-10-22T17:20:12.279Z",
+    "skipped": true,
+    "reason": "Existing user Companion process or listener on 4310/9223; no user process was changed",
+    "passed": []
+  },
+  "limitations": [
+    "Existing nineteen portraits retained; no licensed full-body class illustrations available",
+    "Native 0.7 smoke test skipped when a user instance was running; production Chromium checks do not establish interactive WebView2 behavior",
+    "Physical multi-monitor/DPI and live Discord authentication remain untested",
+    "Existing incomplete patch-verified dungeon strategies and four missing cosmetic catalog images remain"
+  ]
+}

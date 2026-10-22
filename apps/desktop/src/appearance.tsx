@@ -40,12 +40,12 @@ type Theme = (typeof themes)[number]["id"];
 const validTheme = (value: unknown): value is Theme =>
   themes.some((t) => t.id === value);
 function apply(value: unknown) {
-  document.documentElement.dataset.theme = validTheme(value) ? value : "mythic";
+  document.documentElement.dataset.theme = validTheme(value) ? value : "forest";
 }
 export function AppearanceSync() {
   useEffect(() => {
     let active = true;
-    void read("appearance:theme", "mythic").then((v) => {
+    void read("appearance:theme", "forest").then((v) => {
       if (active) apply(v);
     });
     let unlisten: (() => void) | undefined;
@@ -65,7 +65,7 @@ export function AppearanceSync() {
 }
 export function AppearanceSettings() {
   const [theme, setTheme] = useState(
-    document.documentElement.dataset.theme ?? "mythic",
+    document.documentElement.dataset.theme ?? "forest",
   );
   const [error, setError] = useState("");
   async function select(value: Theme) {

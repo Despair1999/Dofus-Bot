@@ -1,3 +1,4 @@
+import { EffectRows } from "../../ui/attributes";
 import { Clipboard, Star, Hammer, Package } from "lucide-react";
 import { useState } from "react";
 import ItemImage from "../shared/ItemImage";
@@ -46,12 +47,16 @@ export default function ItemSummaryCard({
         )}
       </div>
       <div className="v2-effect-grid">
-        {item.effects.map((effect, i) => (
-          <div className="v2-effect" key={i}>
-            <span>◆</span>
-            {effect}
-          </div>
-        ))}
+        {item.numericEffects?.length ? (
+          <EffectRows effects={item.numericEffects} />
+        ) : (
+          item.effects.map((effect, i) => (
+            <div className="v2-effect" key={i}>
+              <span>◆</span>
+              {effect}
+            </div>
+          ))
+        )}
       </div>
       {!item.effects.length && (
         <p className="v2-muted">Keine Effekte in der Datenquelle hinterlegt.</p>

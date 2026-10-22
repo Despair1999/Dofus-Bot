@@ -402,7 +402,7 @@ export function registerDungeons(
     const data = z
       .object({
         jobId: z.number().int(),
-        level: z.number().int().min(1).max(200),
+        level: z.number().int().min(1).max(200).nullable(),
       })
       .parse(request.body);
     if (
@@ -410,7 +410,15 @@ export function registerDungeons(
         v.professions.some((j) => j.id === data.jobId),
       )
     )
-      throw fail("Unbekannter Sammelberuf");
+      throw fail("Unbekannter Beruf");
+    if (data.level === null) {
+      personal.db
+        .prepare(
+          "DELETE FROM character_professions WHERE character_id=? AND job_id=?",
+        )
+        .run(characterId, data.jobId);
+      return { data };
+    }
     personal.db
       .prepare(
         "INSERT INTO character_professions VALUES(?,?,?) ON CONFLICT(character_id,job_id) DO UPDATE SET level=excluded.level",

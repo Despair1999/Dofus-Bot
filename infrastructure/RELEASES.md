@@ -15,3 +15,7 @@ The application checks `https://github.com/Despair1999/Dofus-Bot/releases/latest
 Update signing verifies downloaded updates. It does not replace Authenticode signing of Windows installers. No Windows code-signing certificate is configured; SmartScreen may display an unknown-publisher warning.
 
 The workflow packages a portable ZIP with the executable and complete `service` directory, attaches it to the draft release and saves a workflow artifact. Run `infrastructure/scripts/package-portable.ps1` after a local native release build to create the same archive. A lone EXE is insufficient because the backend/Node resources are required. WebView2 runtime is still needed on the target Windows installation. Personal data stays under the application's Windows AppData directory; "portable" refers to installation-free launch, not storing user data beside the EXE. The NSIS installer handles the configured Tauri WebView2 bootstrap behavior.
+
+## Kontrollierter Release-Request auf main
+
+Das erstmalige Merge einer neuen Datei unter `.github/release-requests/` in `main` kann einen signierten **Draft**-Release-Workflow auslösen. Die GitHub-Actions-Secrets für den bestehenden Tauri-Update-Signierschlüssel müssen gesetzt sein. Erst nach Kontrolle des Installers, der Signaturen und von `latest.json` darf der Entwurf über GitHub **Publish release** veröffentlicht werden. Vorher erhält die installierte Anwendung kein Update. Tag- und manuelle Workflows bleiben weiterhin aktiv.

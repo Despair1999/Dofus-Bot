@@ -112,6 +112,7 @@ export type DungeonVersion = {
   dungeons: DungeonSummary[];
   monsters: DungeonMonster[];
   professions: { id: number; name: string }[];
+  craftingRecipes?: { itemId: number; jobId: number; level: number }[];
   professionQuests: ProfessionQuest[];
   editorial?: DungeonEditorial[];
   report: Record<string, number>;

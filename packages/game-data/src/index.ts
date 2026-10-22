@@ -1,3 +1,4 @@
+import { questGuides } from "./quest-guides.js";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
@@ -383,13 +384,8 @@ export class GameDataStore {
       .get(id) as Row | undefined;
     if (!row) return undefined;
     const quest = JSON.parse(row.content) as Quest;
-    const guides: Record<string, string> = {
-      "Destination Astrub":
-        "https://www.dofuspourlesnoobs.com/destination-astrub.html",
-      "Réponses à tout":
-        "https://www.dofuspourlesnoobs.com/reacuteponses-agrave-tout.html",
-    };
-    quest.guideUrl = guides[quest.nameFr];
+    const guide = questGuides[String(id)];
+    quest.guideUrl = guide?.nameFr === quest.nameFr ? guide.url : undefined;
     return quest;
   }
   importSqlite(

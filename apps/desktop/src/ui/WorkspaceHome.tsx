@@ -4,7 +4,7 @@ import type { Build } from "@dofus/core";
 import type { Config } from "../client";
 import { request } from "../v2/shared/request";
 import { navigatePath } from "../v2/routing";
-import { classAssets } from "@dofus/core";
+import ClassArtwork from "./ClassArtwork";
 import { useRecentViews } from "./workspace";
 import { navigationItems } from "./navigation";
 import { StatusBadge } from "./primitives";
@@ -92,12 +92,7 @@ export default function WorkspaceHome({ config }: { config: Config }) {
                   key={b.id}
                   onClick={() => navigatePath(`/builder/${b.id}`)}
                 >
-                  <img
-                    src={classAssets[b.classId]?.icon}
-                    alt=""
-                    width={34}
-                    height={34}
-                  />
+                  <ClassArtwork classId={b.classId} name="Klasse" size={34} />
                   <span>
                     <strong>{b.name}</strong>
                     <small>

@@ -1,3 +1,4 @@
+import PinnedModules from "./PinnedModules";
 import {
   createContext,
   useContext,
@@ -111,6 +112,7 @@ export function SettingsInformation({ config }: { config: Config }) {
         </section>
       </SettingsGroup>
       <SettingsGroup id="navigation">
+        <PinnedModules />
         <section className="panel">
           <h2>Schneller zu deinem nächsten Schritt</h2>
           <p>

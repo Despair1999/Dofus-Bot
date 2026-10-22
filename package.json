@@ -1,6 +1,6 @@
 {
   "name": "dofus-companion",
-  "version": "0.6.0",
+  "version": "0.9.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.25.0",
@@ -13,11 +13,10 @@
     "test:ocr": "tsx tests/ocr/smoke.ts",
     "bundle:backend": "node infrastructure/scripts/bundle-backend.mjs",
     "dev": "pnpm --parallel --filter @dofus/backend --filter @dofus/desktop dev",
-    "build": "pnpm --filter '!@dofus/website' -r --if-present build",
+    "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
-    "desktop": "pnpm --filter @dofus/desktop tauri dev",
-    "build:website": "pnpm --filter @dofus/website build"
+    "desktop": "pnpm --filter @dofus/desktop tauri dev"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

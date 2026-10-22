@@ -1,3 +1,4 @@
+import { usePinnedModules } from "./PinnedModules";
 import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { read, write } from "../storage";
@@ -13,6 +14,7 @@ export default function SideNavigation({
   onNavigate: (view: View) => void;
   footer: ReactNode;
 }) {
+  const pinned = usePinnedModules();
   const [collapsed, setCollapsed] = useState(false),
     [groups, setGroups] = useState<Record<string, boolean>>({
       Entdecken: true,
@@ -55,6 +57,25 @@ export default function SideNavigation({
       </div>
       <div className="ui-sidebar-caption">DEIN ABENTEUER. DEIN COMPANION.</div>
       <nav aria-label="Hauptnavigation">
+        {pinned.length > 0 && (
+          <section className="ui-nav-group ui-nav-pinned">
+            <span className="ui-nav-group-toggle">Angeheftet</span>
+            {navigationItems
+              .filter((i) => pinned.includes(i.id))
+              .map((i) => (
+                <button
+                  key={i.id}
+                  title={i.description}
+                  className={`nav ${current === i.id ? "active" : ""}`}
+                  aria-label={collapsed ? i.label : undefined}
+                  onClick={() => onNavigate(i.id)}
+                >
+                  <i.icon size={18} />
+                  <span className="ui-nav-label">{i.label}</span>
+                </button>
+              ))}
+          </section>
+        )}
         {["Entdecken", "Planen", "Tools", "Persönlich"].map((group) => (
           <section className="ui-nav-group" key={group}>
             <button
