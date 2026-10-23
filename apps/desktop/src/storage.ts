@@ -18,6 +18,7 @@ export function localAccount() {
 }
 export async function setStorageAccount(uid: string | null) {
   account = uid;
+  window.dispatchEvent(new Event("companion:account-changed"));
 }
 export function onStorageWrite(fn: (key: string, value: unknown) => void) {
   changes.add(fn);
@@ -65,6 +66,7 @@ export async function read<T>(key: string, fallback: T): Promise<T> {
   return (await (await web).get("records", key)) ?? fallback;
 }
 export async function write(key: string, value: unknown) {
+  const writeAccount = account;
   const original = key;
   if (key === "community:applying") {
     remote = value === true;
@@ -79,7 +81,16 @@ export async function write(key: string, value: unknown) {
       [key, JSON.stringify(value)],
     );
   else await (await web).put("records", value, key);
+  if (writeAccount !== account) return;
   if (!remote) changes.forEach((fn) => fn(original, value));
+  if (
+    original === "characters" ||
+    original === "active" ||
+    original.startsWith("community:profile:")
+  )
+    window.dispatchEvent(
+      new CustomEvent("companion:character-data", { detail: original }),
+    );
 }
 export async function erase() {
   if (isTauri()) await (await sql()).execute("DELETE FROM records");

@@ -32,6 +32,7 @@ const db = (id: string, verified = true, authTime = now) =>
     .authenticatedContext(id, { email_verified: verified, auth_time: authTime })
     .firestore();
 const settings = {
+  archived: false,
   guildName: "",
   server: "",
   description: "",
@@ -138,6 +139,73 @@ beforeEach(async () => {
   });
 });
 after(async () => env?.cleanup());
+
+test("guild biography permits own approved profile only, with exact field boundaries", async () => {
+  const ownRef = doc(db(uid), `memberships/${uid}`);
+  await assertSucceeds(
+    updateDoc(ownRef, {
+      personalStatus: "Dungeons 🎲",
+      biography: "Zeile 1\nZeile 2",
+      revision: 2,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertFails(
+    updateDoc(doc(db(other), `memberships/${uid}`), {
+      biography: "fremd",
+      revision: 3,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertFails(
+    updateDoc(ownRef, {
+      rank: "Owner",
+      biography: "Rang manipuliert",
+      revision: 3,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertFails(
+    updateDoc(ownRef, {
+      status: "removed",
+      biography: "Status manipuliert",
+      revision: 3,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertFails(
+    updateDoc(ownRef, {
+      role: "owner",
+      revision: 3,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertFails(
+    updateDoc(ownRef, {
+      personalStatus: "x".repeat(101),
+      revision: 3,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertFails(
+    updateDoc(ownRef, {
+      biography: "x".repeat(501),
+      revision: 3,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertSucceeds(
+    updateDoc(ownRef, {
+      personalStatus: "",
+      biography: "",
+      revision: 3,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertFails(
+    getDoc(doc(env.unauthenticatedContext().firestore(), `memberships/${uid}`)),
+  );
+});
 test("anonymous visitor can read configuration but no guild data", async () => {
   const d = env.unauthenticatedContext().firestore();
   await assertSucceeds(getDoc(doc(d, "platform/legal")));

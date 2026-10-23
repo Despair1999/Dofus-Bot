@@ -54,6 +54,8 @@ import {
   listingInput,
   profileSchema,
   guildRankSchema,
+  guildProfileSchema,
+  guildSettingsSchema,
   type GuildRank,
   reservationDelta,
   transitionReservation,
@@ -83,6 +85,7 @@ export type PlatformConfig = {
   revision: number;
   lastAudit: string;
   archived?: boolean;
+  legalRevision?: number;
 };
 export type Role = "owner" | "admin" | "moderator" | "member";
 export type RecordClock = { seconds: number; nanoseconds: number };
@@ -433,6 +436,20 @@ export class CommunityService {
       updatedAt: serverTimestamp(),
     });
   }
+  async saveGuildProfile(value: unknown, revision: number) {
+    const fields = guildProfileSchema.parse(value);
+    const current = await this.get<{
+      personalStatus?: string;
+      biography?: string;
+    }>(`memberships/${this.uid}`);
+    if (
+      current &&
+      (current.personalStatus ?? "") === fields.personalStatus &&
+      (current.biography ?? "") === fields.biography
+    )
+      return;
+    await this.edit(`memberships/${this.uid}`, fields, revision);
+  }
   async uploadEmblem(blob: Blob) {
     const uid = this.uid;
     if (blob.type !== "image/webp" || blob.size < 12 || blob.size > 200000)
@@ -475,9 +492,25 @@ export class CommunityService {
       await deleteObject(storageRef(this.storage, path));
   }
   async saveSettings(value: PlatformConfig, reason: string) {
+    const parsed = guildSettingsSchema.safeParse(value);
+    if (!parsed.success)
+      throw Error(parsed.error.issues.map((i) => i.message).join(" "));
+    if (reason.trim().length < 5 || reason.trim().length > 1000)
+      throw Error("Bitte einen Änderungsgrund mit 5 bis 1000 Zeichen angeben.");
+    value = { ...value, ...parsed.data };
+    const user = this.auth.currentUser;
+    if (!user) throw Error("Bitte erneut anmelden.");
+    const token = await getIdTokenResult(user, true);
+    if (
+      !token.claims.email_verified ||
+      Date.now() - new Date(token.authTime).getTime() >= 900000
+    )
+      throw Error(
+        "Admin-Anmeldung abgelaufen. Adminmodus schließen und persönlich erneut entsperren.",
+      );
     const audit = crypto.randomUUID(),
       uid = this.uid;
-    await runTransaction(this.db, async (tx) => {
+    return runTransaction(this.db, async (tx) => {
       const guild = await tx.get(this.ref("platform/config")),
         legal = await tx.get(this.ref("platform/legal"));
       this.assertSession(uid);
@@ -522,6 +555,24 @@ export class CommunityService {
         lastAudit: audit + "-legal",
         updatedAt: serverTimestamp(),
       };
+      const legalChanged = [
+        "registrationEnabled",
+        "privacyUrl",
+        "termsUrl",
+        "legalVersion",
+        "guildActive",
+      ].some(
+        (key) =>
+          legalAfter[key as keyof typeof legalAfter] !== legal.data()[key],
+      );
+      if (
+        legalChanged &&
+        value.legalRevision !== undefined &&
+        legal.data().revision !== value.legalRevision
+      )
+        throw Error(
+          "Die Registrierungs- oder Rechtstextfreigabe wurde inzwischen geändert. Bitte neu laden.",
+        );
       this.audit(
         tx,
         audit,
@@ -530,21 +581,28 @@ export class CommunityService {
         guildAfter,
         reason,
       );
-      this.audit(
-        tx,
-        audit + "-legal",
-        "platform/legal",
-        legal.data(),
-        legalAfter,
-        reason,
-      );
+      if (legalChanged)
+        this.audit(
+          tx,
+          audit + "-legal",
+          "platform/legal",
+          legal.data(),
+          legalAfter,
+          reason,
+        );
       tx.set(guild.ref, guildAfter);
-      tx.set(legal.ref, legalAfter);
+      if (legalChanged) tx.set(legal.ref, legalAfter);
       tx.set(this.ref(`guildAnnouncements/${audit}`), {
         actorUid: this.uid,
         text: "Die Gildeninformationen wurden aktualisiert.",
         createdAt: serverTimestamp(),
       });
+      return {
+        revision: guildAfter.revision,
+        legalRevision: legalChanged
+          ? legalAfter.revision
+          : Number(legal.data().revision),
+      };
     });
   }
   async saveGuildRank(

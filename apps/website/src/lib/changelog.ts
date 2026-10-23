@@ -10,6 +10,38 @@ export type PatchRelease = {
 
 const preparedPatchNotes: PatchRelease[] = [
   {
+    version: "v0.11.0",
+    date: "23.10.2026",
+    title: "Gilden-Hub & zuverlässige Charakterdaten",
+    subtitle:
+      "Mitgliederprofile, vollständiger Handelskatalog und reparierte Account-Integration.",
+    groups: [
+      {
+        label: "Gilde",
+        entries: [
+          "Gildenübersicht mit integrierten Mitgliedern, anklickbaren Profilen, selbst gepflegtem Status und Biografie.",
+          "Optionaler Discord-Link, sichere Wappen-Konvertierung und gezielte Browser-CORS-Konfiguration.",
+        ],
+      },
+      {
+        label: "Charaktere & Berufe",
+        entries: [
+          "Gemeinsame Charakteridentität in Sidebar, Backend und Cloud; Berufsabfragen verwenden den richtigen Accountbereich.",
+          "Berufs- und Sammelquestfortschritte über Neustarts und isolierte Clients geprüft.",
+        ],
+      },
+      {
+        label: "Marktplatz",
+        entries: [
+          "17.233 nach Handelsmetadaten geprüfte Gegenstandsvorlagen, mehrsprachige Suche und blätterbare Ergebnisse.",
+          "Verkäufernamen, einheitlicher Discord-Kontakt und korrekte administrative Sichtbarkeit; Meldesystem bleibt erhalten.",
+        ],
+      },
+    ],
+    caveat:
+      "Individuelle Accountbindungen im Spiel prüfen. Der Discord-Bot bleibt bis zur späteren Einrichtung deaktiviert.",
+  },
+  {
     version: "v0.10.0",
     date: "23.10.2026",
     title: "Companion Accounts & Community",

@@ -9,14 +9,16 @@ import { communityDungeons, searchCommunityItems } from "./community-catalog";
 const sections: { id: Section; label: string }[] = [
   { id: "account", label: "Account & Cloud" },
   { id: "guild", label: "Gildenübersicht" },
-  { id: "members", label: "Mitglieder" },
   { id: "marketplace", label: "Marktplatz" },
   { id: "events", label: "Events" },
   { id: "groups", label: "Gruppenfinder" },
 ];
 
 export default function CommunityArea({ path }: { path: string }) {
-  const selected = path.split("/")[2] || "account";
+  const requested = path.split("/")[2] || "account";
+  const selected = requested === "members" ? "guild" : requested;
+  if (requested === "members")
+    history.replaceState(null, "", "/community/guild?section=members");
   return (
     <CommunityProvider
       emulators={

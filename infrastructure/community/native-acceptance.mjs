@@ -15,7 +15,7 @@ const listening = (port) =>
     s.once("error", () => done(false));
   });
 assert.equal(
-  await listening(4310),
+  await listening(4319),
   false,
   "Existing backend must not be interrupted.",
 );
@@ -37,6 +37,7 @@ const child = spawn(
     env: {
       ...process.env,
       WEBVIEW2_USER_DATA_FOLDER: resolve(".data/community-native-qa-webview"),
+      COMPANION_QA_PORT: "4319",
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: "--remote-debugging-port=9223",
     },
   },
@@ -47,7 +48,7 @@ const checks = [],
 try {
   for (let i = 0; i < 60; i++) {
     assert.equal(child.exitCode, null, "QA app exited during startup");
-    if ((await listening(9223)) && (await listening(4310))) break;
+    if ((await listening(9223)) && (await listening(4319))) break;
     await new Promise((r) => setTimeout(r, 500));
   }
   browser = await chromium.connectOverCDP("http://127.0.0.1:9223");
@@ -69,7 +70,7 @@ try {
     );
   assert.equal(await invoke("plugin:app|identifier"), config.identifier);
   const connection = await invoke("local_connection");
-  assert.equal(connection.url, "http://127.0.0.1:4310");
+  assert.equal(connection.url, "http://127.0.0.1:4319");
   const request = async (path, body) => {
     const r = await fetch(connection.url + path, {
       method: body ? "POST" : "GET",

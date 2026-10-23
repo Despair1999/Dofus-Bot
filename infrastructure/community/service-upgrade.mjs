@@ -20,7 +20,7 @@ const port = listener.address().port;
 await new Promise((done) => listener.close(done));
 const token = randomUUID() + randomUUID(),
   origin = `http://127.0.0.1:${port}`;
-let child;
+let child, previousVersion;
 async function start(old = false) {
   const service = resolve(
     old
@@ -46,14 +46,21 @@ async function start(old = false) {
         if (child.exitCode !== null)
           throw Error(`Service ended ${child.exitCode}`);
         try {
-          return (await (await fetch(origin + "/health")).json()).version;
+          const observed = (await (await fetch(origin + "/health")).json())
+            .version;
+          if (old) {
+            assert.match(observed, /^0\.(9\.2|10\.0)$/);
+            previousVersion = observed;
+            return version;
+          }
+          return observed;
         } catch {
           return "";
         }
       },
       { timeout: 30000 },
     )
-    .toBe(old ? "0.9.2" : version);
+    .toBe(version);
 }
 async function stop() {
   if (child?.exitCode === null) {
@@ -183,7 +190,7 @@ try {
   assert.equal(profession.quests.find((q) => q.questId === 945).quantity, 4);
   const result = {
     testedAt: new Date().toISOString(),
-    fromVersion: "0.9.2",
+    fromVersion: previousVersion,
     version,
     scope:
       "Real old/new bundled Windows Node services, isolated SQLite fixture and loopback APIs; no productive user database modified",

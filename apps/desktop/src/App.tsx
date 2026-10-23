@@ -42,7 +42,7 @@ import {
   type Config,
   type Mutation,
 } from "./client";
-import { read, write, erase } from "./storage";
+import { read, write, erase, localAccount } from "./storage";
 import {
   windowMode,
   isOverlayWindow,
@@ -108,6 +108,7 @@ export default function App() {
   return isOverlayWindow() ? <OverlayView /> : <MainApp />;
 }
 function MainApp() {
+  const [companionMain, setCompanionMain] = useState("");
   const [navigation, setNavigation] = useState<OverlaySnapshot["navigation"]>();
   useEffect(() => {
     let mounted = true;
@@ -190,18 +191,45 @@ function MainApp() {
   const questRequest = useRef(0);
   const character = characters.find((c) => c.id === active);
   useEffect(() => {
-    const reload = () => { void (async () => {
-      setCharacters(await read("characters", []));
-      setFavorites(await read("favorites", []));
-      setTodos(await read("todos", []));
-      setActive(await read("active", ""));
-      if(active)setProgress(await read(`progress:${active}`, []));
-    })().catch(error=>setNotice(String(error))); };
-    const failure=(event:Event)=>setNotice((event as CustomEvent<string>).detail);
-    window.addEventListener("companion:replica-ready",reload);
-    window.addEventListener("companion:replica-error",failure);
-    return()=>{window.removeEventListener("companion:replica-ready",reload);window.removeEventListener("companion:replica-error",failure);};
-  },[active]);
+    const reload = () => {
+      void (async () => {
+        const account = localAccount();
+        const next = await read<Character[]>("characters", []);
+        const savedActive = await read("active", "");
+        const profile = account
+          ? await read<{ mainCharacterId?: string } | null>(
+              `community:profile:${account}`,
+              null,
+            )
+          : null;
+        if (account !== localAccount()) return;
+        setCompanionMain(profile?.mainCharacterId || "");
+        const selected = next.some((c) => c.id === savedActive)
+          ? savedActive
+          : next.find((c) => c.id === profile?.mainCharacterId)?.id ||
+            next[0]?.id ||
+            "";
+        setCharacters(next);
+        setFavorites(await read("favorites", []));
+        setTodos(await read("todos", []));
+        setActive(selected);
+        if (savedActive !== selected) await write("active", selected);
+        if (active) setProgress(await read(`progress:${active}`, []));
+      })().catch((error) => setNotice(String(error)));
+    };
+    const failure = (event: Event) =>
+      setNotice((event as CustomEvent<string>).detail);
+    window.addEventListener("companion:replica-ready", reload);
+    window.addEventListener("companion:character-data", reload);
+    window.addEventListener("companion:account-changed", reload);
+    window.addEventListener("companion:replica-error", failure);
+    return () => {
+      window.removeEventListener("companion:replica-ready", reload);
+      window.removeEventListener("companion:character-data", reload);
+      window.removeEventListener("companion:account-changed", reload);
+      window.removeEventListener("companion:replica-error", failure);
+    };
+  }, [active]);
   const gameClass = classes.find((c) => c.id === character?.classId);
   const current = progress.find((p) => p.questId === quest?.id);
   useEffect(() => {
@@ -777,6 +805,26 @@ function MainApp() {
                   <small>Unabhängiges Community-Projekt</small>
                 </div>
               </div>
+              {characters.length > 0 && (
+                <label className="sidebar-character-choice">
+                  Aktiver Charakter
+                  <select
+                    aria-label="Aktiver Charakter"
+                    value={active}
+                    onChange={(e) => {
+                      setActive(e.target.value);
+                      void write("active", e.target.value);
+                    }}
+                  >
+                    {characters.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.id === companionMain ? "★ " : ""}
+                        {c.name} · {c.className} · {c.level}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <button
                 className="profile"
                 onClick={() =>
@@ -908,9 +956,20 @@ function MainApp() {
               ))}
             </div>
           )}
-          {!["builder", "dungeons", "professions", "monsters", "sets", "account", "guild", "members", "marketplace", "events", "groups", "guild-market"].includes(
-            tab,
-          ) &&
+          {![
+            "builder",
+            "dungeons",
+            "professions",
+            "monsters",
+            "sets",
+            "account",
+            "guild",
+            "members",
+            "marketplace",
+            "events",
+            "groups",
+            "guild-market",
+          ].includes(tab) &&
             !(tab === "characters" && route.entityId) && (
               <div className="page-heading">
                 <div>
@@ -1347,7 +1406,11 @@ function MainApp() {
             <DungeonsPage config={config} characters={characters} />
           )}
           {tab === "professions" && (
-            <ProfessionsPage config={config} characters={characters} />
+            <ProfessionsPage
+              config={config}
+              characters={characters}
+              activeCharacterId={active}
+            />
           )}
           {tab === "translator" && <TranslatorPanel config={config} />}
           {tab === "craft" && (
@@ -1361,7 +1424,14 @@ function MainApp() {
             />
           )}
           {tab === "market" && <MarketJournalPage config={config} />}
-          {["account","guild","members","marketplace","events","groups"].includes(tab) && <CommunityPage section={tab as Section}/>}
+          {[
+            "account",
+            "guild",
+            "members",
+            "marketplace",
+            "events",
+            "groups",
+          ].includes(tab) && <CommunityPage section={tab as Section} />}
           {tab === "characters" && (
             <CharactersPage
               key={catalogRevision}

@@ -146,9 +146,25 @@ execFileSync(
   ["infrastructure/community/publication-gate.mjs"],
   { stdio: "inherit", windowsHide: true },
 );
-const pr = await githubRequest("GET", base + "/pulls/11");
-assert.equal(pr.merged, true, "PR #11 must be merged before publication.");
+const pullRequest = Number(
+  process.argv.find((arg) => arg.startsWith("--pr="))?.slice(5),
+);
+assert.ok(
+  Number.isInteger(pullRequest) && pullRequest > 0,
+  "Pass the reviewed source PR explicitly with --pr=<number>.",
+);
+const pr = await githubRequest("GET", base + "/pulls/" + pullRequest);
+assert.equal(
+  pr.merged,
+  true,
+  "The source PR must be merged before publication.",
+);
 const main = await githubRequest("GET", base + "/commits/main");
+assert.equal(
+  pr.merge_commit_sha,
+  main.sha,
+  "Release only the reviewed merge commit; main has changed.",
+);
 const remotePackage = await githubRequest(
   "GET",
   base + "/contents/package.json?ref=" + main.sha,
@@ -175,7 +191,7 @@ assert.ok(
   ),
   "PR CI is not fully successful.",
 );
-const reportPath = ".data/community-release-publication.json";
+const reportPath = `.data/community-release-publication-${version}.json`;
 const previous = existsSync(reportPath) ? read(reportPath) : null;
 const releases = await githubRequest("GET", base + "/releases?per_page=100");
 let release = releases.find((r) => r.tag_name === tag);

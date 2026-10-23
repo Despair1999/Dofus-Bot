@@ -72,6 +72,7 @@ before(async () => {
   );
   const d = adminFirestore(admin);
   await d.doc("platform/legal").set({
+    guildActive: true,
     registrationEnabled: true,
     privacyUrl: "https://example.test/privacy",
     termsUrl: "https://example.test/terms",
@@ -81,6 +82,7 @@ before(async () => {
     updatedAt: FieldValue.serverTimestamp(),
   });
   await d.doc("platform/config").set({
+    archived: false,
     guildName: "Integration",
     server: "Test",
     description: "",
@@ -648,4 +650,95 @@ test("logout aborts an administrative mutation that is waiting on network reads"
   await switched.logout();
   await rejected;
   assert.equal((await doc.ref.get()).data()!.title, before.title);
+});
+
+test("guild-only changes leave legal policy intact and repeated owner saves work", async () => {
+  await owner.reauthenticate(password);
+  const legal = await owner.get<any>("platform/legal"),
+    guild = await owner.get<any>("platform/config");
+  await owner.saveSettings(
+    {
+      ...legal,
+      ...guild,
+      guildName: "Neue Testgilde",
+      legalRevision: legal.revision,
+    },
+    "Gildenname ohne Rechtsänderung",
+  );
+  assert.equal(
+    (await owner.get<any>("platform/legal")).revision,
+    legal.revision,
+  );
+  const changed = await owner.get<any>("platform/config");
+  await owner.saveSettings(
+    { ...legal, ...changed, description: "Zweiter Speichervorgang" },
+    "Erneuter Speichervorgang",
+  );
+  assert.equal(
+    (await owner.get<any>("platform/config")).description,
+    "Zweiter Speichervorgang",
+  );
+  await assert.rejects(
+    () =>
+      owner.saveSettings(
+        {
+          ...legal,
+          ...changed,
+          discordUrl: "https://discord.com/channels/123",
+        },
+        "Ungültiger Einladungslink",
+      ),
+    /Einladungslink/,
+  );
+});
+
+test("guild status and biography update in another client and support audited moderation", async () => {
+  const otherDevice = client("guild-profile-second-device");
+  await otherDevice.login("owner@example.test", password);
+  const current = await owner.get<any>(`memberships/${owner.uid}`);
+  let stop = () => {};
+  const received = new Promise<any>((resolve, reject) => {
+    stop = otherDevice.watch<any>(
+      `memberships/${owner.uid}`,
+      (value) => {
+        if (value?.biography === "Helfe gern\nbei Erfolgen") resolve(value);
+      },
+      reject,
+    );
+  });
+  try {
+    await owner.saveGuildProfile(
+      { personalStatus: "Dungeons 🎲", biography: "Helfe gern\nbei Erfolgen" },
+      current.revision,
+    );
+    const next = await received;
+    assert.equal(next.rank, current.rank);
+    assert.equal(next.status, "approved");
+    await assert.rejects(() =>
+      first.edit(
+        `memberships/${owner.uid}`,
+        { biography: "Unberechtigte Änderung" },
+        next.revision,
+      ),
+    );
+    await owner.edit(
+      `memberships/${owner.uid}`,
+      { biography: "Moderiert" },
+      next.revision,
+      "Moderationsprüfung der Biografie",
+      true,
+    );
+    const moderated = await owner.get<any>(`memberships/${owner.uid}`);
+    assert.ok(moderated.lastAudit);
+    await owner.saveGuildProfile(
+      { personalStatus: "", biography: "" },
+      moderated.revision,
+    );
+    assert.equal(
+      (await otherDevice.get<any>(`memberships/${owner.uid}`)).biography,
+      "",
+    );
+  } finally {
+    stop();
+  }
 });

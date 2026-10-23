@@ -1,5 +1,5 @@
 import { ApiError, type Config } from "../../client";
-import { read, write } from "../../storage";
+import { localAccount, read, write } from "../../storage";
 export interface PageEnvelope<T> {
   data: T;
   total?: number;
@@ -16,6 +16,11 @@ export async function request<T>(
   config: Config,
   signal?: AbortSignal,
 ): Promise<PageEnvelope<T>> {
+  const account = localAccount();
+  const assertAccount = () => {
+    if (account !== localAccount())
+      throw new ApiError(409, "Account wurde während der Anfrage gewechselt.");
+  };
   const server = new URL(config.url);
   if (
     server.protocol !== "https:" &&
@@ -25,7 +30,10 @@ export async function request<T>(
   const key = `cache:${config.url}:${path}`;
   try {
     const response = await fetch(`${server.origin}${path}`, {
-      headers: { Authorization: `Bearer ${config.token}` },
+      headers: {
+        Authorization: `Bearer ${config.token}`,
+        ...(account ? { "X-Companion-Account": account } : {}),
+      },
       signal: signal
         ? AbortSignal.any([signal, AbortSignal.timeout(20000)])
         : AbortSignal.timeout(20000),
@@ -33,6 +41,7 @@ export async function request<T>(
     const result = (await response.json()) as PageEnvelope<T> & {
       error?: string | { message?: string };
     };
+    assertAccount();
     if (!response.ok)
       throw new ApiError(
         response.status,
@@ -45,14 +54,16 @@ export async function request<T>(
     await write(key, result);
     return result;
   } catch (error) {
+    assertAccount();
     if (
       signal?.aborted ||
       (error instanceof Error && error.name === "AbortError")
     )
       throw error;
-    if (error instanceof ApiError && [401, 403].includes(error.status))
+    if (error instanceof ApiError && [401, 403, 409].includes(error.status))
       throw error;
     const saved = await read<PageEnvelope<T> | null>(key, null);
+    assertAccount();
     if (saved) return { ...saved, stale: true, cached: true };
     throw error;
   }

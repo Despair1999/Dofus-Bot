@@ -32,6 +32,12 @@ export default function ProfessionsPage({
   onNavigate?: (path: string) => void;
 }) {
   const route = useRoute();
+  const [replicaRevision, setReplicaRevision] = useState(0);
+  useEffect(() => {
+    const ready = () => setReplicaRevision((v) => v + 1);
+    window.addEventListener("companion:replica-ready", ready);
+    return () => window.removeEventListener("companion:replica-ready", ready);
+  }, []);
   useEffect(() => {
     const id = Number(route.params.get("jobId"));
     if ([2, 24, 26, 28, 36, 41].includes(id)) setResourceJob(id);
@@ -48,8 +54,12 @@ export default function ProfessionsPage({
     [available, setAvailable] = useState<GatherableResource[]>([]),
     [quantities, setQuantities] = useState<Record<number, number>>({});
   useEffect(() => {
-    setCharacterId(activeCharacterId ?? "");
-  }, [activeCharacterId]);
+    setCharacterId((current) =>
+      characters.some((c) => c.id === (activeCharacterId || current))
+        ? activeCharacterId || current
+        : characters[0]?.id || "",
+    );
+  }, [activeCharacterId, characters]);
   useEffect(() => {
     const c = new AbortController();
     const savedLevel = personal.levels.find(
@@ -98,6 +108,7 @@ export default function ProfessionsPage({
       c.signal,
     )
       .then((r) => {
+        setError("");
         setPersonal(r.data);
         setQuantities(
           Object.fromEntries(r.data.quests.map((q) => [q.questId, q.quantity])),
@@ -107,7 +118,7 @@ export default function ProfessionsPage({
         if (!c.signal.aborted) setError(message(e));
       });
     return () => c.abort();
-  }, [characterId, config]);
+  }, [characterId, config, replicaRevision]);
   async function progress(
     quest: ProfessionQuest,
     completed: boolean,
@@ -173,6 +184,7 @@ export default function ProfessionsPage({
         <ProfessionLevels
           config={config}
           characterId={characterId}
+          revision={replicaRevision}
           onChange={() =>
             void request<Personal>(
               `/api/profession-personal/${characterId}`,

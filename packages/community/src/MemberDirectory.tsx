@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   collection,
   documentId,
@@ -15,21 +15,30 @@ type Membership = {
   displayName: string;
   rank: string;
   status: string;
+  personalStatus?: string;
+  biography?: string;
+  revision: number;
 };
 type Row = {
   profile?: Profile & { updatedAt?: { seconds: number } };
   characters: CommunityCharacter[];
+  membership?: Membership;
 };
 export default function MemberDirectory({
   service,
   members,
   contact,
+  emblem,
+  onSummary,
 }: {
   service: CommunityService;
   members: Membership[];
   contact: (uid: string) => ReactNode;
+  emblem?: ReactNode;
+  onSummary?: (value: { members: number; characters: number }) => void;
 }) {
   const { ranks } = useGuildRanks(service);
+  const [selected, setSelected] = useState<string | null>(null);
   const [rows, setRows] = useState<Record<string, Row>>({}),
     [error, setError] = useState(""),
     [search, setSearch] = useState(""),
@@ -47,13 +56,25 @@ export default function MemberDirectory({
     .sort()
     .join(",");
   useEffect(() => {
+    onSummary?.({
+      members: members.filter(
+        (m) => (rows[m.uid]?.membership ?? m).status === "approved",
+      ).length,
+      characters: Object.values(rows).reduce(
+        (sum, r) => sum + r.characters.length,
+        0,
+      ),
+    });
+  }, [members, rows, onSummary]);
+  useEffect(() => {
+    setRows({});
     if (!ids) return;
     setError("");
     const uids = ids.split(","),
       stops: (() => void)[] = [];
     for (let i = 0; i < uids.length; i += 25) {
       const chunk = uids.slice(i, i + 25);
-      for (const path of ["profiles", "guildCharacters"]) {
+      for (const path of ["profiles", "guildCharacters", "memberships"]) {
         stops.push(
           onSnapshot(
             query(
@@ -68,12 +89,14 @@ export default function MemberDirectory({
                   const doc = snapshot.docs.find((d) => d.id === uid),
                     current = next[uid] ?? { characters: [] };
                   next[uid] =
-                    path === "profiles"
-                      ? { ...current, profile: doc?.data() as Row["profile"] }
-                      : {
-                          ...current,
-                          characters: doc?.data().characters ?? [],
-                        };
+                    path === "memberships"
+                      ? { ...current, membership: doc?.data() as Membership }
+                      : path === "profiles"
+                        ? { ...current, profile: doc?.data() as Row["profile"] }
+                        : {
+                            ...current,
+                            characters: doc?.data().characters ?? [],
+                          };
                 }
                 return next;
               }),
@@ -84,6 +107,7 @@ export default function MemberDirectory({
     }
     return () => stops.forEach((stop) => stop());
   }, [service, ids]);
+  const liveMembers = members.map((m) => rows[m.uid]?.membership ?? m);
   const main = (uid: string) => {
     const r = rows[uid];
     return (
@@ -110,7 +134,7 @@ export default function MemberDirectory({
                   ? (r?.profile?.updatedAt?.seconds ?? 0)
                   : m.rank;
   };
-  const filtered = members
+  const filtered = liveMembers
     .filter((m) => {
       if (m.status !== "approved") return false;
       const r = rows[m.uid],
@@ -179,7 +203,7 @@ export default function MemberDirectory({
           Rang
           <select value={rank} onChange={(e) => setRank(e.target.value)}>
             <option value="">Alle Ränge</option>
-            {[...new Set(members.map((m) => m.rank).filter(Boolean))].map(
+            {[...new Set(liveMembers.map((m) => m.rank).filter(Boolean))].map(
               (r) => (
                 <option key={r}>{r}</option>
               ),
@@ -192,7 +216,9 @@ export default function MemberDirectory({
             <option value="">Alle Server</option>
             {[
               ...new Set(
-                members.map((m) => String(value(m, "server"))).filter(Boolean),
+                liveMembers
+                  .map((m) => String(value(m, "server")))
+                  .filter(Boolean),
               ),
             ].map((s) => (
               <option key={s}>{s}</option>
@@ -259,71 +285,237 @@ export default function MemberDirectory({
           const r = rows[m.uid],
             ch = main(m.uid);
           return (
-            <details className="cc-member" key={m.uid}>
-              <summary>
-                {ch && (
-                  <img
-                    className="cc-class"
-                    src={`/classes/${ch.classId}-thumb.webp`}
-                    alt={ch.className}
-                  />
-                )}
-                <b>{value(m, "name") || "Profil wird geladen …"}</b>
-                <span>{ch?.className || "Keine Charakterfreigabe"}</span>
-                <span>{ch ? `${ch.level} · Ω ${ch.omegaLevel}` : ""}</span>
-                <span
-                  style={{
-                    color: ranks.find((r) => r.name === m.rank && !r.archived)
-                      ?.color,
-                  }}
-                >
-                  {ranks.find((r) => r.name === m.rank && !r.archived)
-                    ? rankIcons[
-                        ranks.find((r) => r.name === m.rank && !r.archived)!
-                          .icon
-                      ]
-                    : ""}{" "}
-                  {m.rank || "Mitglied"}
-                </span>
-                <span>
-                  {r?.characters.length ?? 0} Charaktere · {value(m, "server")}
-                </span>
-              </summary>
-              <div className="cc-member-details">
-                {r?.characters.map((character) => (
-                  <p key={character.id}>
-                    <b>{character.name}</b>
-                    {character.id === r.profile?.mainCharacterId
-                      ? " · Hauptcharakter"
-                      : ""}{" "}
-                    · {character.className} · {character.level} · Ω{" "}
-                    {character.omegaLevel} · {character.server}
-                    <small>
-                      {Object.entries(character.professions ?? {})
-                        .map(([job, level]) => `${job}: ${level}`)
-                        .join(" · ")}
-                    </small>
-                  </p>
-                ))}
-                <small>
-                  Selbst gepflegt/administrativ korrigiert; nicht durch DOFUS
-                  verifiziert. Profil aktualisiert:{" "}
-                  {r?.profile?.updatedAt
-                    ? new Date(
-                        r.profile.updatedAt.seconds * 1000,
-                      ).toLocaleString("de-DE")
-                    : "unbekannt"}
-                  .
-                </small>
-                {contact(m.uid)}
-                <MemberHistory service={service} uid={m.uid} />
-              </div>
-            </details>
+            <button
+              type="button"
+              className="cc-member cc-member-row"
+              key={m.uid}
+              onClick={() => setSelected(m.uid)}
+              aria-label={`Profil von ${value(m, "name") || "Mitglied"} öffnen`}
+            >
+              {ch && (
+                <img
+                  className="cc-class"
+                  src={`/classes/${ch.classId}-thumb.webp`}
+                  alt={ch.className}
+                />
+              )}
+              <b>{value(m, "name") || "Profil wird geladen …"}</b>
+              <span>{ch?.className || "Keine Charakterfreigabe"}</span>
+              <span>
+                {ch?.name}
+                {ch &&
+                  ch.id === r?.profile?.mainCharacterId &&
+                  " · Hauptcharakter"}
+              </span>
+              <span>{ch ? `${ch.level} · Ω ${ch.omegaLevel}` : ""}</span>
+              <span
+                style={{
+                  color: ranks.find((r) => r.name === m.rank && !r.archived)
+                    ?.color,
+                }}
+              >
+                {ranks.find((r) => r.name === m.rank && !r.archived)
+                  ? rankIcons[
+                      ranks.find((r) => r.name === m.rank && !r.archived)!.icon
+                    ]
+                  : ""}{" "}
+                {m.rank || "Mitglied"}
+              </span>
+              <span>
+                {r?.characters.length ?? 0} Charaktere · {value(m, "server")}
+              </span>
+              {m.personalStatus && (
+                <span className="cc-member-status">{m.personalStatus}</span>
+              )}
+            </button>
           );
         })}
       </div>
+      {selected &&
+        liveMembers.some(
+          (m) => m.uid === selected && m.status === "approved",
+        ) && (
+          <MemberProfile
+            service={service}
+            member={liveMembers.find((m) => m.uid === selected)!}
+            row={rows[selected]}
+            main={main(selected)}
+            contact={contact(selected)}
+            emblem={emblem}
+            onClose={() => setSelected(null)}
+          />
+        )}
       {error && <p role="alert">{error}</p>}
     </>
+  );
+}
+function MemberProfile({
+  service,
+  member,
+  row,
+  main,
+  contact,
+  emblem,
+  onClose,
+}: {
+  service: CommunityService;
+  member: Membership;
+  row?: Row;
+  main?: CommunityCharacter;
+  contact: ReactNode;
+  emblem?: ReactNode;
+  onClose: () => void;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [editing, setEditing] = useState(false),
+    [status, setStatus] = useState(member.personalStatus ?? ""),
+    [bio, setBio] = useState(member.biography ?? ""),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    dialog.current?.showModal();
+    return () => previous?.focus();
+  }, []);
+  const name =
+    row?.profile?.dofusName || member.displayName || "Gildenmitglied";
+  return (
+    <dialog
+      ref={dialog}
+      className="cc cc-member-dialog"
+      aria-labelledby="cc-member-title"
+      onCancel={onClose}
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="cc-member-profile">
+        <button
+          type="button"
+          className="cc-close"
+          aria-label="Mitgliederprofil schließen"
+          onClick={onClose}
+        >
+          ×
+        </button>
+        <header className="cc-profile-hero">
+          {main && (
+            <img src={`/classes/${main.classId}.webp`} alt={main.className} />
+          )}
+          <div>
+            <small>
+              {member.rank || "Mitglied"} ·{" "}
+              {main?.server || row?.profile?.server}
+            </small>
+            <h2 id="cc-member-title">{name}</h2>
+            <p>
+              {main?.name} · {main?.className} · Stufe {main?.level}
+              {!!main?.omegaLevel && ` · Ω ${main.omegaLevel}`}
+            </p>
+          </div>
+          {emblem && <div className="cc-profile-emblem">{emblem}</div>}
+        </header>
+        <p className="cc-member-status">
+          {member.personalStatus || "Noch kein persönlicher Status."}
+        </p>
+        <section>
+          <h3>Über mich</h3>
+          <p className="cc-prewrap">
+            {member.biography || "Noch keine Biografie hinterlegt."}
+          </p>
+        </section>
+        {member.uid === service.uid && !editing && (
+          <button
+            type="button"
+            onClick={() => {
+              setStatus(member.personalStatus ?? "");
+              setBio(member.biography ?? "");
+              setEditing(true);
+            }}
+          >
+            Profil bearbeiten
+          </button>
+        )}
+        {editing && (
+          <form
+            className="cc-panel"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setBusy(true);
+              setError("");
+              void service
+                .saveGuildProfile(
+                  { personalStatus: status, biography: bio },
+                  member.revision,
+                )
+                .then(
+                  () => setEditing(false),
+                  (e) => setError(String(e)),
+                )
+                .finally(() => setBusy(false));
+            }}
+          >
+            <label className="cc-field">
+              Persönlicher Status
+              <input
+                aria-label="Persönlicher Status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                maxLength={100}
+              />
+              <small>{status.length}/100 · selbst festgelegt</small>
+            </label>
+            <label className="cc-field">
+              Biografie
+              <textarea
+                aria-label="Biografie"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={500}
+                rows={5}
+              />
+              <small>{bio.length}/500</small>
+            </label>
+            <button className="cc-primary" disabled={busy}>
+              Profil speichern
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setEditing(false)}
+            >
+              Abbrechen
+            </button>
+            {error && <p role="alert">{error}</p>}
+          </form>
+        )}
+        <h3>Charaktere · {row?.characters.length ?? 0}</h3>
+        <div className="cc-profile-characters">
+          {row?.characters.map((ch) => (
+            <article className="cc-card" key={ch.id}>
+              <img src={`/classes/${ch.classId}.webp`} alt={ch.className} />
+              <div>
+                <h4>{ch.name}</h4>
+                {ch.id === row.profile?.mainCharacterId && (
+                  <span className="cc-badge">Hauptcharakter</span>
+                )}
+                <p>
+                  {ch.className} · Stufe {ch.level}
+                  {!!ch.omegaLevel && ` · Ω ${ch.omegaLevel}`}
+                </p>
+                <small>{ch.server}</small>
+              </div>
+            </article>
+          ))}
+        </div>
+        {contact}
+        <MemberHistory service={service} uid={member.uid} />
+        <small>
+          Profil und Status sind selbst gepflegt; kein Ingame-Onlinestatus.
+        </small>
+      </div>
+    </dialog>
   );
 }
 function MemberHistory({
