@@ -67,6 +67,7 @@ import "./community.css";
 import AdminParticipants from "./AdminParticipants";
 import ActivityCalendar from "./ActivityCalendar";
 import MemberDirectory from "./MemberDirectory";
+import GuildRanks from "./GuildRanks";
 import { calendarDays, zonedInstant, type CalendarView } from "./calendar";
 import {
   portfolio,
@@ -3215,10 +3216,7 @@ function AdminPanel() {
               vergeben. Ein Gildenrang verleiht keine Systemrechte. Der letzte
               Besitzer kann im Client weder entfernt noch herabgestuft werden.
             </p>
-            <p>
-              Ingame-Ränge und Anzeigenamen lassen sich in der
-              Mitgliederverwaltung bearbeiten.
-            </p>
+            <GuildRanks service={c.service} />
           </div>
         ) : tab === "Mitgliederverwaltung" ? (
           <AdminTable

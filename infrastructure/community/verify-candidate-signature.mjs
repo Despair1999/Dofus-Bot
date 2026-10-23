@@ -5,7 +5,7 @@ const config = JSON.parse(
     readFileSync("apps/desktop/src-tauri/tauri.conf.json", "utf8"),
   ),
   folder = "apps/desktop/src-tauri/target/release/bundle/nsis";
-const names = readdirSync(folder).filter((n) => n.endsWith(".exe.sig"));
+const names = readdirSync(folder).filter((n) => n.endsWith(`_${config.version}_x64-setup.exe.sig`));
 assert.equal(names.length, 1, "Exactly one signed installer expected");
 const pub = Buffer.from(
   Buffer.from(config.plugins.updater.pubkey, "base64")

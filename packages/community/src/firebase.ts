@@ -53,6 +53,8 @@ import {
   type ReservationState,
   listingInput,
   profileSchema,
+  guildRankSchema,
+  type GuildRank,
   reservationDelta,
   transitionReservation,
 } from "./model";
@@ -543,6 +545,33 @@ export class CommunityService {
         text: "Die Gildeninformationen wurden aktualisiert.",
         createdAt: serverTimestamp(),
       });
+    });
+  }
+  async saveGuildRank(
+    id: string,
+    value: Omit<GuildRank, "id" | "revision" | "lastAudit">,
+    revision: number,
+    reason: string,
+  ) {
+    if (!/^[a-f0-9-]{36}$/.test(id)) throw Error("Ungültige Rang-ID.");
+    const fields = guildRankSchema.parse(value),
+      uid = this.uid,
+      auditId = crypto.randomUUID();
+    await runTransaction(this.db, async (tx) => {
+      const ref = this.ref(`guildRanks/${id}`),
+        current = await tx.get(ref);
+      this.assertSession(uid);
+      if ((current.data()?.revision ?? 0) !== revision)
+        throw Error("Rang wurde inzwischen verändert. Bitte neu laden.");
+      const after = {
+        ...fields,
+        id,
+        revision: revision + 1,
+        lastAudit: auditId,
+        updatedAt: serverTimestamp(),
+      };
+      this.audit(tx, auditId, ref.path, current.data() ?? {}, after, reason);
+      tx.set(ref, after);
     });
   }
   async createListing(input: unknown) {

@@ -37,18 +37,6 @@ jobs:
           "allowed=$($allowed.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "draft_exists=$($draftExists.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-  publish-existing:
-    needs: release-state
-    if: needs.release-state.outputs.draft_exists == 'true' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Verify signed draft assets and publish v0.9.2
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./infrastructure/scripts/publish-validated-v092.ps1
-
   release:
     needs: release-state
     if: needs.release-state.outputs.allowed == 'true'
@@ -137,9 +125,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $config = Get-Content -LiteralPath 'apps/desktop/src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json
-          $portable = Get-ChildItem -LiteralPath artifacts -Filter '*-portable.zip' | Select-Object -First 1
-          $setup = Get-ChildItem -LiteralPath artifacts -Filter '*-setup.zip' | Select-Object -First 1
-          gh release upload ('v' + $config.version) $portable.FullName $setup.FullName --clobber
+          $portable = Get-Item -LiteralPath (Join-Path artifacts ('Dofus-Companion-' + $config.version + '-portable.zip'))
+          $setup = Get-Item -LiteralPath (Join-Path artifacts ('Dofus-Companion-' + $config.version + '-setup.zip'))
+          gh release upload ('v' + $config.version) $portable.FullName $setup.FullName
           if ($LASTEXITCODE -ne 0) { throw 'Portable-Archiv konnte nicht angehängt werden.' }
       - name: Save portable archive
         uses: actions/upload-artifact@v4
@@ -147,9 +135,5 @@ jobs:
           name: windows-portable
           path: artifacts/*-portable.zip
 
-      - name: Publish reviewed signed v0.9.2 release after successful build
-        if: github.ref == 'refs/heads/main'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./infrastructure/scripts/publish-validated-v092.ps1
+      # Builds remain drafts. Publication requires the live Firebase, native and
+      # signed-installer evidence checked by infrastructure/community/publish-release.mjs.

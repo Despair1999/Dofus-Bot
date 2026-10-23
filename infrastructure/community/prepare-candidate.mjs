@@ -12,6 +12,8 @@ if (!process.env.TAURI_SIGNING_PRIVATE_KEY || !process.env.UPDATER_PUBLIC_KEY)
 for (const path of [
   "package.json",
   "apps/desktop/package.json",
+  "apps/backend/package.json",
+  "apps/discord-bot/package.json",
   "apps/desktop/src-tauri/tauri.conf.json",
 ]) {
   const data = read(path);

@@ -7,9 +7,11 @@
     "dev": "node scripts/prepare-access.mjs && vite --host 127.0.0.1 --port 4173",
     "build": "node scripts/prepare-access.mjs && tsc --noEmit && vite build && node scripts/postbuild.mjs",
     "build:preview": "node scripts/prepare-access.mjs --reuse-live && tsc --noEmit && vite build --mode guild-preview && node scripts/postbuild.mjs",
+    "build:reuse-access": "node scripts/prepare-access.mjs --reuse-live && tsc --noEmit && vite build && node scripts/postbuild.mjs",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/lib/*.test.ts scripts/*.test.mjs",
     "test:preview": "node scripts/check-preview.mjs",
+    "test:community": "node scripts/check-community.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 4174"
   },
   "dependencies": {

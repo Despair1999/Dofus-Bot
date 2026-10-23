@@ -40,6 +40,9 @@ export default function PreviewGate({onUnlock}:{onUnlock:()=>void}) {
     } finally { setBusy(false); }
   }
   return <div className="gate-shell">
+    <nav aria-label="Rechtliche Informationen" style={{position:"relative",zIndex:2,display:"flex",gap:"1.5rem",justifyContent:"center",padding:"1rem",flexWrap:"wrap"}}>
+      <a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a><a href="/nutzungsbedingungen">Nutzungsbedingungen</a>
+    </nav>
     <div className="gate-stars" aria-hidden="true"/>
     <div className="gate-topbar">
       <div className="gate-brand"><img src={logo} alt=""/><span>DOFUS <b>COMPANION</b><small>THE ADVENTURE TOOLKIT</small></span></div>

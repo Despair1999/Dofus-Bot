@@ -531,6 +531,51 @@ test("archiving logically removes the guild, denies member reads, and restoratio
   assert.ok((await first.page("activities")).items.length > 0);
 });
 
+test("admin rank design is audited, revision safe and never grants system roles", async () => {
+  await owner.login("owner@example.test", password);
+  const id = crypto.randomUUID(),
+    fields = {
+      name: "Offizier",
+      order: 2,
+      color: "#bbaa77",
+      icon: "shield" as const,
+      archived: false,
+    };
+  await owner.saveGuildRank(
+    id,
+    fields,
+    0,
+    "Ingame-Rang für die Gilde erstellt",
+  );
+  const saved = await owner.get<any>(`guildRanks/${id}`);
+  assert.equal(saved.name, "Offizier");
+  assert.equal(
+    (await owner.get<any>(`audit/${saved.lastAudit}`)).before &&
+      Object.keys((await owner.get<any>(`audit/${saved.lastAudit}`)).before)
+        .length,
+    0,
+  );
+  await assert.rejects(() =>
+    first.saveGuildRank(
+      crypto.randomUUID(),
+      fields,
+      0,
+      "Normales Mitglied darf keine Ränge anlegen",
+    ),
+  );
+  await assert.rejects(() =>
+    owner.saveGuildRank(id, fields, 0, "Veraltete Rangänderung muss scheitern"),
+  );
+  await owner.saveGuildRank(
+    id,
+    { ...fields, archived: true },
+    1,
+    "Nicht mehr verwendeten Rang archivieren",
+  );
+  assert.equal((await owner.get<any>(`guildRanks/${id}`)).archived, true);
+  assert.equal(await first.role(), "member");
+});
+
 test("account deletion removes private data and blocks stale sync resurrection", async () => {
   const c = client("delete-account"),
     accountEmail = "delete@example.test";

@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import type { CommunityService } from "./firebase";
 import type { Profile, CommunityCharacter } from "./model";
+import { useGuildRanks, rankIcons } from "./GuildRanks";
 type Membership = {
   uid: string;
   displayName: string;
@@ -28,6 +29,7 @@ export default function MemberDirectory({
   members: Membership[];
   contact: (uid: string) => ReactNode;
 }) {
+  const { ranks } = useGuildRanks(service);
   const [rows, setRows] = useState<Record<string, Row>>({}),
     [error, setError] = useState(""),
     [search, setSearch] = useState(""),
@@ -269,7 +271,20 @@ export default function MemberDirectory({
                 <b>{value(m, "name") || "Profil wird geladen …"}</b>
                 <span>{ch?.className || "Keine Charakterfreigabe"}</span>
                 <span>{ch ? `${ch.level} · Ω ${ch.omegaLevel}` : ""}</span>
-                <span>{m.rank || "Mitglied"}</span>
+                <span
+                  style={{
+                    color: ranks.find((r) => r.name === m.rank && !r.archived)
+                      ?.color,
+                  }}
+                >
+                  {ranks.find((r) => r.name === m.rank && !r.archived)
+                    ? rankIcons[
+                        ranks.find((r) => r.name === m.rank && !r.archived)!
+                          .icon
+                      ]
+                    : ""}{" "}
+                  {m.rank || "Mitglied"}
+                </span>
                 <span>
                   {r?.characters.length ?? 0} Charaktere · {value(m, "server")}
                 </span>

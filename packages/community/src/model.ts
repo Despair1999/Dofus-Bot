@@ -7,6 +7,18 @@ export const profileSchema = z.object({
   mainCharacterId: z.string().max(100).default(""),
 });
 export type Profile = z.infer<typeof profileSchema>;
+export const guildRankSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+  order: z.number().int().min(0).max(1000),
+  color: z.string().regex(/^#[a-fA-F0-9]{6}$/),
+  icon: z.enum(["crown", "shield", "star", "diamond", "sword"]),
+  archived: z.boolean(),
+});
+export type GuildRank = z.infer<typeof guildRankSchema> & {
+  id: string;
+  revision: number;
+  lastAudit: string;
+};
 export const characterSchema = z
   .object({
     id: z.string().min(1).max(100),

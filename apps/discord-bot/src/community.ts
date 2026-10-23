@@ -86,7 +86,15 @@ export async function communityInteraction(i: ChatInputCommandInteraction) {
     throw Error("Bitte zuerst das Companion-Profil vervollständigen.");
   const command = i.options.getSubcommand();
   // This trusted bot uses Admin SDK and therefore enforces authorization explicitly on every invocation.
-  const membership = await db.doc(`memberships/${uid}`).get();
+  const [membership, guildConfig, deletion] = await Promise.all([
+    db.doc(`memberships/${uid}`).get(),
+    db.doc("platform/config").get(),
+    db.doc(`accountDeletions/${uid}`).get(),
+  ]);
+  if (deletion.exists)
+    throw Error("Dieser Account befindet sich in der Löschung.");
+  if (command !== "markt" && guildConfig.data()?.archived === true)
+    throw Error("Die Gilde wurde archiviert.");
   if (command !== "markt" && membership.data()?.status !== "approved")
     throw Error(
       "Diese Gildeninformationen sind ausschließlich bestätigten Mitgliedern zugänglich.",
@@ -166,6 +174,27 @@ export async function communityInteraction(i: ChatInputCommandInteraction) {
     )
       throw Error("Ungültige Charakterdaten.");
     await db.runTransaction(async (tx) => {
+      const [currentMembership, currentGuild, currentRecord, currentDeletion] =
+        await Promise.all([
+          tx.get(db.doc(`memberships/${uid}`)),
+          tx.get(db.doc("platform/config")),
+          tx.get(record.ref),
+          tx.get(db.doc(`accountDeletions/${uid}`)),
+        ]);
+      if (
+        currentMembership.data()?.status !== "approved" ||
+        currentGuild.data()?.archived === true ||
+        currentDeletion.exists
+      )
+        throw Error("Die Gildenberechtigung wurde inzwischen entzogen.");
+      if (
+        !currentRecord.exists ||
+        currentRecord.data()?.deleted ||
+        currentRecord.data()?.payload !== record.data()!.payload
+      )
+        throw Error(
+          "Der Charakter wurde inzwischen geändert; bitte erneut versuchen.",
+        );
       const ref = db.doc(`activities/${groupId}`),
         snapshot = await tx.get(ref);
       if (!snapshot.exists) throw Error("Gruppe nicht gefunden.");

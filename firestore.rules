@@ -17,6 +17,22 @@ service cloud.firestore {
    let log = getAfter(/databases/$(database)/documents/audit/$(id)).data;
    return freshAdmin() && id != resource.data.lastAudit && log.actorUid == request.auth.uid && log.target == path && log.before == resource.data && log.after == request.resource.data && log.createdAt == request.time;
   }
+  match /guildRanks/{id} {
+   function validRank() {
+    let d=request.resource.data;
+    return d.keys().hasOnly(['id','name','order','color','icon','archived','revision','lastAudit','updatedAt'])
+     && d.id==id && text(d.name,60) && d.name.size()>0 && d.order is int && d.order>=0 && d.order<=1000
+     && d.color is string && d.color.matches('#[a-fA-F0-9]{6}') && d.icon in ['crown','shield','star','diamond','sword']
+     && d.archived is bool && d.updatedAt==request.time;
+   }
+   allow get: if member() || admin();
+   allow list: if (member() || admin()) && bounded();
+   allow create: if freshAdmin() && validRank() && request.resource.data.revision==1
+    && getAfter(/databases/$(database)/documents/audit/$(request.resource.data.lastAudit)).data.target=='guildRanks/'+id
+    && getAfter(/databases/$(database)/documents/audit/$(request.resource.data.lastAudit)).data.after==request.resource.data;
+   allow update: if validRank() && revision() && audited('guildRanks/'+id);
+   allow delete: if false;
+  }
   match /platform/config {
    allow read: if member() || admin();
    allow create, delete: if false;
@@ -60,7 +76,7 @@ service cloud.firestore {
    }
    allow get: if own(uid) || registered();
    allow list: if registered() && bounded();
-   allow create: if own(uid) && valid()
+   allow create: if own(uid) && valid() && !exists(/databases/$(database)/documents/accountDeletions/$(uid))
     && get(/databases/$(database)/documents/platform/legal).data.registrationEnabled
     && getAfter(/databases/$(database)/documents/users/$(uid)/account/consent).data.legalVersion == get(/databases/$(database)/documents/platform/legal).data.legalVersion
     && getAfter(/databases/$(database)/documents/users/$(uid)/account/consent).data.legalAcceptedAt == request.time;
@@ -89,7 +105,7 @@ service cloud.firestore {
   match /memberships/{uid} {
    allow get: if own(uid) || member() || admin();
    allow list: if (member() || admin()) && bounded();
-   allow create: if own(uid) && verified() && request.resource.data.keys().hasOnly(['uid','status','rank','displayName','revision','lastAudit','updatedAt'])
+   allow create: if own(uid) && verified() && !exists(/databases/$(database)/documents/accountDeletions/$(uid)) && request.resource.data.keys().hasOnly(['uid','status','rank','displayName','revision','lastAudit','updatedAt'])
     && request.resource.data.uid == uid && request.resource.data.status == 'pending' && request.resource.data.rank == '' && request.resource.data.displayName == ''
     && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && request.resource.data.updatedAt == request.time;
    allow update: if revision() && audited('memberships/' + uid)
@@ -218,9 +234,10 @@ service cloud.firestore {
    allow create: if freshAdmin() && request.resource.data.keys().hasOnly(['actorUid','target','before','after','reason','createdAt'])
     && request.resource.data.actorUid == request.auth.uid && text(request.resource.data.reason,1000) && request.resource.data.reason.size() >= 5
     && request.resource.data.createdAt == request.time
-    && request.resource.data.target.matches('(platform/(config|legal)|memberships/[^/]+|guildCharacters/[^/]+|listings/[^/]+|reservations/[^/]+|activities/[^/]+|reports/[^/]+|listings/[^/]+/comments/[^/]+)')
+    && request.resource.data.target.matches('(platform/(config|legal)|guildRanks/[^/]+|memberships/[^/]+|guildCharacters/[^/]+|listings/[^/]+|reservations/[^/]+|activities/[^/]+|reports/[^/]+|listings/[^/]+/comments/[^/]+)')
     && ((request.resource.data.target.split('/').size() == 2
-     && get(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])).data == request.resource.data.before
+     && ((request.resource.data.target.split('/')[0]=='guildRanks' && !exists(/databases/$(database)/documents/guildRanks/$(request.resource.data.target.split('/')[1])) && request.resource.data.before=={})
+      || get(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])).data == request.resource.data.before)
      && getAfter(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])).data == request.resource.data.after)
     || (request.resource.data.target.split('/').size() == 4
      && get(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])/comments/$(request.resource.data.target.split('/')[3])).data == request.resource.data.before
