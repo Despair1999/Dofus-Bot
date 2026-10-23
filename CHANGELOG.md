@@ -1,5 +1,13 @@
 # Änderungen
 
+## 0.9.1 — 23.10.2026
+
+- Marktjournal bietet neue ×1000-Losgröße inklusive Speicherung, Korrektur und CSV-Export.
+- Warenlager mit manuell eingebuchten Beständen, Bündel- und Stückpreisrechner, Lagerwert und Sortierung.
+- Bestandsentnahmen ohne Verkauf sowie rücknehmbare Fehleinträge mit Prüfung nachfolgender Verkäufe.
+- Getrennte Preisbewertung und historische Einstandskosten; unbekannte Kosten bleiben als solche gekennzeichnet.
+- Automatisierter, nur für v0.9.1 aktivierter signierter GitHub-Release nach erfolgreicher Paketprüfung.
+
 ## 0.9.0 — 22.10.2026
 
 - Vereinigt veröffentlichte Verbesserungen aus v0.8.0 mit allen Änderungen in main, insbesondere der neuen Website und dem Marktjournal.
