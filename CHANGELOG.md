@@ -1,5 +1,14 @@
 # Änderungen
 
+## 0.9.2 — 23.10.2026
+
+- Vereinfachte Lagererfassung: tatsächliche Item-Stückzahl und Preis für **ein** Item sind Pflichtfelder.
+- Gesamtwert des neuen Bestands wird bereits bei der Eingabe als Menge × Einzelpreis berechnet.
+- Bereits erfasste Mengen werden in der Vorschau berücksichtigt und der geschätzte neue Lagerwert angezeigt.
+- Entfernte Bündeleingaben im Warenlager; Preispakete ×1/×10/×100/×1000 bleiben unter Marktpreise erhalten.
+- Übersichtlicheres Warenlager mit Sortierung nach Stückpreis, Stückzahl oder Lagergesamtwert.
+- Bestehende Lagerbewegungen bleiben erhalten; separate Kostenbasis für ursprüngliche Anschaffung bleibt optional.
+
 ## 0.9.1 — 23.10.2026
 
 - Marktjournal bietet neue ×1000-Losgröße inklusive Speicherung, Korrektur und CSV-Export.

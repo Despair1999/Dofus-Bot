@@ -195,6 +195,14 @@ export function currentEstimate(journal: Journal, position: Position) {
   return { ...latestPrice, value: Math.round(latestPrice.unit * position.quantity) };
 }
 export const bundleValue = (unit: number, size: number) => unit * size;
+/** User enters total number of owned items and the price of exactly one item. */
+export function calculateStockValue(quantityInput: string, unitPriceInput: string) {
+  if (!quantityInput.trim() || !unitPriceInput.trim()) return null;
+  const quantity = Number(quantityInput), price = Number(unitPriceInput);
+  if (!isQuantity(quantity) || !isMoney(price) || !Number.isSafeInteger(quantity * price)) return null;
+  return { quantity, price, value: quantity * price };
+}
+
 
 export type Advice = { tone: "info" | "warning" | "positive"; title: string; text: string };
 export function marketAdvice(journal: Journal, item: ItemRef, server: string, now = Date.now()): Advice[] {

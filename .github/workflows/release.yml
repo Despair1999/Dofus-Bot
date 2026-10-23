@@ -40,11 +40,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify signed draft assets and publish v0.9.1
+      - name: Verify signed draft assets and publish v0.9.2
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./infrastructure/scripts/publish-existing-v091.ps1
+        run: ./infrastructure/scripts/publish-validated-v092.ps1
 
   release:
     needs: release-state
@@ -144,9 +144,9 @@ jobs:
           name: windows-portable
           path: artifacts/*-portable.zip
 
-      - name: Publish reviewed signed v0.9.1 release after successful build
+      - name: Publish reviewed signed v0.9.2 release after successful build
         if: github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./infrastructure/scripts/publish-existing-v091.ps1
+        run: ./infrastructure/scripts/publish-validated-v092.ps1

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   canSell, emptyJournal, importJournal, itemKey, latestFor,
-  marketAdvice, parseOcrPrice, portfolio, unitOffers, currentEstimate, validateLedger, bundleValue,
+  marketAdvice, parseOcrPrice, portfolio, unitOffers, currentEstimate, validateLedger, bundleValue, calculateStockValue,
   type Observation, type Trade,
 } from "../src/v4/market/model";
 
@@ -119,4 +119,29 @@ test("Bestandsbuchungen bleiben im JSON Backup rückwärtskompatibel", () => {
   assert.equal(importJournal(JSON.stringify(journal)).trades[0].kind, "stock-in");
   const legacy = { ...emptyJournal(), trades: [buy("legacy", 5, 200)] };
   assert.equal(importJournal(JSON.stringify(legacy)).trades[0].kind, "buy");
+});
+
+test("Stückzahl mal Einzelpreis ergibt automatisch den Gesamtwert", () => {
+  assert.deepEqual(calculateStockValue("2500", "135"), { quantity: 2500, price: 135, value: 337500 });
+  assert.deepEqual(calculateStockValue("1", "0"), { quantity: 1, price: 0, value: 0 });
+});
+test("Einzelpreis und tatsächlich vorhandene Anzahl sind Pflicht", () => {
+  for (const [quantity, price] of [["", "135"], ["2500", ""], ["0", "135"],
+    ["-3", "135"], ["10.5", "135"], ["12", "-1"], ["1", "abc"],
+    ["9007199254740992", "3"], ["9007199254740991", "2"]]) {
+    assert.equal(calculateStockValue(quantity, price), null, `Invalid: ${quantity} / ${price}`);
+  }
+});
+test("Bestand und geschätzter Wert bleiben nach bestehender Lagerbuchung korrekt", () => {
+  const additions: Trade[] = [
+    { ...buy("stock-old", 120, 0), kind: "stock-in", valuationUnitPrice: 135, costBasisKnown: false },
+    { ...buy("stock-new", 2500, 0), at: "2026-10-23T13:00:00Z", kind: "stock-in",
+      valuationUnitPrice: 135, costBasisKnown: false },
+  ];
+  const journal = { ...emptyJournal(), trades: additions };
+  const p = portfolio(journal.trades)[0];
+  assert.equal(p.quantity, 2620);
+  assert.equal(p.cost, 0);
+  assert.equal(p.unknownQuantity, 2620);
+  assert.equal(currentEstimate(journal, p)?.value, 353700);
 });

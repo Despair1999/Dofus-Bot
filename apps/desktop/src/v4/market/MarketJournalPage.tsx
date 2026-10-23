@@ -500,9 +500,10 @@ export default function MarketJournalPage({ config }: { config: Config }) {
         onPick={(picked, selectedServer) => { pick(picked); setServer(selectedServer); }}
         onAdd={(entry) => {
           const error = validateLedger([entry, ...journal.trades]);
-          if (error) { setMessage(error); return; }
+          if (error) { setMessage(error); return false; }
           setJournal((prev) => ({ ...prev, trades: [entry, ...prev.trades] }));
           setMessage(entry.kind === "stock-in" ? "Bestand ohne Einkauf übernommen." : "Bestand ohne Verkauf korrigiert.");
+          return true;
         }}
         onDelete={(id) => remove("trades", id)}
       />}
