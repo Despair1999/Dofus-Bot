@@ -282,8 +282,8 @@ export function importJournal(text: string): Journal {
       throw Error("Ungültige Buchung im Backup.");
     }
   }
-  const error = validateLedger(p.trades);
-  if (error) throw Error(error);
+  // Keep existing v0.9.0 journals readable even if old transactions have inconsistent ordering.
+  // Validate new edits separately, so user data is never discarded on startup.
   for (const note of p.notes) {
     if (!note.id || !note.at || typeof note.text !== "string") throw Error("Ungültige Notiz.");
   }
