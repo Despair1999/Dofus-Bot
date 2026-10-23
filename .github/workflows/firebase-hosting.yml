@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'apps/website/**'
+      - 'packages/community/**'
+      - 'packages/core/src/market.ts'
       - 'apps/desktop/public/branding/**'
       - 'apps/desktop/public/classes/**'
       - 'apps/desktop/public/game-assets/worlds/1.webp'
@@ -15,6 +17,8 @@ on:
     branches: [main]
     paths:
       - 'apps/website/**'
+      - 'packages/community/**'
+      - 'packages/core/src/market.ts'
       - 'apps/desktop/public/branding/**'
       - 'apps/desktop/public/classes/**'
       - 'apps/desktop/public/game-assets/worlds/1.webp'

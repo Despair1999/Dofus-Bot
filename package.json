@@ -17,15 +17,20 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "pnpm -r --if-present test",
     "desktop": "pnpm --filter @dofus/desktop tauri dev",
-    "build:website": "pnpm --filter @dofus/website build"
+    "build:website": "pnpm --filter @dofus/website build",
+    "test:community": "node infrastructure/community/run-emulator-tests.mjs",
+    "community:bootstrap": "node infrastructure/community/bootstrap.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@firebase/rules-unit-testing": "^6.0.0",
     "@playwright/test": "^1.64.1",
     "@types/node": "^22.15.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "firebase": "^13.1.0",
+    "firebase-admin": "^14.5.0",
     "globals": "^17.13.0",
     "prettier": "^3.9.10",
     "tsx": "^4.20.0",

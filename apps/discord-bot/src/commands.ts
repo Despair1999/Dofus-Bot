@@ -3,7 +3,9 @@ import {
   type SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
 import { intelligenceCommands, extendDungeonCommand } from "./intelligence.js";
+import {communityCommand} from "./community.js";
 export const commands = [
+  communityCommand,
   ...intelligenceCommands,
   new SlashCommandBuilder()
     .setName("builder")

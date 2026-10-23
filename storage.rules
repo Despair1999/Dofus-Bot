@@ -1,0 +1,17 @@
+rules_version = '2';
+service firebase.storage {
+ match /b/{bucket}/o {
+  function verified(){return request.auth!=null && request.auth.token.email_verified==true;}
+  function admin(){return verified() && firestore.get(/databases/(default)/documents/roles/$(request.auth.uid)).data.role in ['owner','admin'];}
+  function fresh(){return admin() && request.time.toMillis() / 1000 - request.auth.token.auth_time < 900;}
+  function member(){return verified() && firestore.get(/databases/(default)/documents/memberships/$(request.auth.uid)).data.status=='approved';}
+  match /guild-emblems/default/{file} {
+   allow read: if admin() || member();
+   allow create: if fresh() && file.matches('[a-f0-9-]+[.]webp') && request.resource.size>0 && request.resource.size<=200000
+    && request.resource.contentType=='image/webp' && request.resource.metadata.uploadedBy==request.auth.uid;
+   allow update: if false;
+   allow delete: if fresh() && firestore.get(/databases/(default)/documents/platform/config).data.emblem != 'guild-emblems/default/'+file;
+  }
+  match /{path=**}{allow read,write:if false;}
+ }
+}

@@ -1,158 +1,335 @@
+import { CommunityPage, CommunityProvider, type Section } from "@dofus/community/ui";
+
+import { browserStore } from "@dofus/community/browser-store";
+
+import { LegalPage } from "./LegalPage";
+
+import { communityDungeons, searchCommunityItems } from "./community-catalog";
+
 import { useEffect, useState, type ReactNode } from "react";
+
 import {
+
  ArrowRight, ArrowUpRight, BookOpen, Boxes, Check, ChevronDown, ChevronRight,
+
  CircleHelp, Compass, Copy, Download, Gem, Globe2, Hammer,
+
  HardDriveDownload, Languages, Layers3, Map, MapPinned, Menu, MonitorDown, PackageSearch,
+
  Search, ShieldCheck, Sparkles, Swords, Terminal, Users, X, ZoomIn, ZoomOut
+
 } from "lucide-react";
+
 import logo from "../../desktop/public/branding/icon.png";
+
 import world from "../../desktop/public/game-assets/worlds/1.webp";
+
 import { fetchReleases, latestInstaller, installerFor, fileSize, type GithubRelease } from "./lib/release";
+
 import PatchlogPage from "./PatchlogPage";
 
+
+
 const links = [
- ["/", "Startseite"], ["/funktionen", "Funktionen"], ["/desktop", "Desktop-App"],
+
+ ["/community", "Community"], ["/", "Startseite"], ["/funktionen", "Funktionen"], ["/desktop", "Desktop-App"],
+
  ["/discord", "Discord-Bot"], ["/downloads", "Downloads"], ["/changelog", "Changelogs"], ["/faq", "FAQ"]
+
 ] as const;
+
 const meta: Record<string, [string, string]> = {
+
  "/": ["DOFUS Companion – Dein Abenteuer. Deine Tools.", "Dein unabhängiger Begleiter für DOFUS: Weltkarte, Builds, Quests, Dungeons, Offline-Übersetzer und Discord."],
+
  "/funktionen": ["Funktionen | DOFUS Companion", "Entdecke den Weltatlas, Farmrouten, Builder, Quests, Dungeons und Werkzeuge."],
+
  "/desktop": ["Windows-App & Overlay | DOFUS Companion", "Die Windows-App mit lokalem Backend, Overlay, Builder, Weltkarte und mehr."],
+
  "/discord": ["Discord-Bot | DOFUS Companion", "DOFUS-Befehle, Dungeon-Gruppen und Informationen direkt auf Discord."],
+
  "/downloads": ["Windows-Download | DOFUS Companion", "Lade den aktuellen Windows-Installer von DOFUS Companion herunter."],
+
  "/faq": ["Häufige Fragen | DOFUS Companion", "Antworten zu Installation, Quellen, Updates, Übersetzer und Discord."],
+
  "/changelog": ["Versionshistorie | DOFUS Companion", "Chronologisch sortierte Patchnotes der veröffentlichten DOFUS-Companion-Versionen."],
+
 };
+
 const discordId = import.meta.env.VITE_DISCORD_CLIENT_ID || "";
+
 const invite = /^\d{17,22}$/.test(discordId) ? `https://discord.com/oauth2/authorize?client_id=${discordId}&scope=bot%20applications.commands&permissions=0` : "";
+
 const modules = [
+
  {title:"Weltatlas",desc:"40 Spielwelten, Kartenkoordinaten und ein belegter Teilgraph für Routen.",Icon:MapPinned},
+
  {title:"Farming & Berufe",desc:"Ressourcenregionen, eigene Fundstellen, Berufsquests und Routenplanung.",Icon:Hammer},
+
  {title:"Dungeon-Explorer",desc:"Versionierte Dungeons, Bosse, Resistenzdaten und Vorbereitung.",Icon:Swords},
+
  {title:"Ausrüstungs-Builder",desc:"Sets planen, Attribute vergleichen und den Schaden einzelner Zauber prüfen.",Icon:Gem},
+
  {title:"Quests & Fortschritt",desc:"Quests durchsuchen und bestätigte Schritte pro Charakter speichern.",Icon:BookOpen},
+
  {title:"Offline-Übersetzer",desc:"Deutsch, Englisch und Französisch mit zwei unabhängigen Overlaykarten.",Icon:Languages},
+
  {title:"Item- & Monstersuche",desc:"Gegenstände, Rezepte, Monster und vorhandene Bilder entdecken.",Icon:PackageSearch},
+
  {title:"Almanax & Crafting",desc:"Tagesboni, Materialien, eigene Preisannahmen und Einkaufslisten.",Icon:Boxes},
+
 ];
+
 function AppLink({ href, children, className = "", external = false }: { href:string; children:ReactNode; className?:string; external?:boolean }) {
+
  return <a className={className} href={href} {...(external ? {target:"_blank",rel:"noopener noreferrer"} : {})}>{children}</a>;
+
 }
+
 function Header() {
+
  const [menu,setMenu]=useState(false);
+
  const [scrolled,setScrolled]=useState(false);
+
  useEffect(()=>{const onScroll=()=>setScrolled(window.scrollY>20);onScroll();window.addEventListener("scroll",onScroll,{passive:true});return()=>window.removeEventListener("scroll",onScroll)},[]);
+
  return <header className={`header ${scrolled?"solid":""}`}>
+
   <div className="container header-inner">
+
    <AppLink href="/" className="brand" ><img src={logo} alt="" className="brand-icon"/><span>DOFUS <strong>COMPANION</strong><small>THE ADVENTURE TOOLKIT</small></span></AppLink>
+
    <nav className={`nav ${menu?"open":""}`} aria-label="Hauptnavigation">
+
     {links.map(([href,label])=><AppLink key={href} href={href} className={location.pathname===href?"active":""}>{label}</AppLink>)}
+
     <AppLink href="/downloads" className="button gold nav-download"><Download size={16}/> Jetzt herunterladen</AppLink>
+
    </nav>
+
    <button type="button" aria-label={menu?"Menü schließen":"Menü öffnen"} aria-expanded={menu} className="mobile-menu" onClick={()=>setMenu(!menu)}>{menu?<X size={25}/>:<Menu size={25}/>}</button>
+
   </div>
+
  </header>;
+
 }
+
 function Footer(){return <footer className="footer">
+
  <div className="container foot-main">
+
   <div><AppLink href="/" className="brand foot-brand"><img src={logo} alt=""/><span>DOFUS <strong>COMPANION</strong><small>Dein Abenteuer. Deine Tools.</small></span></AppLink><p>Unabhängige Spielhilfe für die Welt der Zwölf. Mit Liebe für strategische Abenteuer entwickelt.</p></div>
+
   <div><h4>Entdecken</h4><AppLink href="/funktionen">Funktionen</AppLink><AppLink href="/desktop">Desktop-App</AppLink><AppLink href="/discord">Discord-Bot</AppLink><AppLink href="/downloads">Downloads</AppLink></div>
-  <div><h4>Informationen</h4><AppLink href="/faq">FAQ</AppLink><AppLink href="/changelog">Changelog</AppLink></div>
+
+  <div><h4>Informationen</h4><AppLink href="/faq">FAQ</AppLink><AppLink href="/changelog">Changelog</AppLink><AppLink href="/datenschutz">Datenschutz</AppLink><AppLink href="/nutzungsbedingungen">Nutzungsbedingungen</AppLink><AppLink href="/impressum">Impressum</AppLink></div>
+
   
+
  </div>
+
  <div className="container foot-bottom"><span>© {new Date().getFullYear()} DOFUS Companion</span><span>DOFUS und Ankama sind Marken ihrer jeweiligen Rechteinhaber. Unabhängiges Fanprojekt, nicht mit Ankama verbunden.</span></div>
+
  </footer>}
+
 function Label({children}: {children:ReactNode}){return <div className="eyebrow"><span className="tiny-gem"/> {children}</div>}
+
 function Heading({pre,title,desc}: {pre:string;title:string;desc?:string}){return <div className="section-heading"><Label>{pre}</Label><h2>{title}</h2>{desc&&<p>{desc}</p>}</div>}
+
 function BottomCTA(){return <section className="final-cta"><div className="container center"><Label>DEIN NÄCHSTER SCHRITT</Label><h2>Bereit für ein besseres Abenteuer?</h2><p>Erlebe die Werkzeuge von DOFUS Companion auf deinem Windows-PC.</p><AppLink href="/downloads" className="button gold big"><Download size={19}/> Windows-Download ansehen <ArrowRight size={17}/></AppLink></div></section>}
+
 function ProductPreview({compact=false}:{compact?:boolean}){
+
  const [tab,setTab]=useState("Weltkarte");
+
  const tabs=["Weltkarte","Builder","Dungeons","Quests"];
+
  return <div className={`product-window ${compact?"compact":""}`} aria-label="Illustrative Produktvorschau">
+
   <div className="window-top"><div className="window-dots"><i/><i/><i/></div><span>DOFUS Companion</span><span className="window-status"><span className="status-pulse"/> LOKAL</span></div>
+
   <div className="window-workspace"><aside className="preview-sidebar"><div className="preview-side-logo"><img src={logo} alt=""/> DC</div>{tabs.map((t,i)=><button type="button" key={t} onClick={()=>setTab(t)} className={tab===t?"selected":""}>{[<Map size={17}/>,<Gem size={17}/>,<Swords size={17}/>,<BookOpen size={17}/>][i]}<span>{t}</span></button>)}<div className="preview-side-end"><Globe2 size={17}/> 3.7</div></aside>
+
    <div className="preview-content"><div className="preview-breadcrumb">ENTDECKEN <ChevronRight size={13}/> {tab.toUpperCase()}</div>
+
    <h3>{tab==="Weltkarte"?"Die Welt der Zwölf":tab==="Builder"?"Dein nächstes Set":tab==="Dungeons"?"Das nächste Abenteuer":"Deine Questübersicht"}</h3>
+
    <p>{tab==="Weltkarte"?"Weltatlas und erkundbare Regionen":tab==="Builder"?"Klassen, Attribute und Ausrüstung":tab==="Dungeons"?"Dungeons, Bosse und Vorbereitung":"Schritte und persönliche Fortschritte"}</p>
+
    {tab==="Weltkarte"?<div className="preview-map"><img src={world} alt="Ausschnitt einer originalen Weltkarte aus dem Projekt" loading="lazy"/><span className="map-chip"><Layers3 size={13}/> ORIGINAL-KARTE</span><span className="map-target" aria-hidden="true"><Compass size={21}/></span></div>:tab==="Builder"?<div className="preview-cards"><div className="builder-preview-symbol"><Gem size={40}/><img src={logo} alt="DOFUS Companion Logo"/><span>SET- & ATTRIBUTPLANUNG</span></div></div>:tab==="Dungeons"?<div className="preview-feature"><Swords size={54}/><b>Dungeon-Wissen</b><span>Bossdaten • Kampfvorbereitung • Versionen</span></div>:<div className="preview-feature"><BookOpen size={54}/><b>Quest-Assistent</b><span>Suche • Schritte • Eigener Fortschritt</span></div>}
+
    <div className="preview-foot"><span><span className="status-pulse"/> Darstellung ausgewählter Funktionsbereiche</span><span>UNABHÄNGIGES TOOLKIT</span></div>
+
   </div></div>
+
   <div className="preview-disclaimer">Gestaltete Website-Produktvorschau – kein unveränderter Screenshot der App.</div>
+
  </div>;
+
 }
+
 function Home(){return <>
+
  <section className="hero"><div className="hero-stars"/><div className="hero-halo"/>
+
  <div className="container hero-grid"><div className="hero-copy"><div className="hero-kicker"><Sparkles size={14}/> DEIN BEGLEITER FÜR DIE WELT DER ZWÖLF <span className="hero-kicker-line"/></div><h1><span>DEIN ABENTEUER.</span><strong>DEINE TOOLS.</strong><em>ALLES AN EINEM ORT.</em></h1><p>Der intelligente Companion für DOFUS. Erkunde die Welt, perfektioniere deine Ausrüstung und plane deinen nächsten Dungeon – mit einer Windows-App, Overlay und Discord-Werkzeugen.</p><div className="hero-actions"><AppLink href="/downloads" className="button gold big"><MonitorDown size={19}/> Für Windows herunterladen <ArrowRight size={18}/></AppLink><AppLink href="/funktionen" className="button outline big">Funktionen entdecken <ArrowUpRight size={17}/></AppLink></div><div className="hero-proof"><span><Check size={15}/> Unabhängiges Fanprojekt</span><span><Check size={15}/> Lokale Werkzeuge</span><span><Check size={15}/> Kein Cloud-Zwang</span></div></div>
+
  <div className="hero-art"><div className="hero-orb"/><img src={logo} alt="DOFUS Companion" className="hero-emblem" /><ProductPreview compact/></div></div>
+
  <div className="hero-corner">ENTDECKE DEINE MÖGLICHKEITEN <span>↓</span></div></section>
+
  <section className="stat-strip"><div className="container stats"><div><b>40</b><span>Weltkarten</span></div><div><b>187</b><span>Dungeon-Einträge je Datenstand</span></div><div><b>19</b><span>Charakterklassen</span></div><div><b>6</b><span>Sprachrichtungen offline</span></div></div></section>
+
  <section className="section"><div className="container"><Heading pre="EINE WELT. EIN TOOLKIT." title="Mehr als nur eine Spielhilfe." desc="Drei perfekt ergänzende Bereiche – für deine Planung vor, während und nach dem Abenteuer."/><div className="platform-grid">
+
  <AppLink href="/desktop" className="platform-card"><div className="platform-symbol"><MonitorDown size={33}/></div><span className="small-label">01 / WINDOWS</span><h3>Desktop Companion</h3><p>Eine zentrale Anlaufstelle für Builds, Karten, Quests, Ausrüstung und Datenbanken.</p><span className="text-link">Desktop-App ansehen <ArrowRight size={16}/></span></AppLink>
+
  <AppLink href="/discord" className="platform-card"><div className="platform-symbol"><Users size={33}/></div><span className="small-label">02 / DISCORD</span><h3>Discord Companion</h3><p>Spielinformationen, gemeinsame Dungeonplanung und Befehle direkt auf Discord.</p><span className="text-link">Discord-Integration <ArrowRight size={16}/></span></AppLink>
+
  <AppLink href="/desktop#overlay" className="platform-card"><div className="platform-symbol"><Layers3 size={33}/></div><span className="small-label">03 / IM SPIEL</span><h3>Ingame-Overlay</h3><p>Individuelle Mini-Tools und zwei lokale Übersetzungskarten immer in Reichweite.</p><span className="text-link">Overlay entdecken <ArrowRight size={16}/></span></AppLink>
+
  </div></div></section>
+
  <section className="section section-slate"><div className="container"><div className="split-intro"><Heading pre="GUT DURCHDACHT" title="Alles, was deinen Spielalltag einfacher macht." desc="Entwickelt für echte DOFUS-Spieler: klare Informationen statt unübersichtlicher Fenster und Tabellen."/><AppLink href="/funktionen" className="button outline">Alle Funktionen <ArrowRight size={16}/></AppLink></div><div className="module-grid">{modules.slice(0,6).map(({title,desc,Icon})=><AppLink key={title} href="/funktionen" className="module-card"><Icon size={25}/><h3>{title}</h3><p>{desc}</p><ArrowUpRight className="module-arrow" size={16}/></AppLink>)}</div></div></section>
+
  <section className="section feature-spotlight"><div className="container spotlight-grid"><div><Label>DIE WELT NEU ENTDECKEN</Label><h2>Ein Atlas.<br/><span>Unzählige Wege.</span></h2><p>Entdecke 40 Weltkarten, suche nach Koordinaten und Untergebieten und plane Routen auf tatsächlich bekannten Übergängen. Eigene Fundstellen helfen dir beim Farmen.</p><AppLink href="/funktionen#atlas" className="button gold">Weltatlas entdecken <ArrowRight size={17}/></AppLink></div><div className="atlas-art"><img src={world} alt="DOFUS-Weltkartengrafik aus den Projektdateien" loading="lazy"/><div className="atlas-badge"><Compass size={20}/> 40 WELTKARTEN</div></div></div></section>
+
  <BottomCTA/></>}
+
 function AtlasDemo(){
+
  const [zoom,setZoom]=useState(1),[offset,setOffset]=useState({x:0,y:0}),[showGrid,setShowGrid]=useState(false);
+
  const [drag,setDrag]=useState<{x:number,y:number,px:number,py:number}|null>(null);
+
  return <div id="atlas" className="atlas-demo"><div className="demo-toolbar"><span><MapPinned size={17}/> Interaktive Kartenvorschau <small>Originalgrafik · vereinfachte Demo</small></span><div><label className="grid-toggle"><input type="checkbox" checked={showGrid} onChange={e=>setShowGrid(e.target.checked)}/> Raster</label><button aria-label="Verkleinern" type="button" onClick={()=>setZoom(v=>Math.max(.85,Math.round((v-.2)*100)/100))}><ZoomOut size={17}/></button><span>{Math.round(zoom*100)}%</span><button aria-label="Vergrößern" type="button" onClick={()=>setZoom(v=>Math.min(2.2,Math.round((v+.2)*100)/100))}><ZoomIn size={17}/></button><button type="button" onClick={()=>{setOffset({x:0,y:0});setZoom(1)}}>Reset</button></div></div>
+
  <div className="interactive-map" onPointerDown={e=>{if(e.button!==0)return;e.currentTarget.setPointerCapture(e.pointerId);setDrag({x:e.clientX,y:e.clientY,px:offset.x,py:offset.y})}} onPointerMove={e=>{if(drag)setOffset({x:drag.px+e.clientX-drag.x,y:drag.py+e.clientY-drag.y})}} onPointerUp={()=>setDrag(null)} onPointerCancel={()=>setDrag(null)} style={{cursor:drag?"grabbing":"grab"}}>
+
  <div className={`map-image-movable ${showGrid?"show-grid":""}`} style={{transform:`translate(${offset.x}px,${offset.y}px) scale(${zoom})`}}><img src={world} alt="Echte Weltkartengrafik, verschiebbar und zoombar" draggable={false}/></div>
+
  <div className="map-demo-label">VORSCHAU <span>In der Desktop-App stehen Koordinaten, Filter und gespeicherte Routen bereit.</span></div></div>
+
  </div>;
+
 }
+
 function Features(){const [selected,setSelected]=useState(0);return <>
+
  <section className="page-hero container"><Label>DIE FUNKTIONEN</Label><h1>Dein Wissensvorsprung.<br/><span>In jedem Abenteuer.</span></h1><p>Eine wachsende Sammlung praktischer Werkzeuge. Ohne erfundene Live-Preise, exakte Ressourcen-Spawns oder unbestätigte Bossmechaniken.</p></section>
+
  <section className="section section-tight"><div className="container"><div className="feature-tabs" role="tablist" aria-label="Funktionsauswahl">{modules.map(({title,Icon},i)=><button role="tab" aria-selected={selected===i} type="button" onClick={()=>setSelected(i)} className={selected===i?"selected":""} key={title}><Icon size={17}/>{title}</button>)}</div><div className="feature-panel"><div><Label>MODUL {String(selected+1).padStart(2,"0")}</Label><h2>{modules[selected].title}</h2><p>{modules[selected].desc}</p><p className="muted">Dieses Modul gehört zur Windows-Anwendung. Die Website zeigt einen Einblick, keine Verbindung zu privaten lokalen Spielerdaten.</p><AppLink href="/downloads" className="button gold">App entdecken <ArrowRight size={16}/></AppLink></div><div className="feature-illustration">{selected===0?<img src={world} alt="Original-Weltkarte"/>:selected===3?<div className="class-gallery"><Gem size={84} strokeWidth={1.25}/><span>AUSRÜSTUNG • SETS • ATTRIBUTE</span></div>:<div className="feature-large-icon">{(() => {const Icon=modules[selected].Icon;return <Icon size={90}/>})()}<span>{modules[selected].title.toUpperCase()}</span></div>}</div></div></div></section>
+
  <section className="section section-slate"><div className="container"><Heading pre="WELTATLAS" title="Entdecke die Karte interaktiv." desc="Karte mit der Maus ziehen, Zoomstufe ändern und das Raster einblenden. Diese öffentliche Vorschau nutzt eine echte im Repository enthaltene Kartenillustration."/><AtlasDemo/></div></section>
+
  <section className="section"><div className="container"><Heading pre="WEITERE WERKZEUGE" title="Für jeden Spielstil das richtige Tool."/><div className="module-grid">{modules.map(({title,desc,Icon})=><article className="module-card" key={title}><Icon size={26}/><h3>{title}</h3><p>{desc}</p></article>)}</div></div></section><BottomCTA/></>}
+
 function Desktop(){const [active,setActive]=useState("Weltkarte");return <>
+
  <section className="page-hero container"><Label>WINDOWS DESKTOP</Label><h1>Dein Kommandozentrum.<br/><span>Direkt auf dem PC.</span></h1><p>Eine native Windows-Anwendung auf Basis von Tauri und React mit lokalem Backend, eigenen Daten und einem flexiblen Overlay.</p><div className="page-actions"><AppLink href="/downloads" className="button gold big"><Download size={19}/> Windows-Installer <ArrowRight size={17}/></AppLink></div></section>
+
  <section className="section section-tight"><div className="container"><ProductPreview/></div></section>
+
  <section className="section section-slate"><div className="container"><Heading pre="DEIN WORKSPACE" title="Jedes Tool am richtigen Platz." desc="Die Produktvorschau wechselt zwischen vorhandenen Funktionsbereichen. Das endgültige Layout in der installierten App kann abweichen."/><div className="preview-select">{["Weltkarte","Builder","Dungeons","Quests","Overlay"].map(n=><button key={n} className={n===active?"active":""} onClick={()=>setActive(n)}>{n}</button>)}</div><div className="preview-detail"><div className="preview-detail-icon">{active==="Weltkarte"?<MapPinned size={49}/>:active==="Builder"?<Gem size={49}/>:active==="Dungeons"?<Swords size={49}/>:active==="Quests"?<BookOpen size={49}/>:<Languages size={49}/>}</div><div><h3>{active}</h3><p>{active==="Overlay"?"Zwei frei kombinierbare Übersetzerkarten, transparente Fenster, Hotkeys und individuelle Layoutprofile.":active==="Builder"?"Klassenbilder, Seteffekte, Ausrüstungsvergleiche und eine deterministische Schadensermittlung für unterstützte Zauber.":active==="Weltkarte"?"40 vorhandene Welten mit Karten- und Untergebietssuche sowie bekannten Übergängen für Routen.":active==="Dungeons"?"Bossattribute, Katalogeinträge, ausgewählte Kurzleitfäden und persönliche Vorbereitung.":"Questkatalog, bestätigte Fortschrittsstände und bekannte Ziele im eigenen Charakterprofil."}</p></div></div></div></section>
+
  <section className="section" id="overlay"><div className="container two-col"><div><Label>DAS OVERLAY</Label><h2>Immer im Spiel.<br/><span>Nie im Weg.</span></h2><p>Öffne kompakte Werkzeuge im separaten Overlayfenster. Zwei Übersetzerkarten unterstützen Deutsch, Englisch und Französisch lokal – nach einmaligem Modelldownload.</p><ul className="check-list"><li><Check size={17}/> Unabhängige Sprachrichtungen</li><li><Check size={17}/> Texte per Zwischenablage austauschen</li><li><Check size={17}/> Frei positionierbare Fenster und Hotkeys</li></ul></div><div className="translator-showcase"><div className="overlay-mini"><div><Languages size={16}/> DE → FR <Copy size={15}/></div><p>Viel Erfolg!</p><strong>Bonne chance !</strong></div><div className="overlay-mini"><div><Languages size={16}/> FR → DE <Copy size={15}/></div><p>On commence ?</p><strong>Fangen wir an?</strong></div><small>Beispieltext zur Darstellung. Kein Web-Übersetzungsdienst.</small></div></div></section>
+
  <section className="section section-slate"><div className="container"><Heading pre="TECHNISCHE BASIS" title="Modern. Lokal. Erweiterbar."/><div className="facts-grid"><div><MonitorDown size={24}/><h3>Windows</h3><p>Windows-Installer direkt aus dem offiziellen Downloadbereich; verfügbare Varianten hängen von der Version ab.</p></div><div><ShieldCheck size={24}/><h3>Datenschutzbewusst</h3><p>Der Backenddienst läuft lokal; öffentliches Hosting ist für die Desktop-Nutzung nicht erforderlich.</p></div><div><HardDriveDownload size={24}/><h3>Updates</h3><p>Versionsprüfung und signierte Tauri-Updates über den vorhandenen Release-Prozess.</p></div></div></div></section><BottomCTA/></>}
+
 function Discord(){const demos=[
+
  {cmd:"/item suchen",hint:"Gegenstand suchen",result:"Gegenstandssuche",body:"Sucht nach Itemnamen in der verifizierten Datenquelle und bietet passende Treffer."},
+
  {cmd:"/quest suchen",hint:"Quest finden",result:"Questsuche",body:"Durchsucht die importierten Quests mit deutschen und französischen Namen."},
+
  {cmd:"/dungeon erstellen",hint:"Gruppe anlegen",result:"Dungeon-Gruppe",body:"Erstellt eine Anmeldung mit Startzeit, Teilnehmerplätzen und Warteliste."},
+
  {cmd:"/craft berechnen",hint:"Materialbedarf",result:"Crafting-Rechner",body:"Berechnet Mengen für bekannte Rezepte anhand von Item-ID und gewünschter Menge."}
+
  ];const [choice,setChoice]=useState(0);return <>
+
  <section className="page-hero container"><Label>DISCORD COMPANION</Label><h1>Die richtigen Infos.<br/><span>Genau dort, wo ihr spielt.</span></h1><p>Suche Gegenstände, verwalte Dungeon-Gruppen und nutze Quest- und Crafting-Werkzeuge direkt in Discord.</p>{invite?<AppLink external href={invite} className="button gold big"><Users size={18}/> Bot zu Discord hinzufügen <ArrowUpRight size={17}/></AppLink>:<div className="inline-notice"><CircleHelp size={17}/> Ein öffentlicher Bot-Einladungslink ist noch nicht konfiguriert.</div>}</section>
+
  <section className="section section-tight"><div className="container discord-layout"><div><Label>INTERAKTIVE BEISPIELANSICHT</Label><h2>Wähle einen Command.</h2><p>Die Auswahl zeigt die jeweilige Funktion in einer beispielhaften Embed-Vorschau. Sie führt keine echte Discord-Abfrage aus.</p><div className="command-list">{demos.map((d,i)=><button type="button" onClick={()=>setChoice(i)} className={i===choice?"selected":""} key={d.cmd}><Terminal size={19}/><span><b>{d.cmd}</b><small>{d.hint}</small></span><ChevronRight size={17}/></button>)}</div></div><div className="discord-window"><div className="discord-channel"><span># companion-tools</span><span>BEISPIEL-ANSICHT</span></div><div className="discord-message"><div className="discord-avatar"><img src={logo} alt=""/></div><div><b>DOFUS Companion <span>BOT</span></b><small>Produktdemo</small><p>{demos[choice].cmd}</p><div className="discord-embed"><div className="embed-eyebrow">DOFUS COMPANION</div><h4>{demos[choice].result}</h4><p>{demos[choice].body}</p><div className="embed-footer">Vorschau · kein Live-Ergebnis</div></div></div></div></div></div></section>
+
  <section className="section section-slate"><div className="container"><Heading pre="WICHTIGE INFORMATIONEN" title="Discord-Integration mit klaren Grenzen."/><div className="facts-grid"><article><Users size={26}/><h3>Gemeinsame Planung</h3><p>Dungeon-Gruppen mit persistenten Anmeldungen, Wartelisten und Erinnerungen.</p></article><article><Search size={26}/><h3>Wissen per Slash-Command</h3><p>Item-, Quest-, Karten- und Dungeoninformationen aus den vorhandenen Datenquellen.</p></article><article><ShieldCheck size={26}/><h3>Private Funktionen geschützt</h3><p>Persönliche Befehle benötigen die konfigurierte Owner-ID. Der Bot benötigt einen laufenden Host und ist kein öffentlicher Cloud-Dienst.</p></article></div></div></section><BottomCTA/></>}
+
 function useReleases(){const [state,setState]=useState<{loading:boolean, releases:GithubRelease[],error:string}>({loading:true,releases:[],error:""});useEffect(()=>{const ctrl=new AbortController();fetchReleases(ctrl.signal).then(releases=>setState({loading:false,releases,error:""})).catch(e=>{if(!ctrl.signal.aborted)setState({loading:false,releases:[],error:String(e instanceof Error?e.message:e)})});return()=>ctrl.abort()},[]);return state}
+
 function Downloads(){const state=useReleases(),latest=latestInstaller(state.releases);return <>
+
  <section className="page-hero container"><Label>OFFIZIELLE DOWNLOADS</Label><h1>Dein nächstes Abenteuer.<br/><span>Nur einen Klick entfernt.</span></h1><p>Die Windows-Installer werden direkt aus der offiziellen Veröffentlichungsquelle geladen. Die Website selbst enthält keine Installationsdateien.</p></section>
+
  <section className="section section-tight"><div className="container download-layout"><div className="download-primary"><div className="download-icon"><MonitorDown size={36}/></div><div className="download-os">DOFUS COMPANION <span>FÜR WINDOWS</span></div><h2>Desktop Companion</h2>{state.loading?<p role="status">Veröffentlichte Versionen werden geladen …</p>:state.error?<p className="notice-error" role="alert">Versionsprüfung momentan nicht möglich. Versuche es später erneut.</p>:latest?<><p>Veröffentlichte Version <strong>{latest.release.tag_name}</strong> – offizielles Windows-Installationspaket.</p><div className="download-data"><div><span>VERSION</span><b>{latest.release.tag_name}</b></div><div><span>INSTALLERGRÖSSE</span><b>{fileSize(latest.installer.size)}</b></div><div><span>VERÖFFENTLICHT</span><b>{latest.release.published_at?new Date(latest.release.published_at).toLocaleDateString("de-DE"):"Nicht angegeben"}</b></div><div><span>SYSTEM</span><b>Windows</b></div></div><AppLink href={latest.installer.browser_download_url} external className="button gold big download-cta"><Download size={21}/> Installer herunterladen <ArrowUpRight size={18}/></AppLink><p className="download-filename">{latest.installer.name}</p>{latest.portable&&<AppLink href={latest.portable.browser_download_url} external className="secondary-download">Portable ZIP ({fileSize(latest.portable.size)}) <ArrowUpRight size={16}/></AppLink>}{latest.checksum&&<AppLink href={latest.checksum.browser_download_url} external className="secondary-download">SHA-256-Prüfsummen <ArrowUpRight size={16}/></AppLink>}</>:<p role="status">Derzeit ist kein gültiger öffentlicher Windows-Installer verfügbar. Ein Downloadbutton wird deshalb nicht angezeigt.</p>}</div>
+
  <aside className="download-aside"><div><span className="aside-number">01</span><h3>Download starten</h3><p>Wähle den Installer der neuesten gültigen öffentlichen Version.</p></div><div><span className="aside-number">02</span><h3>Installation</h3><p>Öffne die heruntergeladene Setup-Datei und folge dem Windows-Installationsassistenten.</p></div><div><span className="aside-number">03</span><h3>Abenteuer beginnen</h3><p>Starte die App. Dein lokaler Backenddienst wird bei installierten Releases automatisch verwaltet.</p></div><div className="aside-note"><ShieldCheck size={19}/><span>Tauri-Updater-Signatur bedeutet nicht automatisch Windows-Authenticode-Signierung. Windows kann deshalb einen Warnhinweis anzeigen.</span></div></aside></div></section>
+
  <section className="section section-slate"><div className="container"><Heading pre="VERÖFFENTLICHUNGEN" title="Immer auf dem neuesten Stand."/><ReleaseList releases={state.releases} loading={state.loading} error={state.error}/></div></section></>}
+
 function ReleaseList({releases,loading,error}:{releases:GithubRelease[],loading:boolean,error:string}){if(loading)return <p role="status">Release-Historie wird geladen …</p>;if(error)return <div className="empty-state" role="alert">Release-Historie momentan nicht abrufbar.</div>;if(!releases.length)return <div className="empty-state">Noch keine öffentlichen Versionen gefunden.</div>;return <div className="release-list">{releases.slice(0,12).map(r=>{const installer=installerFor(r);return <article key={r.tag_name} className="release-row"><span className="release-version">{r.tag_name}</span><div><h3>{r.name||`Version ${r.tag_name}`}</h3><small>{r.published_at?new Date(r.published_at).toLocaleDateString("de-DE"):"Datum unbekannt"} · {installer?"Windows-Installer verfügbar":"Kein gültiger Installer"}</small></div><AppLink href={`/changelog#${r.tag_name}`} className="release-link">Patchnotes <ArrowRight size={16}/></AppLink></article>})}</div>}
+
 function Changelog(){return <PatchlogPage/>}
+
 const faqItems = [
+
  ["Was ist DOFUS Companion?","Eine unabhängige, lokal nutzbare Windows-Spielhilfe mit Weltkarte, Items, Builder, Quests, Dungeons, Overlay und optionalem Discord-Bot."],
+
  ["Ist DOFUS Companion kostenlos?","Die Vorschau ist durch ein Zugangspasswort geschützt. Die offiziellen Windows-Installationspakete stehen im Downloadbereich bereit."],
+
  ["Welche Betriebssysteme werden unterstützt?","Aktuell werden Windows-Installer veröffentlicht. Andere native Plattformen sind nicht als freigegeben ausgewiesen."],
+
  ["Wie wird die Anwendung installiert?","Lade die echte Setup-EXE auf der Downloadseite herunter und starte den Installer. Die installierte Tauri-App verwaltet den lokalen Backenddienst."],
+
  ["Wie funktioniert das Overlay?","Über ein separates natives Fenster mit Profilen, Positionen, Transparenz und Hotkeys. Der Übersetzer kann in zwei unabhängigen Karten angezeigt werden."],
+
  ["Brauche ich einen API-Key?","Für die öffentliche Website nicht. Im lokalen Entwicklungsbetrieb und für den selbst betriebenen Discord-Bot sind je nach Funktion Konfigurationswerte erforderlich."],
+
  ["Werden Spielerdaten in Firebase gespeichert?","Nein. Firebase Hosting liefert nur statische Website-Dateien aus. Die Website führt keine persönlichen Backendabfragen aus."],
+
  ["Was kostet die Übersetzung?","Die Windows-App verwendet lokale Argos-Modelle ohne verpflichtende Übersetzungs-API; für den erstmaligen Modelldownload wird eine Internetverbindung benötigt."],
+
  ["Ist das eine offizielle Ankama-Anwendung?","Nein. DOFUS Companion ist ein unabhängiges Fanprojekt ohne offizielle Verbindung zu Ankama."],
+
  ["Sind Marktpreise oder alle Fundorte live?","Nein. Eigene Preisannahmen und bestätigte Fundstellen sind von verifizierten Daten getrennt. Unbekannte Werte werden nicht als Live-Daten ausgegeben."],
+
  ["Wie wird der Discord-Bot hinzugefügt?","Ein Einladungslink erscheint erst, wenn eine gültige öffentliche Discord Application ID konfiguriert ist. Ein dauerhaft erreichbarer Bot-Host muss separat betrieben werden."],
+
  ["Woher stammen die Daten?","Aus dem versionierten Spieldatenkatalog und ergänzenden geprüften Quellen. Bekannte Datenlücken werden in der Anwendung gekennzeichnet."]
+
 ];
+
 function Faq(){const [opened,setOpened]=useState<number|null>(0);return <><section className="page-hero container"><Label>GUT ZU WISSEN</Label><h1>Fragen?<br/><span>Hier findest du Antworten.</span></h1><p>Alles Wichtige zu DOFUS Companion, Installation, Datenquellen und der Nutzung der Werkzeuge.</p></section><section className="section section-tight"><div className="container faq-wrap">{faqItems.map(([q,a],i)=><div className="faq-item" key={q}><button type="button" aria-expanded={opened===i} onClick={()=>setOpened(opened===i?null:i)}><span>{q}</span><ChevronDown size={19} className={opened===i?"rotated":""}/></button>{opened===i&&<p>{a}</p>}</div>)}</div></section><BottomCTA/></>}
+
 function NotFound(){return <section className="page-hero container center"><Label>404 · UNBEKANNTE SEITE</Label><h1>Hier endet der Weg.</h1><p>Diese Seite existiert nicht. Starte dein Abenteuer auf der Startseite.</p><AppLink className="button gold big" href="/">Zur Startseite <ArrowRight size={17}/></AppLink></section>}
+
 export default function App(){
+
  const path=location.pathname.replace(/\/$/,"")||"/";
+
  useEffect(()=>{const [title,desc]=meta[path]||["404 | DOFUS Companion","Seite nicht gefunden."];document.title=title;document.documentElement.lang="de";document.querySelector('meta[name="description"]')?.setAttribute("content",desc);
+
  // Private preview: deliberately no canonical or indexable public pages.
+
  },[path]);
+
  let page:ReactNode;
+
+ if(path.startsWith("/community")) {
+
+  const selected = path.split("/")[2] || "account";
+
+  const sections: {id:Section;label:string}[] = [{id:"account",label:"Account & Cloud"},{id:"guild",label:"Gildenübersicht"},{id:"members",label:"Mitglieder"},{id:"marketplace",label:"Marktplatz"},{id:"events",label:"Events"},{id:"groups",label:"Gruppenfinder"}];
+
+  return <><Header/><main className="cc-website"><CommunityProvider emulators={(import.meta.env.DEV || import.meta.env.MODE==="emulator-test") && import.meta.env.VITE_COMMUNITY_EMULATORS==="true"} store={browserStore} searchItems={searchCommunityItems} dungeons={communityDungeons}><div className="cc"><nav className="cc-tabs" aria-label="Community">{sections.map(s=><a key={s.id} href={`/community/${s.id}`}>{s.label}</a>)}</nav></div><CommunityPage section={sections.find(s=>s.id===selected)?.id || "account"}/></CommunityProvider></main><Footer/></>;
+
+ }
+
+ if(["/datenschutz","/nutzungsbedingungen","/impressum"].includes(path)) return <><Header/><main><LegalPage path={path}/></main><Footer/></>;
+
  switch(path){case "/":page=<Home/>;break;case "/funktionen":page=<Features/>;break;case "/desktop":page=<Desktop/>;break;case "/discord":page=<Discord/>;break;case "/downloads":page=<Downloads/>;break;case "/faq":page=<Faq/>;break;case "/changelog":page=<Changelog/>;break;default:page=<NotFound/>;}
+
  return <><Header/><main id="main">{page}</main><Footer/></>;
+
 }

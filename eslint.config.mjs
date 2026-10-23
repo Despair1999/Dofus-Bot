@@ -33,7 +33,7 @@ export default ts.config(
     },
   },
   {
-    files: ["apps/desktop/src/**/*.{ts,tsx}"],
+    files: ["apps/desktop/src/**/*.{ts,tsx}", "packages/community/src/**/*.{ts,tsx}"],
     plugins: { "react-hooks": hooks },
     rules: { "react-hooks/rules-of-hooks": "error" },
   },

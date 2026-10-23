@@ -148,6 +148,11 @@ export default function BuilderPage({
     () => calculateBuild(draft, itemMap, setMap),
     [draft, itemMap, setMap],
   );
+  useEffect(()=>{
+    const receive=()=>{void read<Build[]>("builder:saved",[]).then(setSaved).catch(error=>setError(String(error)));};
+    window.addEventListener("companion:replica-ready",receive);
+    return()=>window.removeEventListener("companion:replica-ready",receive);
+  },[]);
   const change = useCallback(
     (next: Partial<Build>) => setDraft((d) => ({ ...d, ...next })),
     [],

@@ -1,3 +1,4 @@
+import { CommunityPage, type Section } from "@dofus/community/ui";
 import OmegaBadge from "./ui/OmegaBadge";
 import ClassArtwork from "./ui/ClassArtwork";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -188,6 +189,19 @@ function MainApp() {
   const modeQueue = useRef(createSerialQueue());
   const questRequest = useRef(0);
   const character = characters.find((c) => c.id === active);
+  useEffect(() => {
+    const reload = () => { void (async () => {
+      setCharacters(await read("characters", []));
+      setFavorites(await read("favorites", []));
+      setTodos(await read("todos", []));
+      setActive(await read("active", ""));
+      if(active)setProgress(await read(`progress:${active}`, []));
+    })().catch(error=>setNotice(String(error))); };
+    const failure=(event:Event)=>setNotice((event as CustomEvent<string>).detail);
+    window.addEventListener("companion:replica-ready",reload);
+    window.addEventListener("companion:replica-error",failure);
+    return()=>{window.removeEventListener("companion:replica-ready",reload);window.removeEventListener("companion:replica-error",failure);};
+  },[active]);
   const gameClass = classes.find((c) => c.id === character?.classId);
   const current = progress.find((p) => p.questId === quest?.id);
   useEffect(() => {
@@ -894,7 +908,7 @@ function MainApp() {
               ))}
             </div>
           )}
-          {!["builder", "dungeons", "professions", "monsters", "sets"].includes(
+          {!["builder", "dungeons", "professions", "monsters", "sets", "account", "guild", "members", "marketplace", "events", "groups", "guild-market"].includes(
             tab,
           ) &&
             !(tab === "characters" && route.entityId) && (
@@ -1347,6 +1361,7 @@ function MainApp() {
             />
           )}
           {tab === "market" && <MarketJournalPage config={config} />}
+          {["account","guild","members","marketplace","events","groups"].includes(tab) && <CommunityPage section={tab as Section}/>}
           {tab === "characters" && (
             <CharactersPage
               key={catalogRevision}

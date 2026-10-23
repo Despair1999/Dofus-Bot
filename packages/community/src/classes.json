@@ -1,0 +1,21 @@
+[
+  { "id": 1, "name": "Féca", "imageUrl": "/classes/1.webp" },
+  { "id": 2, "name": "Osamodas", "imageUrl": "/classes/2.webp" },
+  { "id": 3, "name": "Enutrof", "imageUrl": "/classes/3.webp" },
+  { "id": 4, "name": "Sram", "imageUrl": "/classes/4.webp" },
+  { "id": 5, "name": "Xélor", "imageUrl": "/classes/5.webp" },
+  { "id": 6, "name": "Ecaflip", "imageUrl": "/classes/6.webp" },
+  { "id": 7, "name": "Eniripsa", "imageUrl": "/classes/7.webp" },
+  { "id": 8, "name": "Iop", "imageUrl": "/classes/8.webp" },
+  { "id": 9, "name": "Crâ", "imageUrl": "/classes/9.webp" },
+  { "id": 10, "name": "Sadida", "imageUrl": "/classes/10.webp" },
+  { "id": 11, "name": "Sacrieur", "imageUrl": "/classes/11.webp" },
+  { "id": 12, "name": "Pandawa", "imageUrl": "/classes/12.webp" },
+  { "id": 13, "name": "Halsabschneider", "imageUrl": "/classes/13.webp" },
+  { "id": 14, "name": "Maskerador", "imageUrl": "/classes/14.webp" },
+  { "id": 15, "name": "Steamer", "imageUrl": "/classes/15.webp" },
+  { "id": 16, "name": "Eliotrop", "imageUrl": "/classes/16.webp" },
+  { "id": 17, "name": "Übermagier", "imageUrl": "/classes/17.webp" },
+  { "id": 18, "name": "Ouginak", "imageUrl": "/classes/18.webp" },
+  { "id": 20, "name": "Speerschmied", "imageUrl": "/classes/20.webp" }
+]

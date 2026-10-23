@@ -1,0 +1,30 @@
+{
+  "name": "@dofus/community",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./model": "./src/model.ts",
+    "./ui": "./src/Community.tsx",
+    "./browser-store": "./src/browser-store.ts",
+    "./style.css": "./src/community.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@dofus/core": "workspace:*",
+    "firebase": "^13.1.0",
+    "idb": "^8.0.4",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

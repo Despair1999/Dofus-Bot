@@ -15,10 +15,12 @@ export class ConflictError extends Error {
 
 export class PersonalStore {
   readonly db: DatabaseSync;
-  constructor(path: string) {
+  constructor(readonly path: string) {
     this.db = new DatabaseSync(path);
     this.db
       .exec(`PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;
+      CREATE TABLE IF NOT EXISTS community_sync_state(id INTEGER PRIMARY KEY CHECK(id=1),dirty_revision INTEGER NOT NULL,mirrored_revision INTEGER NOT NULL);
+      INSERT OR IGNORE INTO community_sync_state VALUES(1,0,0);
       CREATE TABLE IF NOT EXISTS migrations(version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS characters(id TEXT PRIMARY KEY, name TEXT NOT NULL, server TEXT NOT NULL, class_name TEXT NOT NULL, level INTEGER NOT NULL CHECK(level BETWEEN 1 AND 200), version INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS character_quests(character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE, quest_id INTEGER NOT NULL, step INTEGER NOT NULL, status TEXT NOT NULL CHECK(status IN ('active','paused','completed')), version INTEGER NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY(character_id,quest_id));
