@@ -27,7 +27,7 @@ export default function WarehousePanel({ journal, positions, item, server, onPic
 }) {
   const [mode, setMode] = useState<"stock-in" | "stock-out">("stock-in");
   const [bundleCount, setBundleCount] = useState("1");
-  const [packSize, setPackSize] = useState("100");
+  const [packSize, setPackSize] = useState("1");
   const [unitPrice, setUnitPrice] = useState("");
   const [marketAverage, setMarketAverage] = useState("");
   const [costPerUnit, setCostPerUnit] = useState("");
