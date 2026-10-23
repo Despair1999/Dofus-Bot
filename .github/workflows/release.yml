@@ -128,3 +128,41 @@ jobs:
         with:
           name: windows-portable
           path: artifacts/*-portable.zip
+
+      - name: Publish validated v0.9.1 signed update
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content 'apps/desktop/src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json).version
+          if ($version -ne '0.9.1') {
+            Write-Host 'Automatische Veröffentlichung ist nur für v0.9.1 freigeschaltet.'
+            exit 0
+          }
+          $tag = 'v' + $version
+          $release = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$tag" | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or -not $release.draft) { throw 'Signierter Release-Entwurf fehlt.' }
+          $names = @($release.assets | ForEach-Object { $_.name })
+          foreach ($required in @(
+            'DOFUS.Companion_0.9.1_x64-setup.exe',
+            'DOFUS.Companion_0.9.1_x64-setup.exe.sig',
+            'Dofus-Companion-0.9.1-portable.zip',
+            'latest.json'
+          )) {
+            if ($names -notcontains $required) { throw "Release-Asset fehlt: $required" }
+            $asset = $release.assets | Where-Object { $_.name -eq $required } | Select-Object -First 1
+            if ($asset.size -le 0) { throw "Leeres Release-Asset: $required" }
+          }
+          New-Item -ItemType Directory -Path .data-release -Force | Out-Null
+          gh release download $tag --pattern latest.json --dir .data-release
+          if ($LASTEXITCODE -ne 0) { throw 'Updater-Metadaten konnten nicht geladen werden.' }
+          $metadata = Get-Content '.data-release/latest.json' -Raw | ConvertFrom-Json
+          if ($metadata.version -ne $version) { throw 'Updater-Version ist nicht konsistent.' }
+          $platforms = @($metadata.platforms.PSObject.Properties.Value)
+          if ($platforms.Count -lt 1 -or @($platforms | Where-Object { -not $_.signature -or -not $_.url }).Count -gt 0) {
+            throw 'Updater-Signatur oder Download-URL fehlt.'
+          }
+          gh release edit $tag --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Signierter Release konnte nicht veröffentlicht werden.' }
+          Write-Host "Signiertes Update $tag wurde veröffentlicht."
