@@ -7,7 +7,7 @@ Stand 23.10.2026. Basis main 0.9.2. Kein Produktionsdeploy.
 - `pnpm typecheck`: alle Workspace-Projekte erfolgreich.
 - `pnpm lint`: erfolgreich.
 - `pnpm test`: 166 erfolgreich, keine Fehler: Core 30, Community 24, Game Data 8, Website 7, Desktop 32, Backend 46, Discord 19.
-- `pnpm test:community`: 38 erfolgreich, keine Fehler: 21 Rules-, elf SDK-Integrations-, ein lokaler Owner-Einrichtungs- und fünf Chromium-Browsertests.
+- `pnpm test:community`: 39 erfolgreich, keine Fehler: 21 Rules-, zwölf SDK-Integrations-, ein lokaler Owner-Einrichtungs- und fünf Chromium-Browsertests.
 - Desktop- und Website-Produktionsbuild erfolgreich. Vite meldet große JS-Chunks; Codeaufteilung bleibt eine mögliche Optimierung.
 
 Nachgewiesen: echte Emulator-Registrierung, private Zustimmung, Verifikation, Reset, Login/Logout, zwei unabhängige Sync-Clients, Offline-Queue, idempotente Wiederholung, konkurrierende Revisionen, lokale Änderung während Upload, Konfliktentscheidung und dauerhafter Backend-Mutationszähler mit exakter Bestätigung.
@@ -29,3 +29,5 @@ Der ENOENT-Fehler auf frischen GitHub-Runnern ist behoben: Logordner wird vor sy
 Ergänzte Negativtests: Upload über 200 KB, falsches MIME, falsche Uploader-UID, unerlaubte zusätzliche Metadaten, verbotene Bucket-Auflistung und ungültige WebP-Signatur im Client. Rules können keine Bilddateien dekodieren; kein serverseitiges Scanning behaupten. Meldungen: Mindestabstand, privater Reporterzugriff, fremde Entscheidungen blockiert, Adminabschluss nur mit Audit. Rücknahme einer Kommentar-Moderation ist nur auf den nachweisbaren Originaltext und ohne zwischenzeitliche Änderung erlaubt. Lokale Owner-Einrichtung blockiert fremde Origins, fehlende Sitzungstoken und zu kurze Passwörter vor jedem Firebase-Aufruf.
 
 Sommerzeit-/Zeitzonen-Unitprüfungen und Kalendernavigation ergänzen die Regression. Die Publication-Gate-Probe verweigert Veröffentlichung bei offenen Voraussetzungen wie erwartet. Signierter Kandidatenworkflow ist vorbereitet und enthält echte Signatur-/Manipulationsprüfung, wurde aber nicht ausgeführt; kein neues signiertes Windows-Artefakt oder Update-Manifest vorhanden.
+
+Zusätzliche Session-Prüfung: Logout während einer auf Netzwerklesungen wartenden Adminänderung bricht die Mutation ab; der gemeinsame Datensatz bleibt unverändert. Die ursprüngliche UID wird vor administrativen Transaktionsschreibvorgängen erneut geprüft.

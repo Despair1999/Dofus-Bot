@@ -473,10 +473,12 @@ export class CommunityService {
       await deleteObject(storageRef(this.storage, path));
   }
   async saveSettings(value: PlatformConfig, reason: string) {
-    const audit = crypto.randomUUID();
+    const audit = crypto.randomUUID(),
+      uid = this.uid;
     await runTransaction(this.db, async (tx) => {
       const guild = await tx.get(this.ref("platform/config")),
         legal = await tx.get(this.ref("platform/legal"));
+      this.assertSession(uid);
       if (!guild.exists() || !legal.exists())
         throw Error(
           "Gilden- oder Rechtstextkonfiguration wurde noch nicht initialisiert.",
@@ -629,6 +631,7 @@ export class CommunityService {
       const l = await tx.get(this.ref(`listings/${before.listingId}`));
       if (!l.exists()) throw Error("Angebot fehlt.");
       const listing = l.data() as Listing;
+      this.assertSession(uid);
       const admin = uid !== before.buyerUid && uid !== before.sellerUid;
       const next = transitionReservation(before, state, uid, admin);
       const delta = reservationDelta(before.state, state, before.quantity);
@@ -752,6 +755,7 @@ export class CommunityService {
         s = await tx.get(ref);
       if (!s.exists()) throw Error("Aktivität fehlt.");
       const value = s.data() as Activity;
+      this.assertSession(uid);
       if (value.status !== "open") throw Error("Aktivität ist geschlossen.");
       if (participant && participant.level < value.minLevel)
         throw Error("Mindestlevel nicht erreicht.");
@@ -792,10 +796,12 @@ export class CommunityService {
     revision: number,
     reason: string,
   ) {
-    const auditId = crypto.randomUUID();
+    const auditId = crypto.randomUUID(),
+      uid = this.uid;
     await runTransaction(this.db, async (tx) => {
       const ref = this.ref(`activities/${id}`),
         snapshot = await tx.get(ref);
+      this.assertSession(uid);
       if (!snapshot.exists() || snapshot.data().revision !== revision)
         throw Error("Aktivität wurde inzwischen geändert. Neu laden.");
       const before = snapshot.data() as Activity,
@@ -873,10 +879,12 @@ export class CommunityService {
     reason = "",
     admin = false,
   ) {
-    const id = crypto.randomUUID();
+    const id = crypto.randomUUID(),
+      uid = this.uid;
     await runTransaction(this.db, async (tx) => {
       const ref = this.ref(path),
         s = await tx.get(ref);
+      this.assertSession(uid);
       if (!s.exists() || s.data().revision !== revision)
         throw Error("Datensatz wurde verändert. Neu laden und vergleichen.");
       const after: DocumentData = {

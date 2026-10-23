@@ -582,3 +582,25 @@ test("account deletion removes private data and blocks stale sync resurrection",
     }),
   );
 });
+
+test("logout aborts an administrative mutation that is waiting on network reads", async () => {
+  const switched = client("late-admin");
+  await switched.login("owner@example.test", password);
+  const snapshot = await adminFirestore(admin)
+      .collection("activities")
+      .limit(1)
+      .get(),
+    doc = snapshot.docs[0],
+    before = doc.data();
+  const pending = switched.edit(
+    `activities/${doc.id}`,
+    { title: "Must not survive logout" },
+    before.revision,
+    "Accountwechsel während Adminänderung",
+    true,
+  );
+  const rejected = assert.rejects(pending);
+  await switched.logout();
+  await rejected;
+  assert.equal((await doc.ref.get()).data()!.title, before.title);
+});
