@@ -6,3 +6,5 @@ allowBuilds:
 packages:
   - apps/*
   - packages/*
+overrides:
+  '@grpc/grpc-js': 1.14.6

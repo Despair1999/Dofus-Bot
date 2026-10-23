@@ -8,13 +8,21 @@ import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { PersonalStore } from "../../apps/backend/src/store.js";
 import { GameDataStore } from "../../packages/game-data/src/index.ts";
 import { createApp } from "../../apps/backend/src/app.js";
-import { mkdirSync, createWriteStream } from "node:fs";
+import {
+  mkdirSync,
+  createWriteStream,
+  openSync,
+  type WriteStream,
+} from "node:fs";
+import { finished } from "node:stream/promises";
 const projectId = "demo-dofus-community",
   admin = initializeApp({ projectId }, "ui-tests"),
   token = "local-ui-emulator-test-bearer-at-least-32-characters",
   password = "emulator-ui-password-123";
 let browser: Browser, website: Page, desktop: Page, adminPage: Page;
 const children: ChildProcess[] = [];
+const logs: WriteStream[] = [];
+const fixtureErrors: Error[] = [];
 const personal = new PersonalStore(":memory:"),
   game = new GameDataStore(":memory:");
 let backend: Awaited<ReturnType<typeof createApp>>;
@@ -33,7 +41,14 @@ async function ready(url: string) {
 async function vite(pkg: string, port: string) {
   const command = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
   const folder = ".data/community-ui-dist";
-  const log = createWriteStream(`test-results/community-vite-${port}.log`);
+  // A fresh checkout has no test-results directory. Open synchronously so failures
+  // belong to this hook instead of becoming unhandled errors after tests pass.
+  mkdirSync("test-results", { recursive: true });
+  const log = createWriteStream("", {
+    fd: openSync(`test-results/community-vite-${port}.log`, "w"),
+  });
+  log.on("error", (error) => fixtureErrors.push(error));
+  logs.push(log);
   const build = spawn(
     command,
     [
@@ -85,8 +100,8 @@ async function vite(pkg: string, port: string) {
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
-  child.stdout?.pipe(log);
-  child.stderr?.pipe(log);
+  child.stdout?.pipe(log, { end: false });
+  child.stderr?.pipe(log, { end: false });
   children.push(child);
 }
 before(
@@ -213,9 +228,18 @@ after(async () => {
     else child.kill();
   }
   await backend?.close();
+  for (const log of logs) {
+    log.end();
+    await finished(log);
+  }
   personal.close();
   game.close();
   await deleteApp(admin);
+  assert.deepEqual(
+    fixtureErrors,
+    [],
+    "Fixture logging must finish without asynchronous errors",
+  );
 });
 async function login(page: Page, url: string, email: string) {
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
