@@ -60,6 +60,25 @@ assert.ok(
 );
 assert.ok(live.passed && live.cleanupComplete);
 assert.ok(read("test-results/community-image-rule-production.json").passed);
+if (version !== "0.10.0") {
+  const hub = read(".data/guild-hub-production-acceptance.json");
+  assert.ok(
+    hub.passed &&
+      hub.cleanupComplete &&
+      hub.ownerPreserved &&
+      hub.browserSettingsSaved &&
+      hub.authenticatedBrowserStorage &&
+      hub.nonAdminUploadDenied &&
+      hub.profileBoundaries,
+  );
+  const catalog = read("design/community-market-catalog.json");
+  assert.equal(catalog.excluded.unverified, 0);
+  for (const path of [
+    "apps/desktop/public/community-items.json",
+    "apps/website/public/community-items.json",
+  ])
+    assert.equal(sha(readFileSync(path)), catalog.sha256);
+}
 assert.ok(
   regression.passed && regression.total === 54 && regression.failed === 0,
 );

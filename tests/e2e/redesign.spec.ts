@@ -7,6 +7,9 @@ test.beforeEach(async ({ page }) => {
     await write("onboarded", true);
   });
   await page.reload();
+  await expect(
+    page.getByRole("button", { name: /Globale Suche/ }),
+  ).toBeVisible();
 });
 test("command palette searches real records, supports keyboard navigation, and restores focus", async ({
   page,

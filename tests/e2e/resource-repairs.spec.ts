@@ -28,7 +28,7 @@ test("a delayed crafting selection cannot reopen an item after X", async ({
     await route.continue();
   });
   await search.fill("Piou");
-  const option = page.getByRole("option").first();
+  const option = page.locator('[role="listbox"]').getByRole("option").first();
   await expect(option).toBeVisible();
   const delayed = page.waitForResponse((r) =>
     /\/api\/items\/\d+\?/.test(r.url()),

@@ -154,9 +154,15 @@ test("character profile, active selection, real build equipment and class grid s
       "src",
       "/classes/11.webp",
     );
-    await page
-      .getByRole("button", { name: "Als aktives Profil wählen", exact: true })
-      .click();
+    const choose = page.getByRole("button", {
+      name: "Als aktives Profil wählen",
+      exact: true,
+    });
+    if (await choose.isVisible()) await choose.click();
+    else
+      await expect(
+        page.getByRole("button", { name: "Aktives Profil", exact: true }),
+      ).toBeDisabled();
     await page.reload();
     await expect(
       page.getByRole("button", { name: "Aktives Profil", exact: true }),
@@ -194,7 +200,10 @@ test("character profile, active selection, real build equipment and class grid s
         .getByRole("option"),
     ).toHaveCount(19);
     await page.getByLabel("Klasse suchen").fill("Iop");
-    await page.getByRole("option", { name: /Iop/ }).click();
+    await page
+      .getByRole("listbox", { name: "Verfügbare Klassen" })
+      .getByRole("option", { name: /Iop/ })
+      .click();
     await expect(
       page.getByRole("combobox", { name: "Profilklasse" }),
     ).toContainText("Iop");

@@ -670,6 +670,7 @@ export default function WorldPage({
       price,
     ],
   );
+  const routeCharacterId=onlyCharacter?characterId:undefined;
   useEffect(() => {
     routeRevision.current++;
     setRoute(null);
@@ -681,7 +682,7 @@ export default function WorldPage({
     maxLevel,
     onlyCharacter,
     includeUnconfirmed,
-    characterId,
+    routeCharacterId,
   ]);
   useEffect(() => {
     const c = new AbortController();

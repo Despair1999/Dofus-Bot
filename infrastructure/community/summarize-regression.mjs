@@ -14,10 +14,10 @@ function visit(suite) {
     });
   for (const child of suite.suites ?? []) visit(child);
 }
-for (const path of [
-  ".data/community-regression-initial.json",
-  "test-results/e2e.json",
-]) {
+const inputs = process.argv.slice(2);
+for (const path of inputs.length
+  ? inputs
+  : [".data/community-regression-initial.json", "test-results/e2e.json"]) {
   const report = JSON.parse(readFileSync(path, "utf8"));
   for (const suite of report.suites) visit(suite);
 }
@@ -29,7 +29,8 @@ const report = {
   failed,
   passed: tests.length === 54 && failed === 0,
   method:
-    "Complete 54-test run plus targeted rerun of the three failed cases after cold-start harness and new read-only Firebase transport assertions were corrected.",
+    "Complete 54-test run plus explicitly supplied targeted rerun reports; each file/title is counted once using its latest result.",
+  inputs,
   tests,
 };
 writeFileSync(

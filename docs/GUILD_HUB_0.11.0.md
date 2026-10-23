@@ -31,4 +31,12 @@ Der gemeinsame Suchcode unterstützt IDs, deutsche/englische/französische Namen
 
 Weitere Regressionen, native Artefaktabnahme, neue Rules-Bereitstellung und Veröffentlichung werden erst nach ihrem tatsächlichen Abschluss ergänzt. Bestehende Veröffentlichungen, Accounts und Datensätze bleiben erhalten. Discord-Bot-Betrieb bleibt auf ausdrücklichen Betreiberwunsch für später zurückgestellt.
 
+## Ergänzte Prüfung des finalen Funktionsstands
+
+Die 54 Regressionen sind bestanden: zunächst 49 erfolgreich, anschließend die fünf betroffenen Fälle gezielt wiederholt. Auswahltests sind auf die jeweiligen Listen begrenzt, nachdem die neue Charakterauswahl ebenfalls native Optionen anbietet. Das Testsetup wartet vor Tastaturkürzeln auf die Oberfläche. Eine tatsächliche Folgekorrektur verhindert, dass eine Farmroute ohne aktiven Charakterfilter bei der Wiederherstellung der Charakterauswahl verworfen wird. Der Bericht zählt jede Datei/Testbezeichnung nur einmal.
+
+Die Firestore-/Storage-Quellen wurden nach Sicherung erneut produktiv bereitgestellt und zurückgelesen. Der neue Produktiv-Browsertest speicherte unveränderte Gildenfelder mit dem vorhandenen optionalen Discord-Feld, erhielt die Rechtstextrevision, prüfte eigene Profiltexte, fremde Schreibverweigerung, auditierte Moderation und einen echten authentifizierten Browser-Storage-Abruf. Ein normales Mitglied durfte nicht hochladen. Testkonten und nicht verwendete Testbilder wurden entfernt, echte Owner- und Gildendaten erhalten. Das echte Gildenwappen wurde bei dieser Probe nicht ersetzt.
+
+Die Dev-Dependency-Suche ist auf `index.html` begrenzt; erzeugte QA-HTML-Dateien unter `.data` werden nicht mehr als zusätzliche Vite-Einstiegspunkte gescannt. Dies behebt den beim Regression-Kaltstart beobachteten Scan-Stillstand.
+
 Quellen: [Firebase SDK-Downloads und CORS](https://firebase.google.com/docs/storage/web/download-files), [DOFUSDB-API, Beispielvorlage](https://api.dofusdb.fr/items/384), [DOFUS-Dude API](https://github.com/dofusdude/dofusdude-ts).
