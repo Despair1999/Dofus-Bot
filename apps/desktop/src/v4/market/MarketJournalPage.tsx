@@ -220,10 +220,19 @@ export default function MarketJournalPage({ config }: { config: Config }) {
     setNote(""); setMessage("Notiz gespeichert.");
   }
   function remove(type: "observations" | "trades" | "notes", id: string) {
-    if (!window.confirm("Diesen Eintrag wirklich löschen?")) return;
+    if (type === "trades") {
+      const next = journal.trades.filter((entry) => entry.id !== id);
+      const error = validateLedger(next);
+      if (error) {
+        setMessage("Löschen nicht möglich: " + error + " Nutze bei verbrauchtem Bestand eine Bestandskorrektur.");
+        return;
+      }
+    }
+    if (!window.confirm("Diesen Eintrag endgültig löschen? Zur Sicherheit vorher ein JSON-Backup erstellen.")) return;
     setJournal((prev) => ({
       ...prev, [type]: prev[type].filter((entry) => entry.id !== id),
     }));
+    setMessage("Eintrag entfernt.");
   }
   async function recognizeFile(file: File) {
     if (!file.type.startsWith("image/") || file.size > 20_000_000) {
@@ -470,7 +479,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
           <div className="market-scroll"><table><thead><tr>
             <th>Datum</th><th>Gegenstand</th><th>Typ</th><th>Menge</th><th>Gesamt</th><th>Gebühren</th><th/>
           </tr></thead><tbody>
-            {journal.trades.filter((t) => !item || itemKey(t.item, t.server) === selectedKey).map((t) =>
+            {journal.trades.filter((t) => (t.kind === "buy" || t.kind === "sell") && (!item || itemKey(t.item, t.server) === selectedKey)).map((t) =>
               <tr key={t.id}><td>{new Date(t.at).toLocaleString("de-DE")}</td>
                 <td>{t.item.name}<small>{t.server}</small></td>
                 <td>{t.kind === "buy" ? "Kauf" : "Verkauf"}</td>
@@ -478,28 +487,20 @@ export default function MarketJournalPage({ config }: { config: Config }) {
                 <td><button className="icon-button" aria-label="Buchung löschen" onClick={() => remove("trades", t.id)}><Trash2 size={15}/></button></td>
               </tr>)}
           </tbody></table></div>
-          {!journal.trades.length && <p>Noch keine Transaktionen dokumentiert.</p>}
+          {!journal.trades.some((t) => t.kind === "buy" || t.kind === "sell") && <p>Noch keine Transaktionen dokumentiert.</p>}
         </section>
       </>}
 
-      {tab === "stock" && <section className="panel"><h3>Dein Warenlager</h3>
-        <p>Bestand und Anschaffungskosten aus echten, manuell erfassten Transaktionen.</p>
-        <div className="market-scroll"><table><thead><tr>
-          <th>Item</th><th>Server</th><th>Menge</th><th>Einstand</th><th>Beobachteter Wert</th><th>Realisierter Gewinn</th>
-        </tr></thead><tbody>
-          {positions.filter((p) => p.quantity || p.sold).map((p) => {
-            const estimate = currentEstimate(journal, p);
-            return <tr key={p.key}><td><button className="market-item-button" onClick={() => { pick(p.item); setServer(p.server); setTab("assistant"); }}>
-              <ItemImage item={p.item} size={32}/>{p.item.name}</button></td>
-              <td>{p.server}</td><td>{fmt(p.quantity)}</td>
-              <td>{kama(p.cost)}</td>
-              <td>{estimate ? kama(estimate.value) : "Keine Beobachtung"}</td>
-              <td>{kama(p.realized)}</td></tr>;
-          })}
-        </tbody></table></div>
-        {!positions.length && <p>Dein Warenlager ist leer. Erfasse zunächst einen Einkauf.</p>}
-        <small>Marktwert ist eine Schätzung aus dem letzten selbst beobachteten günstigsten Paketpreis, keine Verkaufsgarantie.</small>
-      </section>}
+      {tab === "stock" && <WarehousePanel journal={journal} positions={positions} item={item} server={server}
+        onPick={(picked, selectedServer) => { pick(picked); setServer(selectedServer); }}
+        onAdd={(entry) => {
+          const error = validateLedger([entry, ...journal.trades]);
+          if (error) { setMessage(error); return; }
+          setJournal((prev) => ({ ...prev, trades: [entry, ...prev.trades] }));
+          setMessage(entry.kind === "stock-in" ? "Bestand ohne Einkauf übernommen." : "Bestand ohne Verkauf korrigiert.");
+        }}
+        onDelete={(id) => remove("trades", id)}
+      />}
 
       {tab === "assistant" && <>
         <section className="panel"><h3><ShieldAlert size={19}/> Persönlicher Strategie-Assistent</h3>
