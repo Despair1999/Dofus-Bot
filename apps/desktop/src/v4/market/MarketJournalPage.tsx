@@ -10,10 +10,11 @@ import ItemSearchBar from "../../v2/items/ItemSearchBar";
 import ItemImage from "../../v2/shared/ItemImage";
 import type { CatalogItem } from "../../v2/items/types";
 import { navigatePath } from "../../v2/routing";
+import WarehousePanel from "./WarehousePanel";
 import {
   canSell, currentEstimate, emptyJournal, importJournal, isMoney,
   isQuantity, itemKey, kama, latestFor, marketAdvice, parseOcrPrice,
-  portfolio, unitOffers,
+  portfolio, unitOffers, validateLedger,
   type ItemRef, type Journal, type Observation, type Trade,
 } from "./model";
 import "./market.css";
@@ -54,6 +55,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   const [pack1, setPack1] = useState("");
   const [pack10, setPack10] = useState("");
   const [pack100, setPack100] = useState("");
+  const [pack1000, setPack1000] = useState("");
   const [average, setAverage] = useState("");
   const [volume, setVolume] = useState("");
   const [observationNote, setObservationNote] = useState("");
@@ -139,6 +141,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
     setPack1(entry.packs["1"] === undefined ? "" : String(entry.packs["1"]));
     setPack10(entry.packs["10"] === undefined ? "" : String(entry.packs["10"]));
     setPack100(entry.packs["100"] === undefined ? "" : String(entry.packs["100"]));
+    setPack1000(entry.packs["1000"] === undefined ? "" : String(entry.packs["1000"]));
     setAverage(entry.average === undefined ? "" : String(entry.average));
     setVolume(entry.volume === undefined ? "" : String(entry.volume));
     setObservationNote(entry.note);
@@ -152,7 +155,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   function saveObservation() {
     if (!item || !server.trim()) { setMessage("Gegenstand und Server wählen."); return; }
     const packs: Record<string, number> = {};
-    for (const [size, input] of [["1", pack1], ["10", pack10], ["100", pack100]]) {
+    for (const [size, input] of [["1", pack1], ["10", pack10], ["100", pack100], ["1000", pack1000]]) {
       const value = numeric(input);
       if (value === undefined) continue;
       if (!isMoney(value)) { setMessage("Paketpreise müssen ganze, nichtnegative Kamas sein."); return; }
@@ -175,7 +178,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
       ? prev.observations.map((old) => old.id === editingObservationId ? entry : old)
       : [entry, ...prev.observations],
     }));
-    setPack1(""); setPack10(""); setPack100(""); setAverage("");
+    setPack1(""); setPack10(""); setPack100(""); setPack1000(""); setAverage("");
     setVolume(""); setObservationNote(""); setFromOcr(false); setObservationAt("");
     setMessage(editingObservationId ? "Marktbeobachtung aktualisiert." : "Marktbeobachtung gespeichert.");
     setEditingObservationId(null);
@@ -274,10 +277,10 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   }
   function exportCsv() {
     const lines = [
-      ["Datum", "Server", "Gegenstand", "Item-ID", "1er", "10er", "100er", "Durchschnitt", "Volumen", "Quelle", "Notiz"].join(";"),
+      ["Datum", "Server", "Gegenstand", "Item-ID", "1er", "10er", "100er", "1000er", "Durchschnitt", "Volumen", "Quelle", "Notiz"].join(";"),
       ...journal.observations.map((o) => [
         o.at, o.server, o.item.name, o.item.id, o.packs["1"], o.packs["10"],
-        o.packs["100"], o.average, o.volume, o.source, o.note,
+        o.packs["100"], o.packs["1000"], o.average, o.volume, o.source, o.note,
       ].map(quote).join(";")),
     ];
     download("dofus-marktbeobachtungen.csv", "\uFEFF" + lines.join("\r\n"), "text/csv;charset=utf-8");
@@ -383,6 +386,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
             <Field label="Preis für ×1 (Kamas)" value={pack1} onChange={setPack1}/>
             <Field label="Preis für ×10 (Kamas)" value={pack10} onChange={setPack10}/>
             <Field label="Preis für ×100 (Kamas)" value={pack100} onChange={setPack100}/>
+            <Field label="Preis für ×1000 (Kamas)" value={pack1000} onChange={setPack1000}/>
             <Field label="Angezeigter Ø-Preis (Kamas)" value={average} onChange={setAverage}/>
             <Field label="Angezeigtes Handelsvolumen" value={volume} onChange={setVolume}/>
           </div>
