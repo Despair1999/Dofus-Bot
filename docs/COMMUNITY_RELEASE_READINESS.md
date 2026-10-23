@@ -1,6 +1,6 @@
 # Freigabe und Release-Kandidat 0.10.0
 
-Stand 23.10.2026. Blaze ist durch den Nutzer aktiviert. Firebase-Zugang wieder funktionsfähig; bestätigter Owner sicher über echte Auth-UID eingerichtet. Öffentliche Registrierung aus. Keine Website, Rules, IAM-Freigabe oder Update-Datei veröffentlicht. Vorhandene Regeln entsprechen noch nicht diesem Entwicklungsstand.
+Stand 23.10.2026. Blaze ist durch den Nutzer aktiviert. Firebase-Zugang wieder funktionsfähig; bestätigter Owner sicher über echte Auth-UID eingerichtet. Öffentliche Registrierung aus. Der Betreiber hat inzwischen ausdrücklich die reine Website-Vorschau ohne unfertige Rechtsseiten beauftragt; diese wurde separat über Hosting bereitgestellt. Sie enthält keine Community-Module. Details und rechtlich offener Status in [WEBSITE_PREVIEW_PUBLICATION.md](WEBSITE_PREVIEW_PUBLICATION.md). Keine neuen Rules, IAM-Freigaben oder Update-Dateien veröffentlicht. Vorhandene Regeln entsprechen noch nicht diesem Entwicklungsstand und sperren alle Datenzugriffe.
 
 ## Reihenfolge zur sicheren Produktivfreigabe
 

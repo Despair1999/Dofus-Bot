@@ -1,12 +1,6 @@
-import { CommunityPage, CommunityProvider, type Section } from "@dofus/community/ui";
-
-import { browserStore } from "@dofus/community/browser-store";
-
 import { LegalPage } from "./LegalPage";
 
-import { communityDungeons, searchCommunityItems } from "./community-catalog";
-
-import { useEffect, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 
 import {
 
@@ -27,6 +21,10 @@ import world from "../../desktop/public/game-assets/worlds/1.webp";
 import { fetchReleases, latestInstaller, installerFor, fileSize, type GithubRelease } from "./lib/release";
 
 import PatchlogPage from "./PatchlogPage";
+
+// Static preview publication is independent of the pending Community rollout.
+const previewOnly = import.meta.env.MODE === "guild-preview";
+const WebsiteCommunity = previewOnly ? null : lazy(() => import("./CommunityArea"));
 
 
 
@@ -102,7 +100,7 @@ function Header() {
 
    <nav className={`nav ${menu?"open":""}`} aria-label="Hauptnavigation">
 
-    {links.map(([href,label])=><AppLink key={href} href={href} className={location.pathname===href?"active":""}>{label}</AppLink>)}
+    {links.filter(([href])=>!previewOnly || href!=="/community").map(([href,label])=><AppLink key={href} href={href} className={location.pathname===href?"active":""}>{label}</AppLink>)}
 
     <AppLink href="/downloads" className="button gold nav-download"><Download size={16}/> Jetzt herunterladen</AppLink>
 
@@ -124,7 +122,7 @@ function Footer(){return <footer className="footer">
 
   <div><h4>Entdecken</h4><AppLink href="/funktionen">Funktionen</AppLink><AppLink href="/desktop">Desktop-App</AppLink><AppLink href="/discord">Discord-Bot</AppLink><AppLink href="/downloads">Downloads</AppLink></div>
 
-  <div><h4>Informationen</h4><AppLink href="/faq">FAQ</AppLink><AppLink href="/changelog">Changelog</AppLink><AppLink href="/datenschutz">Datenschutz</AppLink><AppLink href="/nutzungsbedingungen">Nutzungsbedingungen</AppLink><AppLink href="/impressum">Impressum</AppLink></div>
+  <div><h4>Informationen</h4><AppLink href="/faq">FAQ</AppLink><AppLink href="/changelog">Changelog</AppLink>{!previewOnly&&<><AppLink href="/datenschutz">Datenschutz</AppLink><AppLink href="/nutzungsbedingungen">Nutzungsbedingungen</AppLink><AppLink href="/impressum">Impressum</AppLink></>}</div>
 
   
 
@@ -316,17 +314,11 @@ export default function App(){
 
  let page:ReactNode;
 
- if(path.startsWith("/community")) {
+ if(previewOnly && path.startsWith("/community")) return <><Header/><main><section className="page-hero container"><Label>COMMUNITY IN VORBEREITUNG</Label><h1>Die Gildenfunktionen folgen.</h1><p>Accounts, Cloud-Synchronisierung und Gildenverwaltung sind in dieser Website-Vorschau noch nicht freigeschaltet. Die technische Sicherheitsabnahme läuft.</p><AppLink className="button gold" href="/">Zur Startseite</AppLink></section></main><Footer/></>;
 
-  const selected = path.split("/")[2] || "account";
+ if(WebsiteCommunity && path.startsWith("/community")) return <><Header/><main className="cc-website"><Suspense fallback={<p role="status">Community wird geladen …</p>}><WebsiteCommunity path={path}/></Suspense></main><Footer/></>;
 
-  const sections: {id:Section;label:string}[] = [{id:"account",label:"Account & Cloud"},{id:"guild",label:"Gildenübersicht"},{id:"members",label:"Mitglieder"},{id:"marketplace",label:"Marktplatz"},{id:"events",label:"Events"},{id:"groups",label:"Gruppenfinder"}];
-
-  return <><Header/><main className="cc-website"><CommunityProvider emulators={(import.meta.env.DEV || import.meta.env.MODE==="emulator-test") && import.meta.env.VITE_COMMUNITY_EMULATORS==="true"} store={browserStore} searchItems={searchCommunityItems} dungeons={communityDungeons}><div className="cc"><nav className="cc-tabs" aria-label="Community">{sections.map(s=><a key={s.id} href={`/community/${s.id}`}>{s.label}</a>)}</nav></div><CommunityPage section={sections.find(s=>s.id===selected)?.id || "account"}/></CommunityProvider></main><Footer/></>;
-
- }
-
- if(["/datenschutz","/nutzungsbedingungen","/impressum"].includes(path)) return <><Header/><main><LegalPage path={path}/></main><Footer/></>;
+ if(!previewOnly && ["/datenschutz","/nutzungsbedingungen","/impressum"].includes(path)) return <><Header/><main><LegalPage path={path}/></main><Footer/></>;
 
  switch(path){case "/":page=<Home/>;break;case "/funktionen":page=<Features/>;break;case "/desktop":page=<Desktop/>;break;case "/discord":page=<Discord/>;break;case "/downloads":page=<Downloads/>;break;case "/faq":page=<Faq/>;break;case "/changelog":page=<Changelog/>;break;default:page=<NotFound/>;}
 
