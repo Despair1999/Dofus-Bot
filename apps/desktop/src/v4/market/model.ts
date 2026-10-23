@@ -180,13 +180,14 @@ export function currentEstimate(journal: Journal, position: Position) {
   const observation = latestFor(journal, position.item, position.server);
   const offer = observation ? unitOffers(observation)[0] : undefined;
   const saved = orderedTrades(journal.trades).filter((trade) =>
-    trade.kind === "stock-in" && trade.valuationUnitPrice !== undefined &&
+    trade.kind === "stock-in" && (trade.valuationUnitPrice !== undefined || trade.referenceAverage !== undefined) &&
     itemKey(trade.item, trade.server) === position.key).at(-1);
   // Most recent explicitly recorded price (offer or manual warehouse valuation).
   const latestPrice = offer && observation && (!saved || observation.at >= saved.at)
     ? { unit: offer.unit, observedAt: observation.at, source: "Marktbeobachtung" }
-    : saved?.valuationUnitPrice !== undefined
-      ? { unit: saved.valuationUnitPrice, observedAt: saved.at, source: "Lagerbewertung" }
+    : saved && (saved.valuationUnitPrice !== undefined || saved.referenceAverage !== undefined)
+      ? { unit: saved.valuationUnitPrice ?? saved.referenceAverage!, observedAt: saved.at,
+          source: saved.valuationUnitPrice !== undefined ? "Lagerbewertung" : "Ø-Marktpreis (manuell)" }
       : offer && observation
         ? { unit: offer.unit, observedAt: observation.at, source: "Marktbeobachtung" }
         : null;
