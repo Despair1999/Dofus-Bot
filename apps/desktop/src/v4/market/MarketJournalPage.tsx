@@ -197,6 +197,8 @@ export default function MarketJournalPage({ config }: { config: Config }) {
       id: newId(), item, server: server.trim(), at: now(), kind,
       quantity: qty, total: gross, fees: fee, note: tradeNote.trim(),
     };
+    const ledgerError = validateLedger([entry, ...journal.trades]);
+    if (ledgerError) { setMessage(ledgerError); return; }
     setJournal((prev) => ({ ...prev, trades: [entry, ...prev.trades] }));
     setTotal(""); setFees("0"); setQuantity("1"); setTradeNote("");
     setMessage(kind === "buy" ? "Einkauf gebucht." : "Verkauf und FIFO-Gewinn gebucht.");
@@ -298,6 +300,9 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   const totalProfit = positions.reduce((sum, p) => sum + p.realized, 0);
   const estimates = positions.map((p) => currentEstimate(journal, p));
   const totalEstimate = estimates.reduce((sum, e) => sum + (e?.value ?? 0), 0);
+  const withoutValue = positions.filter((p, index) => p.quantity > 0 && !estimates[index]).length;
+  const unknownCosts = positions.reduce((sum, p) => sum + p.unknownQuantity, 0);
+  const unknownProfit = positions.some((p) => p.unknownSoldQuantity > 0);
   const latestPoints = [...relevant].reverse()
     .map((o) => ({ date: o.at, unit: unitOffers(o)[0]?.unit }))
     .filter((p): p is { date: string; unit: number } => p.unit !== undefined);
@@ -363,10 +368,10 @@ export default function MarketJournalPage({ config }: { config: Config }) {
 
       {tab === "overview" && <>
         <div className="market-metrics">
-          <Metric label="Gebundenes Kapital" value={kama(totalCost)} icon={<Wallet size={18}/>}/>
-          <Metric label="Realisierter Gewinn (FIFO)" value={kama(totalProfit)} icon={<ChartLine size={18}/>}/>
+          <Metric label="Bekannte Einstandskosten" value={kama(totalCost)} detail={unknownCosts ? fmt(unknownCosts) + " Stück ohne belegte Kosten" : "Nur bekannte Anschaffungskosten"} icon={<Wallet size={18}/>}/>
+          <Metric label="Realisierter Gewinn (FIFO)" value={unknownProfit ? "Teilweise unbekannt" : kama(totalProfit)} detail={unknownProfit ? "Einstand einiger verkaufter Stücke unbekannt" : undefined} icon={<ChartLine size={18}/>}/>
           <Metric label="Beobachteter Lagerwert" value={kama(totalEstimate)}
-            detail="Nur Bestände mit aktuellen eigenen Preisdaten" icon={<Package size={18}/>}/>
+            detail={withoutValue ? fmt(withoutValue) + " Position(en) ohne Bewertung" : "Basierend auf deinen eigenen Preisen"} icon={<Package size={18}/>}/>
           <Metric label="Preisbeobachtungen" value={fmt(journal.observations.length)} icon={<BookOpen size={18}/>}/>
         </div>
         <div className="market-grid">
@@ -533,15 +538,15 @@ export default function MarketJournalPage({ config }: { config: Config }) {
             if (!valid) return <p>Wähle einen Gegenstand mit ausreichendem Lagerbestand und gib gültige Mengen, Preise und Gebühren (0 bis unter 100 %) ein.</p>;
             const gross = q * price;
             const estimatedFees = Math.round(gross * fee / 100);
-            const estimatedCost = Math.round(position!.cost / position!.quantity * q);
+            const estimatedCost = position!.unknownQuantity === 0 ? Math.round(position!.cost / position!.quantity * q) : null;
             const net = gross - estimatedFees;
-            const profit = net - estimatedCost;
-            const breakEven = Math.ceil(estimatedCost / q / (1 - fee / 100));
+            const profit = estimatedCost === null ? null : net - estimatedCost;
+            const breakEven = estimatedCost === null ? null : Math.ceil(estimatedCost / q / (1 - fee / 100));
             return <div className="market-plan-results" aria-live="polite">
               <div><small>Bruttoerlös</small><strong>{kama(gross)}</strong></div>
               <div><small>Geschätzte Gebühren</small><strong>{kama(estimatedFees)}</strong></div>
-              <div><small>Geplantes Nettoergebnis</small><strong>{kama(profit)}</strong></div>
-              <div><small>Break-even je Stück</small><strong>{kama(breakEven)}</strong></div>
+              <div><small>Geplantes Nettoergebnis</small><strong>{profit === null ? "Unbekannt" : kama(profit)}</strong></div>
+              <div><small>Break-even je Stück</small><strong>{breakEven === null ? "Unbekannt" : kama(breakEven)}</strong></div>
               <p>Basierend auf dem durchschnittlichen Einstandswert des aktuellen Bestands. Der tatsächlich gebuchte Gewinn wird beim Verkauf nach FIFO ermittelt. Absatz und Verkaufspreis sind nicht garantiert.</p>
             </div>;
           })()}
