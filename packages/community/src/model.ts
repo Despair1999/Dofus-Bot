@@ -7,6 +7,57 @@ export const profileSchema = z.object({
   mainCharacterId: z.string().max(100).default(""),
 });
 export type Profile = z.infer<typeof profileSchema>;
+export const guildProfileSchema = z
+  .object({
+    personalStatus: z.string().trim().max(100),
+    biography: z.string().trim().max(500),
+  })
+  .strict();
+export const guildSettingsSchema = z
+  .object({
+    guildName: z.string().max(80, "Gildenname: maximal 80 Zeichen."),
+    server: z.string().max(60, "Server: maximal 60 Zeichen."),
+    description: z.string().max(4000, "Beschreibung: maximal 4000 Zeichen."),
+    rules: z.string().max(4000, "Gildenregeln: maximal 4000 Zeichen."),
+    admission: z
+      .string()
+      .max(4000, "Aufnahmebedingungen: maximal 4000 Zeichen."),
+    discordUrl: z
+      .string()
+      .trim()
+      .max(200)
+      .transform((value) =>
+        /^(discord\.gg\/|discord\.com\/invite\/)/.test(value)
+          ? `https://${value}`
+          : value,
+      )
+      .refine(
+        (value) =>
+          !value ||
+          /^https:\/\/(discord\.gg\/|discord\.com\/invite\/)\S+$/.test(value),
+        "Bitte einen Discord-Einladungslink wie https://discord.gg/… verwenden.",
+      ),
+    emblem: z
+      .string()
+      .refine(
+        (value) =>
+          !value || /^guild-emblems\/default\/[a-f0-9-]+\.webp$/.test(value),
+        "Das Wappen muss zuerst sicher hochgeladen werden.",
+      ),
+    archived: z.boolean().default(false),
+    registrationEnabled: z.boolean(),
+    privacyUrl: z.string().max(300),
+    termsUrl: z.string().max(300),
+    legalVersion: z.string().max(100),
+  })
+  .refine(
+    (value) =>
+      !value.registrationEnabled ||
+      (/^https:\/\//.test(value.privacyUrl) &&
+        /^https:\/\//.test(value.termsUrl) &&
+        !!value.legalVersion),
+    "Für die Registrierung sind gültige HTTPS-Rechtstextlinks und eine Rechtstextversion erforderlich.",
+  );
 export const guildRankSchema = z.object({
   name: z.string().trim().min(1).max(60),
   order: z.number().int().min(0).max(1000),

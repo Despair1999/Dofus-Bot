@@ -18,12 +18,14 @@ export const browserStore: LocalStore = {
     return (await (await database).get("records", scoped(key))) ?? fallback;
   },
   async write(key, value) {
+    const writeAccount = account;
     if (key === "community:applying") {
       remote = value === true;
       return;
     }
     await (await database).put("records", value, scoped(key));
-    if (!remote) listeners.forEach((fn) => fn(key, value));
+    if (!remote && writeAccount === account)
+      listeners.forEach((fn) => fn(key, value));
   },
   async keys() {
     const keys = (await (await database).getAllKeys("records")).map(String);

@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./model": "./src/model.ts",
+    "./catalog-search": "./src/catalog-search.ts",
     "./ui": "./src/Community.tsx",
     "./browser-store": "./src/browser-store.ts",
     "./style.css": "./src/community.css"

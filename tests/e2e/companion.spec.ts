@@ -83,7 +83,10 @@ test("create character, real quest progress offline queue and reconnect", async 
     await page.getByLabel("Name", { exact: true }).fill(name);
     await page.getByLabel("Server", { exact: true }).fill("Testserver");
     await page.getByRole("combobox", { name: "Klasse", exact: true }).click();
-    await page.getByRole("option", { name: /Sacrieur/ }).click();
+    await page
+      .getByRole("listbox", { name: "Verfügbare Klassen" })
+      .getByRole("option", { name: /Sacrieur/ })
+      .click();
     await page.getByLabel("Stufe", { exact: true }).fill("100");
     await page
       .getByRole("button", { name: "Registrieren", exact: true })

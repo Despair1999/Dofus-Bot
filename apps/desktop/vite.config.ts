@@ -3,7 +3,16 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   clearScreen: false,
+  // Built QA HTML is kept under .data; it must never become a second dev entry.
+  optimizeDeps: { entries: ["index.html"] },
   server: {
+    watch: {
+      ignored: [
+        "**/.data/**",
+        "**/src-tauri/target/**",
+        "**/src-tauri/resources/**",
+      ],
+    },
     strictPort: true,
     proxy: { "/api": { target: "http://127.0.0.1:4310", changeOrigin: true } },
   },

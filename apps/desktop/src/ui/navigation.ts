@@ -24,12 +24,41 @@ export const navigationItems: {
   group: string;
   description: string;
 }[] = [
-  {id:"account",label:"Companion-Account",icon:Users,group:"Persönlich",description:"Anmelden, Profil und Cloud-Synchronisierung"},
-  {id:"guild",label:"Gildenübersicht",icon:ShieldCheck,group:"Gilde",description:"Die bestehende Gilde organisieren"},
-  {id:"members",label:"Mitglieder",icon:Users,group:"Gilde",description:"Accounts und ihre Charaktere"},
-  {id:"marketplace",label:"Community-Marktplatz",icon:Package,group:"Gilde",description:"Globale Angebote und Reservierungen"},
-  {id:"events",label:"Events & Aktivitäten",icon:CalendarDays,group:"Gilde",description:"Gemeinsam Abenteuer planen"},
-  {id:"groups",label:"Gruppenfinder",icon:Users,group:"Gilde",description:"Dungeon-Gruppen und Wartelisten"},
+  {
+    id: "account",
+    label: "Companion-Account",
+    icon: Users,
+    group: "Persönlich",
+    description: "Anmelden, Profil und Cloud-Synchronisierung",
+  },
+  {
+    id: "guild",
+    label: "Gildenübersicht",
+    icon: ShieldCheck,
+    group: "Gilde",
+    description: "Die bestehende Gilde organisieren",
+  },
+  {
+    id: "marketplace",
+    label: "Community-Marktplatz",
+    icon: Package,
+    group: "Gilde",
+    description: "Globale Angebote und Reservierungen",
+  },
+  {
+    id: "events",
+    label: "Events & Aktivitäten",
+    icon: CalendarDays,
+    group: "Gilde",
+    description: "Gemeinsam Abenteuer planen",
+  },
+  {
+    id: "groups",
+    label: "Gruppenfinder",
+    icon: Users,
+    group: "Gilde",
+    description: "Dungeon-Gruppen und Wartelisten",
+  },
   {
     id: "dashboard",
     label: "Übersicht",

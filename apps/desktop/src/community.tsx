@@ -1,7 +1,8 @@
+import { createCatalogSearch } from "@dofus/community/catalog-search";
 import { setBackendObserver } from "./client";
 import { useEffect, type ReactNode } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import { CommunityProvider, type CatalogItem } from "@dofus/community/ui";
+import { CommunityProvider } from "@dofus/community/ui";
 import type { LocalStore } from "@dofus/community";
 import dungeons from "../../../packages/community/src/dungeons.json";
 import {
@@ -253,23 +254,7 @@ const store: LocalStore = {
     if (!localAccount()) await captureBackend().catch(() => {});
   },
 };
-let catalog: Promise<CatalogItem[]> | undefined;
-async function searchItems(q: string) {
-  catalog ??= fetch("/community-items.json")
-    .then((r) => {
-      if (!r.ok) throw Error("Gegenstandskatalog nicht verfügbar.");
-      return r.json();
-    })
-    .catch((e) => {
-      catalog = undefined;
-      throw e;
-    });
-  return (await catalog!)
-    .filter((i) =>
-      i.name.toLocaleLowerCase("de").includes(q.toLocaleLowerCase("de")),
-    )
-    .slice(0, 30);
-}
+const searchItems = createCatalogSearch();
 function BackendBridge() {
   useEffect(() => {
     setBackendObserver(() => sequenceReplica(captureBackend));

@@ -13,10 +13,12 @@ export const professionGroup = (id: number) =>
 export default function ProfessionLevels({
   config,
   characterId,
+  revision = 0,
   onChange,
 }: {
   config: Config;
   characterId: string;
+  revision?: number;
   onChange?: () => void;
 }) {
   const generation = useRef(0);
@@ -48,7 +50,7 @@ export default function ProfessionLevels({
         if (!c.signal.aborted) setError(message(e));
       });
     return () => c.abort();
-  }, [config, characterId]);
+  }, [config, characterId, revision]);
   async function save(jobId: number, value: string) {
     const revision = generation.current;
     const level = value === "" ? null : Number(value);

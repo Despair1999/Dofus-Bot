@@ -18,11 +18,9 @@ import {
   Users,
   CalendarDays,
   ShoppingBag,
-  Search,
   LogOut,
   RefreshCw,
   X,
-  Copy,
   Upload,
   Download,
 } from "lucide-react";
@@ -68,6 +66,9 @@ import AdminParticipants from "./AdminParticipants";
 import ActivityCalendar from "./ActivityCalendar";
 import MemberDirectory from "./MemberDirectory";
 import GuildRanks from "./GuildRanks";
+import DiscordContactButton from "./DiscordContactButton";
+import { usePublicProfile } from "./public-profile";
+import { prepareEmblem } from "./emblem";
 import { calendarDays, zonedInstant, type CalendarView } from "./calendar";
 import {
   portfolio,
@@ -77,13 +78,9 @@ import {
   type Journal,
 } from "@dofus/core/market";
 
-export type CatalogItem = {
-  id: number;
-  name: string;
-  iconUrl: string;
-  level?: number;
-  category?: string;
-};
+export type { CatalogItem } from "./catalog-search";
+import type { CatalogItem } from "./catalog-search";
+import CatalogSearch from "./CatalogSearch";
 export type DungeonOption = { id: number; name: string };
 export type Section =
   "account" | "guild" | "members" | "marketplace" | "events" | "groups";
@@ -94,6 +91,8 @@ type Membership = {
   displayName: string;
   revision: number;
   lastAudit: string;
+  personalStatus?: string;
+  biography?: string;
 };
 type ContextValue = {
   service: CommunityService;
@@ -190,6 +189,7 @@ export function CommunityProvider({
                   privacyUrl: value.privacyUrl,
                   termsUrl: value.termsUrl,
                   legalVersion: value.legalVersion,
+                  legalRevision: value.revision,
                   archived:
                     (value as PlatformConfig & { guildActive?: boolean })
                       .guildActive === false,
@@ -580,29 +580,8 @@ function Empty({ children }: { children: ReactNode }) {
 }
 function Contact({ uid }: { uid: string }) {
   const { service } = useCommunity();
-  const [name, setName] = useState("");
-  useEffect(() => {
-    let active = true;
-    void service
-      .get<Profile>(`profiles/${uid}`)
-      .then((p) => {
-        if (active) setName(p?.discordName ?? "");
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [service, uid]);
-  return name ? (
-    <button
-      type="button"
-      title="Auf Discord kontaktieren – unbestätigten Benutzernamen kopieren"
-      onClick={() => void navigator.clipboard.writeText(name)}
-    >
-      <Copy size={14} />
-      {name}
-    </button>
-  ) : null;
+  const profile = usePublicProfile(service, uid);
+  return <DiscordContactButton name={profile?.discordName ?? ""} />;
 }
 export function CommunityPage({ section = "account" }: { section?: Section }) {
   const c = useCommunity();
@@ -644,7 +623,7 @@ export function CommunityPage({ section = "account" }: { section?: Section }) {
       ) : section === "account" ? (
         <AccountPanel />
       ) : section === "marketplace" ? (
-        <Marketplace visibility="global" />
+        <CommunityMarketplace />
       ) : c.settings?.archived && !["owner", "admin"].includes(c.role) ? (
         <Empty>
           Diese Gilde wurde archiviert. Deine persönlichen Accountdaten bleiben
@@ -656,7 +635,7 @@ export function CommunityPage({ section = "account" }: { section?: Section }) {
       ) : section === "guild" ? (
         <GuildHome />
       ) : section === "members" ? (
-        <Members />
+        <GuildHome />
       ) : section === "events" ? (
         <Activities kind="event" />
       ) : (
@@ -1123,7 +1102,8 @@ function CharacterManager() {
               level: Number(level),
               omegaLevel: Number(omega),
               server: c.profile!.server,
-              professions: {},
+              professions:
+                characters.find((c) => c.id === editing)?.professions ?? {},
             });
             await save([
               ...characters.filter((c) => c.id !== character.id),
@@ -1653,6 +1633,7 @@ function GuildJoin() {
 }
 function GuildHome() {
   const c = useCommunity();
+  const [summary, setSummary] = useState({ members: 0, characters: 0 });
   return (
     <>
       <div className="cc-panel cc-guild-banner">
@@ -1668,6 +1649,17 @@ function GuildHome() {
             {c.settings?.description ||
               "Ein Administrator kann die bestehende Gilde hier einrichten."}
           </p>
+          <div className="cc-guild-stats">
+            <span>
+              <b>{summary.members}</b> bestätigte Mitglieder
+            </span>
+            <span>
+              <b>{summary.characters}</b> geteilte Charaktere
+            </span>
+            <small>
+              Geladene Mitglieder · weitere über „Weitere Mitglieder laden“
+            </small>
+          </div>
           {c.settings?.discordUrl && (
             <a href={c.settings.discordUrl} target="_blank" rel="noreferrer">
               Gilden-Discord öffnen
@@ -1675,14 +1667,22 @@ function GuildHome() {
           )}
         </div>
       </div>
-      <div className="cc-panel">
-        <h3>Gildenregeln & Aufnahme</h3>
-        <p className="cc-prewrap">
-          {c.settings?.rules || "Noch keine Regeln hinterlegt."}
-        </p>
-        <p>{c.settings?.admission}</p>
+      <div className="cc-guild-rules">
+        <details className="cc-panel">
+          <summary>Gildenregeln</summary>
+          <p className="cc-prewrap">
+            {c.settings?.rules || "Noch keine Regeln hinterlegt."}
+          </p>
+        </details>
+        <details className="cc-panel">
+          <summary>Aufnahmebedingungen</summary>
+          <p className="cc-prewrap">
+            {c.settings?.admission ||
+              "Noch keine Aufnahmebedingungen hinterlegt."}
+          </p>
+        </details>
       </div>
-      <Marketplace visibility="guild" />
+      <Members onSummary={setSummary} />
     </>
   );
 }
@@ -1701,7 +1701,10 @@ function GuildEmblem({
     let objectUrl = "";
     setUrl("");
     setError("");
-    if (path.startsWith("data:image/")) {
+    if (
+      preview &&
+      (path.startsWith("blob:") || path.startsWith("data:image/"))
+    ) {
       setUrl(path);
       return;
     }
@@ -1719,7 +1722,7 @@ function GuildEmblem({
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [service, path]);
+  }, [service, path, preview]);
   return url ? (
     <img
       className={preview ? "cc-emblem" : undefined}
@@ -1818,10 +1821,15 @@ function usePage<T>(
   ]);
   return { data, loading, error, more, load };
 }
-function Members() {
+function Members({
+  onSummary,
+}: {
+  onSummary?: (value: { members: number; characters: number }) => void;
+} = {}) {
+  const c = useCommunity();
   const page = usePage<Membership>("memberships");
   return (
-    <div className="cc-panel">
+    <div className="cc-panel" id="guild-members">
       <div className="cc-toolbar">
         <h2>
           <Users size={22} />
@@ -1834,9 +1842,15 @@ function Members() {
         Profilaktivität; kein erfundener Ingame-Onlinestatus.
       </p>
       <MemberDirectory
-        service={useCommunity().service}
+        service={c.service}
         members={page.data}
         contact={(uid) => <Contact uid={uid} />}
+        onSummary={onSummary}
+        emblem={
+          c.settings?.emblem ? (
+            <GuildEmblem path={c.settings.emblem} />
+          ) : undefined
+        }
       />
       {page.more && (
         <button onClick={() => void page.load(true)}>
@@ -1847,13 +1861,42 @@ function Members() {
     </div>
   );
 }
+function CommunityMarketplace() {
+  const c = useCommunity();
+  const member = c.membership?.status === "approved" && !c.settings?.archived;
+  const [visibility, setVisibility] = useState<"guild" | "global">(
+    member ? "guild" : "global",
+  );
+  return (
+    <>
+      <div className="cc-tabs" aria-label="Marktplatzbereich">
+        <button
+          className={visibility === "guild" && member ? "active" : ""}
+          disabled={!member}
+          title={!member ? "Nur für bestätigte Gildenmitglieder" : undefined}
+          onClick={() => setVisibility("guild")}
+        >
+          Gildenmarktplatz
+        </button>
+        <button
+          className={visibility === "global" || !member ? "active" : ""}
+          onClick={() => setVisibility("global")}
+        >
+          Globaler Marktplatz
+        </button>
+      </div>
+      <Marketplace
+        key={member ? visibility : "global"}
+        visibility={member ? visibility : "global"}
+      />
+    </>
+  );
+}
 function Marketplace({ visibility }: { visibility: "guild" | "global" }) {
   const c = useCommunity(),
     a = useAction(),
     page = usePage<Listing>("listings", "visibility", visibility);
   const [search, setSearch] = useState(""),
-    [itemSearch, setItemSearch] = useState(""),
-    [items, setItems] = useState<CatalogItem[]>([]),
     [item, setItem] = useState<CatalogItem | null>(null),
     [quantity, setQuantity] = useState("1"),
     [price, setPrice] = useState("0"),
@@ -1926,38 +1969,7 @@ function Marketplace({ visibility }: { visibility: "guild" | "global" }) {
                 });
               }}
             >
-              <div className="cc-toolbar">
-                <Field
-                  label="Gegenstand im DOFUS-Katalog suchen"
-                  value={itemSearch}
-                  onChange={setItemSearch}
-                />
-                <button
-                  type="button"
-                  disabled={a.busy || !c.searchItems}
-                  onClick={() =>
-                    void a.run(async () =>
-                      setItems(await c.searchItems!(itemSearch)),
-                    )
-                  }
-                >
-                  <Search size={16} />
-                  Suchen
-                </button>
-              </div>
-              <div className="cc-search-results">
-                {items.map((i) => (
-                  <button
-                    type="button"
-                    className={item?.id === i.id ? "active" : ""}
-                    key={i.id}
-                    onClick={() => setItem(i)}
-                  >
-                    {i.iconUrl && <img src={i.iconUrl} alt="" />}
-                    {i.name} · Stufe {i.level ?? "?"}
-                  </button>
-                ))}
-              </div>
+              <CatalogSearch search={c.searchItems} onSelect={setItem} />
               {item && <p>Ausgewählt: {item.name}</p>}
               <div className="cc-form-grid">
                 <Field
@@ -2127,6 +2139,7 @@ function ListingCard({
     a = useAction(),
     [quantity, setQuantity] = useState("1");
   const [l, setListing] = useState(listing);
+  const seller = usePublicProfile(c.service, l.ownerUid);
   useEffect(
     () =>
       c.service.watch<Listing>(
@@ -2140,6 +2153,16 @@ function ListingCard({
   );
   return (
     <article className="cc-card">
+      <p className="cc-seller">
+        <small>
+          {
+            { sell: "Verkäufer", buy: "Gesucht von", swap: "Angeboten von" }[
+              l.type
+            ]
+          }
+        </small>
+        <strong>{seller?.dofusName || "Spielerprofil nicht verfügbar"}</strong>
+      </p>
       <div className="cc-item-header">
         {l.iconUrl && <img src={l.iconUrl} alt="" loading="lazy" />}
         <div>
@@ -2148,6 +2171,9 @@ function ListingCard({
             {l.status}
           </small>
           <h3>{l.itemName}</h3>
+          <small>
+            {l.category || "Gegenstand"} · Stufe {l.itemLevel ?? "?"}
+          </small>
         </div>
       </div>
       <div className="cc-price">
@@ -3221,14 +3247,24 @@ function AdminPanel() {
         ) : tab === "Mitgliederverwaltung" ? (
           <AdminTable
             path="memberships"
-            fields={["displayName", "rank", "status"]}
+            fields={[
+              "displayName",
+              "rank",
+              "status",
+              "personalStatus",
+              "biography",
+            ]}
           />
         ) : tab === "Charakterverwaltung" ? (
           <AdminCharacters />
         ) : tab === "Marktplatzverwaltung" ? (
           <AdminTable
             path="listings"
-            filter={["visibility", "guild"]}
+            filter={
+              c.membership?.status === "approved" && !c.settings?.archived
+                ? undefined
+                : ["visibility", "global"]
+            }
             fields={[
               "itemName",
               "itemId",
@@ -3330,49 +3366,22 @@ function AdminDashboard() {
     </div>
   );
 }
-async function emblemData(file: File) {
-  if (
-    !["image/png", "image/jpeg", "image/webp"].includes(file.type) ||
-    file.size > 5000000
-  )
-    throw Error("Bitte PNG, JPEG oder WebP bis 5 MB wählen.");
-  const bitmap = await createImageBitmap(file);
-  if (
-    bitmap.width < 1 ||
-    bitmap.height < 1 ||
-    bitmap.width > 8192 ||
-    bitmap.height > 8192 ||
-    bitmap.width * bitmap.height > 16000000
-  ) {
-    bitmap.close();
-    throw Error(
-      "Bild ist zu groß: maximal 16 Megapixel und 8192 Pixel pro Seite.",
-    );
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = 192;
-  canvas.height = 192;
-  const ctx = canvas.getContext("2d")!;
-  ctx.clearRect(0, 0, 192, 192);
-  const scale = Math.min(192 / bitmap.width, 192 / bitmap.height);
-  ctx.drawImage(
-    bitmap,
-    (192 - bitmap.width * scale) / 2,
-    (192 - bitmap.height * scale) / 2,
-    bitmap.width * scale,
-    bitmap.height * scale,
-  );
-  bitmap.close();
-  const data = canvas.toDataURL("image/webp", 0.8);
-  if (data.length > 60000)
-    throw Error("Wappen ist nach Komprimierung noch zu groß.");
-  return data;
-}
 function GuildSettings() {
   const c = useCommunity(),
     a = useAction();
   const [value, setValue] = useState(c.settings),
     [reason, setReason] = useState("");
+  const [pendingEmblem, setPendingEmblem] = useState<Blob | null>(null),
+    [previewUrl, setPreviewUrl] = useState("");
+  useEffect(() => {
+    if (!pendingEmblem) {
+      setPreviewUrl("");
+      return;
+    }
+    const url = URL.createObjectURL(pendingEmblem);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [pendingEmblem]);
   if (!value || value.revision === undefined)
     return (
       <Empty>
@@ -3394,15 +3403,47 @@ function GuildSettings() {
         void a.run(async () => {
           const oldEmblem = c.settings?.emblem ?? "";
           const finalValue = { ...value };
-          if (value.emblem.startsWith("data:image/"))
-            finalValue.emblem = await c.service.uploadEmblem(
-              await (await fetch(value.emblem)).blob(),
+          const cleanupKey = `community:emblem-cleanup:${c.user!.uid}`;
+          let cleanup = await c.store.read<string[]>(cleanupKey, []);
+          const collect = async (path: string) => {
+            if (path && path !== finalValue.emblem) {
+              try {
+                await c.service.removeUnusedEmblem(path);
+                cleanup = cleanup.filter((p) => p !== path);
+              } catch {
+                if (!cleanup.includes(path)) cleanup.push(path);
+              }
+            }
+          };
+          if (pendingEmblem) {
+            finalValue.emblem = await c.service.uploadEmblem(pendingEmblem);
+            cleanup.push(finalValue.emblem);
+            await c.store.write(cleanupKey, cleanup);
+          }
+          try {
+            Object.assign(
+              finalValue,
+              await c.service.saveSettings(finalValue, reason),
             );
-          await c.service.saveSettings(finalValue, reason);
-          setValue({ ...finalValue, revision: value.revision + 1 });
-          if (oldEmblem !== finalValue.emblem)
-            await c.service.removeUnusedEmblem(oldEmblem);
-          a.setMessage("Gildenkonfiguration gespeichert.");
+          } catch (error) {
+            const failed = finalValue.emblem;
+            finalValue.emblem = oldEmblem;
+            if (failed !== oldEmblem) await collect(failed);
+            await c.store.write(cleanupKey, cleanup);
+            throw error;
+          }
+          cleanup = cleanup.filter((p) => p !== finalValue.emblem);
+          setValue(finalValue);
+          setPendingEmblem(null);
+          if (oldEmblem !== finalValue.emblem) await collect(oldEmblem);
+          for (const path of [...cleanup]) await collect(path);
+          await c.store.write(cleanupKey, cleanup);
+          a.setMessage(
+            "Gildenkonfiguration gespeichert." +
+              (cleanup.length
+                ? " Nicht mehr verwendete Wappen werden beim nächsten Speichern erneut bereinigt."
+                : ""),
+          );
         });
       }}
     >
@@ -3420,7 +3461,9 @@ function GuildSettings() {
         />
         Gilde archivieren / logisch löschen
       </label>
-      {value.emblem && <GuildEmblem path={value.emblem} preview />}
+      {(previewUrl || value.emblem) && (
+        <GuildEmblem path={previewUrl || value.emblem} preview />
+      )}
       <label className="cc-field">
         <Upload size={16} />
         Gildenwappen hochladen · PNG/JPEG/WebP, bis 5 MB
@@ -3431,12 +3474,18 @@ function GuildSettings() {
             const file = e.target.files?.[0];
             if (file)
               void a.run(async () =>
-                setValue({ ...value, emblem: await emblemData(file) }),
+                setPendingEmblem(await prepareEmblem(file)),
               );
           }}
         />
       </label>
-      <button type="button" onClick={() => setValue({ ...value, emblem: "" })}>
+      <button
+        type="button"
+        onClick={() => {
+          setPendingEmblem(null);
+          setValue({ ...value, emblem: "" });
+        }}
+      >
         Wappen entfernen
       </button>
       {(
@@ -3474,7 +3523,13 @@ function GuildSettings() {
       <button className="cc-primary" disabled={a.busy}>
         Änderungen bestätigen & speichern
       </button>
-      <button type="button" onClick={() => setValue(c.settings)}>
+      <button
+        type="button"
+        onClick={() => {
+          setPendingEmblem(null);
+          setValue(c.settings);
+        }}
+      >
         Verwerfen
       </button>
       <Status message={a.message} />
@@ -3500,10 +3555,49 @@ function AdminTable({
     [checked, setChecked] = useState<string[]>([]),
     [bulkStatus, setBulkStatus] = useState("approved"),
     [search, setSearch] = useState("");
+  const [marketFilters, setMarketFilters] = useState({
+    visibility: "",
+    status: "",
+    type: "",
+    server: "",
+    seller: "",
+  });
+  const [ownerNames, setOwnerNames] = useState<Record<string, string>>({});
+  const owners =
+    path === "listings"
+      ? [...new Set(page.data.map((row) => String(row.ownerUid)))]
+          .sort()
+          .join(",")
+      : "";
+  useEffect(() => {
+    setOwnerNames({});
+    if (!owners) return;
+    const ids = owners.split(","),
+      stops: (() => void)[] = [];
+    for (let i = 0; i < ids.length; i += 25)
+      stops.push(
+        onSnapshot(
+          query(
+            collection(c.service.db, "profiles"),
+            where(documentId(), "in", ids.slice(i, i + 25)),
+            limit(25),
+          ),
+          (snapshot) =>
+            setOwnerNames((old) => ({
+              ...old,
+              ...Object.fromEntries(
+                snapshot.docs.map((d) => [d.id, String(d.data().dofusName)]),
+              ),
+            })),
+          () => {},
+        ),
+      );
+    return () => stops.forEach((stop) => stop());
+  }, [c.service, owners]);
   return (
     <div className="cc-panel">
       <div className="cc-toolbar">
-        <h3>{path}</h3>
+        <h3>{path === "listings" ? "Marktplatzverwaltung" : path}</h3>
         <button onClick={() => void page.load()}>Aktualisieren</button>
       </div>
       <Field
@@ -3512,6 +3606,79 @@ function AdminTable({
         onChange={setSearch}
         required={false}
       />
+      {path === "listings" && (
+        <div className="cc-form-grid">
+          {(
+            [
+              [
+                "visibility",
+                "Sichtbarkeit",
+                [
+                  ["guild", "Gildenintern"],
+                  ["global", "Global"],
+                ],
+              ],
+              [
+                "status",
+                "Angebotsstatus",
+                [
+                  ["open", "Aktiv"],
+                  ["paused", "Pausiert"],
+                  ["withdrawn", "Zurückgezogen"],
+                ],
+              ],
+              [
+                "type",
+                "Angebotsart",
+                [
+                  ["sell", "Verkaufen"],
+                  ["buy", "Suchen"],
+                  ["swap", "Tauschen"],
+                ],
+              ],
+            ] as const
+          ).map(([key, label, options]) => (
+            <label className="cc-field" key={key}>
+              {label}
+              <select
+                aria-label={label}
+                value={marketFilters[key]}
+                onChange={(e) =>
+                  setMarketFilters((old) => ({ ...old, [key]: e.target.value }))
+                }
+              >
+                <option value="">Alle</option>
+                {options.map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+          <Field
+            label="Verkäufer filtern"
+            value={marketFilters.seller}
+            onChange={(seller) =>
+              setMarketFilters((old) => ({ ...old, seller }))
+            }
+            required={false}
+          />
+          <Field
+            label="Angebotsserver"
+            value={marketFilters.server}
+            onChange={(server) =>
+              setMarketFilters((old) => ({ ...old, server }))
+            }
+            required={false}
+          />
+          <p>
+            Globale fremde Angebote sind nur lesbar. Gildenrechte verleihen
+            keine globalen Moderationsrechte. Filter gelten für die geladenen
+            Seiten.
+          </p>
+        </div>
+      )}
       {path === "memberships" && (
         <div className="cc-panel">
           <h4>Ausgewählte Mitgliedschaften verwalten · maximal 20</h4>
@@ -3575,6 +3742,12 @@ function AdminTable({
             <tr>
               {path === "memberships" && <th>Auswahl</th>}
               <th>Datensatz</th>
+              {path === "listings" && (
+                <>
+                  <th>Verkäufer</th>
+                  <th>Sichtbarkeit / Status</th>
+                </>
+              )}
               {fields.slice(0, 4).map((f) => (
                 <th key={f}>{f}</th>
               ))}
@@ -3583,10 +3756,24 @@ function AdminTable({
           </thead>
           <tbody>
             {page.data
-              .filter((row) =>
-                JSON.stringify(row)
-                  .toLowerCase()
-                  .includes(search.toLowerCase()),
+              .filter(
+                (row) =>
+                  JSON.stringify(row)
+                    .toLowerCase()
+                    .includes(search.toLowerCase()) &&
+                  (path !== "listings" ||
+                    ((!marketFilters.visibility ||
+                      row.visibility === marketFilters.visibility) &&
+                      (!marketFilters.status ||
+                        row.status === marketFilters.status) &&
+                      (!marketFilters.type ||
+                        row.type === marketFilters.type) &&
+                      String(row.server)
+                        .toLowerCase()
+                        .includes(marketFilters.server.toLowerCase()) &&
+                      String(ownerNames[String(row.ownerUid)] || row.ownerUid)
+                        .toLowerCase()
+                        .includes(marketFilters.seller.toLowerCase()))),
               )
               .map((row) => (
                 <tr key={row.id}>
@@ -3610,11 +3797,28 @@ function AdminTable({
                     </td>
                   )}
                   <td>{row.id}</td>
+                  {path === "listings" && (
+                    <>
+                      <td>
+                        {ownerNames[String(row.ownerUid)] ||
+                          "Spielerprofil wird geladen …"}
+                      </td>
+                      <td>
+                        {row.visibility === "guild" ? "Gildenintern" : "Global"}{" "}
+                        · {String(row.status)}
+                      </td>
+                    </>
+                  )}
                   {fields.slice(0, 4).map((f) => (
                     <td key={f}>{String(row[f] ?? "")}</td>
                   ))}
                   <td>
                     <button
+                      disabled={
+                        path === "listings" &&
+                        row.visibility === "global" &&
+                        row.ownerUid !== c.user?.uid
+                      }
                       onClick={() => {
                         setSelected(row);
                         setChanges({});
@@ -3644,7 +3848,7 @@ function AdminTable({
                 changes,
                 selected.revision,
                 reason,
-                true,
+                !(path === "listings" && selected.visibility === "global"),
               );
               setSelected(null);
               await page.load();

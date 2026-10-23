@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-23T16:59:22.815Z",
+  "source": "https://api.dofusdb.fr/items",
+  "sourceItems": 21554,
+  "verifiedItems": 21554,
+  "items": 17233,
+  "counts": {
+    "equipment": 4015,
+    "resources": 3509,
+    "consumables": 3100,
+    "cosmetics": 6609
+  },
+  "excluded": {
+    "nonExchangeable": 4321,
+    "unverified": 0
+  },
+  "sha256": "aa6b355cfbc89702900134aa6cbb7da10f0cd5633c3d26d84f1e4d198af2434e",
+  "scope": "Template exchangeability; individual account bindings must be checked by the listing author."
+}

@@ -40,6 +40,7 @@ service cloud.firestore {
     && request.resource.data.keys().hasOnly(['guildName','server','description','discordUrl','emblem','rules','admission','archived','revision','lastAudit','updatedAt'])
     && text(request.resource.data.guildName, 80) && text(request.resource.data.description, 4000)
     && text(request.resource.data.server, 60) && text(request.resource.data.discordUrl, 200)
+    && text(request.resource.data.rules,4000) && text(request.resource.data.admission,4000) && request.resource.data.archived is bool
     && (request.resource.data.discordUrl == '' || request.resource.data.discordUrl.matches('https://(discord.gg/|discord.com/invite/).*'))
     && text(request.resource.data.emblem, 60000)
     && (request.resource.data.emblem == '' || request.resource.data.emblem == resource.data.emblem || request.resource.data.emblem.matches('guild-emblems/default/[a-f0-9-]+[.]webp'))
@@ -51,6 +52,7 @@ service cloud.firestore {
    allow update: if revision() && audited('platform/legal')
     && request.resource.data.keys().hasOnly(['registrationEnabled','privacyUrl','termsUrl','legalVersion','guildActive','revision','lastAudit','updatedAt'])
     && text(request.resource.data.privacyUrl,300) && text(request.resource.data.termsUrl,300) && text(request.resource.data.legalVersion,100)
+    && request.resource.data.registrationEnabled is bool && request.resource.data.guildActive is bool
     && (!request.resource.data.registrationEnabled || (request.resource.data.privacyUrl.matches('https://.*') && request.resource.data.termsUrl.matches('https://.*') && request.resource.data.legalVersion.size()>0));
   }
   match /accountDeletions/{uid} {
@@ -108,9 +110,14 @@ service cloud.firestore {
    allow create: if own(uid) && verified() && !exists(/databases/$(database)/documents/accountDeletions/$(uid)) && request.resource.data.keys().hasOnly(['uid','status','rank','displayName','revision','lastAudit','updatedAt'])
     && request.resource.data.uid == uid && request.resource.data.status == 'pending' && request.resource.data.rank == '' && request.resource.data.displayName == ''
     && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && request.resource.data.updatedAt == request.time;
-   allow update: if revision() && audited('memberships/' + uid)
-    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','rank','displayName','revision','lastAudit','updatedAt'])
-    && request.resource.data.status in ['pending','approved','rejected','removed'] && text(request.resource.data.rank,60) && text(request.resource.data.displayName,60);
+   allow update: if revision()
+    && text(request.resource.data.get('personalStatus',''),100) && text(request.resource.data.get('biography',''),500)
+    && ((own(uid) && member() && request.resource.data.lastAudit==resource.data.lastAudit
+      && request.resource.data.diff(resource.data).affectedKeys().hasAny(['personalStatus','biography'])
+      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['personalStatus','biography','revision','updatedAt']))
+     || (audited('memberships/' + uid)
+      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','rank','displayName','personalStatus','biography','revision','lastAudit','updatedAt'])
+      && request.resource.data.status in ['pending','approved','rejected','removed'] && text(request.resource.data.rank,60) && text(request.resource.data.displayName,60)));
    allow delete: if own(uid) && !exists(/databases/$(database)/documents/roles/$(uid));
   }
   match /guildCharacters/{uid} {

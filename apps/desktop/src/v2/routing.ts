@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 export type View =
-  | "account" | "guild" | "members" | "marketplace" | "events" | "groups"
+  | "account"
+  | "guild"
+  | "members"
+  | "marketplace"
+  | "events"
+  | "groups"
   | "monsters"
   | "sets"
   | "dashboard"
@@ -22,7 +27,13 @@ export type View =
 export function parseRoute(hash = location.hash) {
   const url = new URL(hash.replace(/^#/, "") || "/", location.origin);
   const segments = url.pathname.split("/").filter(Boolean);
-  const view = (!segments.length ? "dashboard" : segments[0]) as View;
+  const view = (
+    !segments.length
+      ? "dashboard"
+      : segments[0] === "members"
+        ? "guild"
+        : segments[0]
+  ) as View;
   return {
     view,
     entityId: segments[1],
@@ -45,6 +56,8 @@ export function navigatePath(path: string, replace = false) {
 export function useRoute() {
   const [route, setRoute] = useState(() => parseRoute());
   useEffect(() => {
+    if (location.hash.startsWith("#/members"))
+      navigatePath("/guild?section=members", true);
     const handler = () => setRoute(parseRoute());
     addEventListener("hashchange", handler);
     return () => removeEventListener("hashchange", handler);

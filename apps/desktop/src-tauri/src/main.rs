@@ -15,6 +15,22 @@ struct LocalConnection {
     url: String,
     token: String,
 }
+fn selected_service_port(identifier: &str, requested: Option<&str>) -> u16 {
+    if identifier == "fr.dofus.companion.qa.community" {
+        requested
+            .and_then(|value| value.parse::<u16>().ok())
+            .filter(|port| *port >= 1024)
+            .unwrap_or(4319)
+    } else {
+        4310
+    }
+}
+fn service_port(app: &tauri::AppHandle) -> u16 {
+    selected_service_port(
+        &app.config().identifier,
+        std::env::var("COMPANION_QA_PORT").ok().as_deref(),
+    )
+}
 fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if cfg!(debug_assertions) {
         Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.data"))
@@ -30,7 +46,7 @@ fn local_connection(app: tauri::AppHandle) -> Result<LocalConnection, String> {
     let token = fs::read_to_string(data_dir(&app)?.join("backend-token"))
         .map_err(|_| "Lokaler Dienst startet noch oder ist nicht erreichbar.".to_string())?;
     Ok(LocalConnection {
-        url: "http://127.0.0.1:4310".into(),
+        url: format!("http://127.0.0.1:{}", service_port(&app)),
         token: token.trim().into(),
     })
 }
@@ -71,7 +87,15 @@ fn main() {
                 let directory = data_dir(app.handle()).map_err(std::io::Error::other)?;
                 fs::create_dir_all(&directory)?;
                 let resources = app.path().resource_dir()?.join("service");
-                service::reclaim_previous_service(&resources.join("node.exe"))?;
+                let port = service_port(app.handle());
+                if port == 4310 {
+                    service::reclaim_previous_service(&resources.join("node.exe"))?;
+                } else if std::net::TcpStream::connect(("127.0.0.1", port)).is_ok() {
+                    return Err(std::io::Error::other(
+                        "QA-Port ist bereits belegt; vorhandener Dienst bleibt unverändert.",
+                    )
+                    .into());
+                }
                 let log = fs::OpenOptions::new()
                     .create(true)
                     .append(true)
@@ -84,7 +108,7 @@ fn main() {
                     .arg("backend.mjs")
                     .env("DATA_DIR", &directory)
                     .env("HOST", "127.0.0.1")
-                    .env("PORT", "4310")
+                    .env("PORT", port.to_string())
                     .env(
                         "COMPANION_CATALOG_SEED",
                         resources.join("catalog-seed.sqlite"),
@@ -124,4 +148,30 @@ fn main() {
             }
         }
     });
+}
+#[cfg(test)]
+mod port_tests {
+    use super::selected_service_port;
+    #[test]
+    fn production_port_cannot_be_overridden() {
+        assert_eq!(
+            selected_service_port("fr.dofus.companion", Some("4319")),
+            4310
+        );
+    }
+    #[test]
+    fn isolated_qa_uses_nonprivileged_port() {
+        assert_eq!(
+            selected_service_port("fr.dofus.companion.qa.community", Some("4321")),
+            4321
+        );
+        assert_eq!(
+            selected_service_port("fr.dofus.companion.qa.community", Some("80")),
+            4319
+        );
+        assert_eq!(
+            selected_service_port("fr.dofus.companion.qa.community", None),
+            4319
+        );
+    }
 }

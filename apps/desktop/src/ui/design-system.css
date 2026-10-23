@@ -1900,3 +1900,5 @@ html[data-motion="reduced"] *::after {
   margin: 12px 0;
   color: var(--text-muted);
 }
+.sidebar-character-choice {display:grid;gap:6px;margin:8px 12px;color:var(--text-muted);font-size:10px}
+.sidebar-character-choice select {width:100%;min-width:0;font-size:11px;padding:9px;border-radius:9px;background:var(--bg-surface,#142021);color:var(--text,#e5eddf);border:1px solid var(--border,#364a43)}
