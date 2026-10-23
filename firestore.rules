@@ -1,0 +1,319 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  function signed() { return request.auth != null; }
+  function verified() { return signed() && request.auth.token.email_verified == true; }
+  function registered(){return verified() && exists(/databases/$(database)/documents/profiles/$(request.auth.uid));}
+  function own(uid) { return signed() && request.auth.uid == uid; }
+  function member() { return registered() && get(/databases/$(database)/documents/memberships/$(request.auth.uid)).data.status == 'approved' && !get(/databases/$(database)/documents/platform/config).data.get('archived',false); }
+  function admin() { return verified() && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role in ['owner', 'admin']; }
+  function freshAdmin() { return admin() && request.time.toMillis() / 1000 - request.auth.token.auth_time < 900; }
+  function text(s, max) { return s is string && s.size() <= max; }
+  function revision() { return request.resource.data.revision == resource.data.revision + 1 && request.resource.data.updatedAt == request.time; }
+  function bounded() { return request.query.limit != null && request.query.limit <= 100; }
+  function visible(d) { return registered() && (d.visibility == 'global' || member()); }
+  function audited(path) {
+   let id = request.resource.data.lastAudit;
+   let log = getAfter(/databases/$(database)/documents/audit/$(id)).data;
+   return freshAdmin() && id != resource.data.lastAudit && log.actorUid == request.auth.uid && log.target == path && log.before == resource.data && log.after == request.resource.data && log.createdAt == request.time;
+  }
+  match /guildRanks/{id} {
+   function validRank() {
+    let d=request.resource.data;
+    return d.keys().hasOnly(['id','name','order','color','icon','archived','revision','lastAudit','updatedAt'])
+     && d.id==id && text(d.name,60) && d.name.size()>0 && d.order is int && d.order>=0 && d.order<=1000
+     && d.color is string && d.color.matches('#[a-fA-F0-9]{6}') && d.icon in ['crown','shield','star','diamond','sword']
+     && d.archived is bool && d.updatedAt==request.time;
+   }
+   allow get: if member() || admin();
+   allow list: if (member() || admin()) && bounded();
+   allow create: if freshAdmin() && validRank() && request.resource.data.revision==1
+    && getAfter(/databases/$(database)/documents/audit/$(request.resource.data.lastAudit)).data.target=='guildRanks/'+id
+    && getAfter(/databases/$(database)/documents/audit/$(request.resource.data.lastAudit)).data.after==request.resource.data;
+   allow update: if validRank() && revision() && audited('guildRanks/'+id);
+   allow delete: if false;
+  }
+  match /platform/config {
+   allow read: if member() || admin();
+   allow create, delete: if false;
+   allow update: if revision() && audited('platform/config')
+    && request.resource.data.keys().hasOnly(['guildName','server','description','discordUrl','emblem','rules','admission','archived','revision','lastAudit','updatedAt'])
+    && text(request.resource.data.guildName, 80) && text(request.resource.data.description, 4000)
+    && text(request.resource.data.server, 60) && text(request.resource.data.discordUrl, 200)
+    && (request.resource.data.discordUrl == '' || request.resource.data.discordUrl.matches('https://(discord.gg/|discord.com/invite/).*'))
+    && text(request.resource.data.emblem, 60000)
+    && (request.resource.data.emblem == '' || request.resource.data.emblem == resource.data.emblem || request.resource.data.emblem.matches('guild-emblems/default/[a-f0-9-]+[.]webp'))
+;
+  }
+  match /platform/legal {
+   allow read: if true;
+   allow create, delete: if false;
+   allow update: if revision() && audited('platform/legal')
+    && request.resource.data.keys().hasOnly(['registrationEnabled','privacyUrl','termsUrl','legalVersion','guildActive','revision','lastAudit','updatedAt'])
+    && text(request.resource.data.privacyUrl,300) && text(request.resource.data.termsUrl,300) && text(request.resource.data.legalVersion,100)
+    && (!request.resource.data.registrationEnabled || (request.resource.data.privacyUrl.matches('https://.*') && request.resource.data.termsUrl.matches('https://.*') && request.resource.data.legalVersion.size()>0));
+  }
+  match /accountDeletions/{uid} {
+   allow get: if own(uid);
+   allow create: if own(uid) && verified() && !exists(/databases/$(database)/documents/roles/$(uid))
+    && request.time.toMillis() / 1000 - request.auth.token.auth_time < 300
+    && request.resource.data.keys().hasOnly(['state','createdAt']) && request.resource.data.state == 'pending' && request.resource.data.createdAt == request.time;
+   allow list, update, delete: if false;
+  }
+  match /roles/{uid} {
+   allow get: if own(uid) || admin();
+   allow list: if freshAdmin() && bounded();
+   // System roles are exclusively assigned through the trusted Admin SDK bootstrap.
+   allow write: if false;
+  }
+  match /profiles/{uid} {
+   function valid() {
+    let d = request.resource.data;
+    return d.keys().hasOnly(['uid','dofusName','discordName','server','mainCharacterId','updatedAt'])
+     && d.uid == uid && text(d.dofusName, 60) && d.dofusName.size() >= 2
+     && text(d.discordName, 64) && d.discordName.size() >= 2 && text(d.server,60) && d.server.size() >= 2
+     && text(d.mainCharacterId,100) && d.updatedAt == request.time;
+   }
+   allow get: if own(uid) || registered();
+   allow list: if registered() && bounded();
+   allow create: if own(uid) && valid() && !exists(/databases/$(database)/documents/accountDeletions/$(uid))
+    && get(/databases/$(database)/documents/platform/legal).data.registrationEnabled
+    && getAfter(/databases/$(database)/documents/users/$(uid)/account/consent).data.legalVersion == get(/databases/$(database)/documents/platform/legal).data.legalVersion
+    && getAfter(/databases/$(database)/documents/users/$(uid)/account/consent).data.legalAcceptedAt == request.time;
+   allow update: if own(uid) && valid();
+   allow delete: if own(uid) && !exists(/databases/$(database)/documents/roles/$(uid));
+  }
+  match /users/{uid}/account/consent {
+   allow get: if own(uid);
+   allow create,update: if own(uid) && !exists(/databases/$(database)/documents/accountDeletions/$(uid))
+    && request.resource.data.keys().hasOnly(['legalVersion','legalAcceptedAt']) && request.resource.data.legalAcceptedAt==request.time
+    && get(/databases/$(database)/documents/platform/legal).data.registrationEnabled
+    && request.resource.data.legalVersion==get(/databases/$(database)/documents/platform/legal).data.legalVersion;
+   allow delete: if own(uid) && verified();
+  }
+  match /users/{uid}/records/{id} {
+   allow read: if own(uid) && registered();
+   allow create, update: if own(uid) && registered() && !exists(/databases/$(database)/documents/accountDeletions/$(uid))
+    && request.resource.data.keys().hasOnly(['key','payload','revision','mutationId','deviceId','deleted','updatedAt'])
+    && text(request.resource.data.key,300) && text(request.resource.data.payload,750000)
+    && text(request.resource.data.mutationId,100) && text(request.resource.data.deviceId,100)
+    && request.resource.data.deleted is bool && request.resource.data.updatedAt == request.time
+    && ((!exists(/databases/$(database)/documents/users/$(uid)/records/$(id)) && request.resource.data.revision == 1)
+     || (resource.data.revision + 1 == request.resource.data.revision && resource.data.key == request.resource.data.key));
+   allow delete: if own(uid) && verified();
+  }
+  match /memberships/{uid} {
+   allow get: if own(uid) || member() || admin();
+   allow list: if (member() || admin()) && bounded();
+   allow create: if own(uid) && verified() && !exists(/databases/$(database)/documents/accountDeletions/$(uid)) && request.resource.data.keys().hasOnly(['uid','status','rank','displayName','revision','lastAudit','updatedAt'])
+    && request.resource.data.uid == uid && request.resource.data.status == 'pending' && request.resource.data.rank == '' && request.resource.data.displayName == ''
+    && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && request.resource.data.updatedAt == request.time;
+   allow update: if revision() && audited('memberships/' + uid)
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','rank','displayName','revision','lastAudit','updatedAt'])
+    && request.resource.data.status in ['pending','approved','rejected','removed'] && text(request.resource.data.rank,60) && text(request.resource.data.displayName,60);
+   allow delete: if own(uid) && !exists(/databases/$(database)/documents/roles/$(uid));
+  }
+  match /guildCharacters/{uid} {
+   allow read: if member() || admin();
+   allow create: if own(uid) && member() && request.resource.data.uid == uid && request.resource.data.characters is list && request.resource.data.characters.size() <= 30
+    && request.resource.data.keys().hasOnly(['uid','characters','revision','lastAudit','updatedAt']) && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && request.resource.data.updatedAt == request.time;
+   allow update: if request.resource.data.uid == uid && request.resource.data.characters is list && request.resource.data.characters.size() <= 30
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['characters','revision','lastAudit','updatedAt']) && revision()
+    && ((own(uid) && member() && request.resource.data.lastAudit == resource.data.lastAudit) || audited('guildCharacters/' + uid));
+   allow delete: if own(uid);
+  }
+  match /listings/{id} {
+   function valid() {
+    let d = request.resource.data;
+    return d.keys().hasOnly(['id','ownerUid','itemId','itemName','iconUrl','quantity','available','price','server','type','visibility','description','status','revision','lastReservation','lastAudit','updatedAt','itemLevel','category','createdAt'])
+     && d.id == id && d.itemId is int && d.itemId > 0 && text(d.itemName,160) && d.itemName.size() > 0
+     && text(d.iconUrl,300) && (d.iconUrl == '' || d.iconUrl.matches('https://api[.]dofusdu[.]de/.*') || d.iconUrl.matches('/game-assets/.*'))
+     && d.quantity is int && d.quantity > 0 && d.quantity <= 1000000 && d.available is int && d.available >= 0 && d.available <= d.quantity
+     && d.price is int && d.price >= 0 && d.price <= 2000000000 && text(d.server,60) && text(d.description,2000)
+     && d.type in ['sell','buy','swap'] && d.visibility in ['guild','global'] && d.status in ['open','paused','withdrawn']
+     && d.get('itemLevel',0) is int && d.get('itemLevel',0)>=0 && d.get('itemLevel',0)<=200 && text(d.get('category',''),80);
+   }
+   function reservationUpdate() {
+    let rid = request.resource.data.lastReservation;
+    let before = get(/databases/$(database)/documents/reservations/$(rid)).data;
+    let after = getAfter(/databases/$(database)/documents/reservations/$(rid)).data;
+    let oldHeld = before.state in ['accepted','completed'] ? before.quantity : 0;
+    let newHeld = after.state in ['accepted','completed'] ? after.quantity : 0;
+    return before.listingId == id && after.revision == before.revision + 1
+     && after.updatedAt == request.time && request.resource.data.available == resource.data.available + oldHeld - newHeld
+     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['available','lastReservation','revision','updatedAt','lastAudit'])
+     && ((request.auth.uid == before.buyerUid || request.auth.uid == before.sellerUid) || (resource.data.visibility == 'guild' && audited('listings/' + id)));
+   }
+   allow get: if visible(resource.data) || (registered() && resource.data.ownerUid == request.auth.uid);
+   allow list: if bounded() && (visible(resource.data) || (registered() && resource.data.ownerUid == request.auth.uid));
+   allow create: if verified() && !exists(/databases/$(database)/documents/accountDeletions/$(request.auth.uid)) && valid() && request.resource.data.ownerUid == request.auth.uid
+    && (request.resource.data.visibility == 'global' || member()) && request.resource.data.available == request.resource.data.quantity
+    && request.resource.data.revision == 1 && request.resource.data.status == 'open' && request.resource.data.lastAudit == '' && request.resource.data.lastReservation == '' && request.resource.data.updatedAt == request.time;
+   allow update: if (visible(resource.data) || (registered() && own(resource.data.ownerUid))) && valid() && revision() && request.resource.data.ownerUid == resource.data.ownerUid
+    && (reservationUpdate() || (request.resource.data.available == resource.data.available + request.resource.data.quantity - resource.data.quantity
+     && request.resource.data.visibility == resource.data.visibility && request.resource.data.lastReservation == resource.data.lastReservation
+     && ((own(resource.data.ownerUid) && request.resource.data.lastAudit == resource.data.lastAudit) || (resource.data.visibility == 'guild' && audited('listings/' + id)))));
+   allow delete: if false;
+   match /comments/{commentId} {
+    function parent() { return get(/databases/$(database)/documents/listings/$(id)).data; }
+    function restoresPrevious() {
+     let prior=get(/databases/$(database)/documents/audit/$(resource.data.lastAudit)).data;
+     return resource.data.moderated && prior.target=='listings/'+id+'/comments/'+commentId && prior.after==resource.data
+      && request.resource.data.text==prior.before.text && request.resource.data.moderated==prior.before.moderated;
+    }
+    allow get: if visible(parent());
+    allow list: if visible(parent()) && bounded();
+    allow create: if visible(parent()) && request.resource.data.keys().hasOnly(['ownerUid','text','createdAt','updatedAt','revision','lastAudit','moderated']) && own(request.resource.data.ownerUid)
+     && text(request.resource.data.text,2000) && request.resource.data.text.size() > 0 && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && !request.resource.data.moderated;
+    allow update: if parent().visibility == 'guild' && revision() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','moderated','revision','lastAudit','updatedAt'])
+     && audited('listings/' + id + '/comments/' + commentId) && ((request.resource.data.moderated == true && request.resource.data.text == '[Kommentar moderiert]') || restoresPrevious());
+    allow delete: if own(resource.data.ownerUid);
+   }
+  }
+  match /reservations/{id} {
+   function listing() { return get(/databases/$(database)/documents/listings/$(resource.data.listingId)).data; }
+   allow get: if verified() && ((request.auth.uid == resource.data.buyerUid || request.auth.uid == resource.data.sellerUid) || (listing().visibility == 'guild' && admin()));
+   allow list: if verified() && bounded() && ((request.auth.uid == resource.data.buyerUid || request.auth.uid == resource.data.sellerUid) || (listing().visibility == 'guild' && admin()));
+   allow create: if verified() && request.resource.data.keys().hasOnly(['id','listingId','buyerUid','sellerUid','quantity','state','revision','lastAudit','updatedAt'])
+    && request.resource.data.id == id && own(request.resource.data.buyerUid) && request.resource.data.buyerUid != request.resource.data.sellerUid
+    && request.resource.data.sellerUid == get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data.ownerUid
+    && visible(get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data)
+    && get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data.status == 'open'
+    && request.resource.data.quantity is int && request.resource.data.quantity > 0
+    && request.resource.data.quantity <= get(/databases/$(database)/documents/listings/$(request.resource.data.listingId)).data.available
+    && request.resource.data.state == 'requested' && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && request.resource.data.updatedAt == request.time;
+   allow update: if verified() && revision() && visible(listing())
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['state','revision','lastAudit','updatedAt'])
+    && ((resource.data.state == 'requested' && request.resource.data.state in ['accepted','rejected','withdrawn']) || (resource.data.state == 'accepted' && request.resource.data.state in ['completed','withdrawn']))
+    && ((own(resource.data.sellerUid) && request.resource.data.lastAudit == resource.data.lastAudit)
+     || (own(resource.data.buyerUid) && request.resource.data.state == 'withdrawn' && request.resource.data.lastAudit == resource.data.lastAudit)
+     || (listing().visibility == 'guild' && audited('reservations/' + id)))
+    && getAfter(/databases/$(database)/documents/listings/$(resource.data.listingId)).data.lastReservation == id
+    && getAfter(/databases/$(database)/documents/listings/$(resource.data.listingId)).data.revision == listing().revision + 1;
+   allow delete: if false;
+  }
+  match /activities/{id} {
+   function valid() {
+    let d = request.resource.data;
+    return d.keys().hasOnly(['id','kind','ownerUid','title','description','server','startsAt','timezone','meeting','dungeonId','minLevel','capacity','joined','participants','status','revision','lastAudit','lastParticipantUid','lastNotice','updatedAt','activityType','wantedClasses','wantedRoles','resourceName','targetQuantity'])
+     && d.id == id && d.kind in ['event','group'] && text(d.title,160) && d.title.size() > 0 && text(d.description,2000)
+     && text(d.server,60) && text(d.startsAt,40) && text(d.timezone,80) && text(d.meeting,200) && d.dungeonId is int
+     && d.minLevel is int && d.minLevel >= 1 && d.minLevel <= 200 && d.capacity is int && d.capacity >= 1 && d.capacity <= 100
+     && d.participants is map && d.participants.size() <= 100 && d.joined is int && d.joined >= 0 && d.joined <= d.capacity
+     && d.status in ['open','cancelled','completed']
+     && text(d.get('activityType',''),60) && text(d.get('resourceName',''),160)
+     && d.get('wantedClasses',[]) is list && d.get('wantedClasses',[]).size()<=19 && d.get('wantedClasses',[]).hasOnly([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20])
+     && d.get('wantedRoles',[]) is list && d.get('wantedRoles',[]).size()<=6 && d.get('wantedRoles',[]).hasOnly(['Schaden','Tank','Heilung','Unterstützung','Positionierung','Flexibel'])
+     && d.get('targetQuantity',0) is int && d.get('targetQuantity',0)>=0 && d.get('targetQuantity',0)<=1000000;
+   }
+   function participation(uid) {
+    let old = resource.data.participants.get(uid, {'status':'none'});
+    let next = request.resource.data.participants.get(uid, {'status':'none'});
+    let oldCount = old.status == 'joined' ? 1 : 0;
+    let newCount = next.status == 'joined' ? 1 : 0;
+    return resource.data.status == 'open' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participants','joined','lastParticipantUid','revision','lastAudit','updatedAt'])
+     && request.resource.data.participants.diff(resource.data.participants).affectedKeys().hasOnly([uid])
+     && request.resource.data.joined == resource.data.joined - oldCount + newCount
+     && (next.status == 'none' || (next.keys().hasOnly(['characterId','name','level','role','status']) && next.level is int && next.level >= resource.data.minLevel && next.level <= 200
+      && text(next.name,60) && text(next.characterId,100) && text(next.role,60) && next.status in ['joined','waiting'] && get(/databases/$(database)/documents/memberships/$(uid)).data.status == 'approved'));
+   }
+   allow get: if member() || admin();
+   allow list: if (member() || admin()) && bounded();
+   allow create: if member() && valid() && own(request.resource.data.ownerUid) && request.resource.data.participants.size() == 0 && request.resource.data.joined == 0
+    && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && request.resource.data.status == 'open' && request.resource.data.updatedAt == request.time;
+   allow update: if (member() || admin()) && valid() && revision() && request.resource.data.ownerUid == resource.data.ownerUid && request.resource.data.kind == resource.data.kind
+    && ((request.resource.data.lastAudit == resource.data.lastAudit && ((own(resource.data.ownerUid)
+       && request.resource.data.participants == resource.data.participants && request.resource.data.joined == resource.data.joined)
+       || (request.resource.data.get('lastParticipantUid',request.auth.uid) == request.auth.uid && participation(request.auth.uid))))
+      || (request.resource.data.lastAudit != resource.data.lastAudit && audited('activities/' + id) && ((request.resource.data.participants == resource.data.participants && request.resource.data.joined == resource.data.joined) || participation(request.resource.data.get('lastParticipantUid','')))));
+   allow delete: if false;
+  }
+  match /audit/{id} {
+   allow get: if freshAdmin();
+   allow list: if freshAdmin() && bounded();
+   allow create: if freshAdmin() && request.resource.data.keys().hasOnly(['actorUid','target','before','after','reason','createdAt'])
+    && request.resource.data.actorUid == request.auth.uid && text(request.resource.data.reason,1000) && request.resource.data.reason.size() >= 5
+    && request.resource.data.createdAt == request.time
+    && request.resource.data.target.matches('(platform/(config|legal)|guildRanks/[^/]+|memberships/[^/]+|guildCharacters/[^/]+|listings/[^/]+|reservations/[^/]+|activities/[^/]+|reports/[^/]+|listings/[^/]+/comments/[^/]+)')
+    && ((request.resource.data.target.split('/').size() == 2
+     && ((request.resource.data.target.split('/')[0]=='guildRanks' && !exists(/databases/$(database)/documents/guildRanks/$(request.resource.data.target.split('/')[1])) && request.resource.data.before=={})
+      || get(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])).data == request.resource.data.before)
+     && getAfter(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])).data == request.resource.data.after)
+    || (request.resource.data.target.split('/').size() == 4
+     && get(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])/comments/$(request.resource.data.target.split('/')[3])).data == request.resource.data.before
+     && getAfter(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])/comments/$(request.resource.data.target.split('/')[3])).data == request.resource.data.after))
+    && request.resource.data.after.lastAudit == id;
+   allow update, delete: if false;
+  }
+  match /guildAnnouncements/{id} {
+   allow get: if member() || admin();
+   allow list: if (member() || admin()) && bounded();
+   allow create: if freshAdmin() && request.resource.data.keys().hasOnly(['actorUid','text','createdAt'])
+    && request.resource.data.actorUid==request.auth.uid && text(request.resource.data.text,200) && request.resource.data.createdAt==request.time
+    && getAfter(/databases/$(database)/documents/platform/config).data.lastAudit==id && getAfter(/databases/$(database)/documents/platform/config).data.updatedAt==request.time;
+   allow update,delete: if false;
+  }
+  match /activityAnnouncements/{id} {
+   allow get: if (member() || admin()) && request.auth.uid in resource.data.recipientUids;
+   allow list: if bounded() && (member() || admin()) && request.auth.uid in resource.data.recipientUids;
+   allow create: if (member() || freshAdmin()) && request.resource.data.keys().hasOnly(['actorUid','activityId','recipientUids','text','createdAt'])
+    && request.resource.data.actorUid==request.auth.uid && text(request.resource.data.text,200) && request.resource.data.createdAt==request.time
+    && request.resource.data.recipientUids is list && request.resource.data.recipientUids.size()<=100
+    && request.resource.data.recipientUids.toSet()==get(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.participants.keys().toSet()
+    && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.lastNotice==id
+    && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.updatedAt==request.time
+    && (get(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.ownerUid==request.auth.uid || freshAdmin());
+   allow update,delete: if false;
+  }
+  match /users/{uid}/notifications/{id} {
+   allow read: if own(uid) && verified();
+   allow update: if own(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']) && request.resource.data.read is bool;
+   allow delete: if own(uid);
+   allow create: if verified() && request.resource.data.keys().hasOnly(['kind','subjectId','text','read','actorUid','createdAt'])
+    && !exists(/databases/$(database)/documents/accountDeletions/$(uid)) && request.resource.data.actorUid==request.auth.uid
+    && request.resource.data.createdAt==request.time && request.resource.data.read==false && text(request.resource.data.text,200)
+    && ((request.resource.data.kind=='membership' && request.resource.data.subjectId==uid && freshAdmin()
+      && getAfter(/databases/$(database)/documents/memberships/$(uid)).data.lastAudit==id && getAfter(/databases/$(database)/documents/memberships/$(uid)).data.updatedAt==request.time)
+     || (request.resource.data.kind=='guild-character' && request.resource.data.subjectId==uid && freshAdmin()
+      && getAfter(/databases/$(database)/documents/guildCharacters/$(uid)).data.lastAudit==id && getAfter(/databases/$(database)/documents/guildCharacters/$(uid)).data.updatedAt==request.time)
+     || (request.resource.data.kind=='reservation'
+      && getAfter(/databases/$(database)/documents/reservations/$(request.resource.data.subjectId)).data.buyerUid==uid
+      && getAfter(/databases/$(database)/documents/reservations/$(request.resource.data.subjectId)).data.updatedAt==request.time
+      && get(/databases/$(database)/documents/reservations/$(request.resource.data.subjectId)).data.revision+1==getAfter(/databases/$(database)/documents/reservations/$(request.resource.data.subjectId)).data.revision)
+     || (request.resource.data.kind=='activity-admin' && freshAdmin()
+      && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.lastAudit==id
+      && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.updatedAt==request.time
+      && (uid in get(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.participants || uid in getAfter(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.participants))
+     || (request.resource.data.kind=='activity-self' && own(uid)
+      && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.updatedAt==request.time
+      && get(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.participants.get(uid,{'status':'none'}).status=='waiting'
+      && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.participants[uid].status=='joined'));
+  }
+  match /users/{uid}/account/reportLimit {
+   allow get: if own(uid) && registered();
+   allow create, update: if own(uid) && registered() && request.resource.data.keys().hasOnly(['reportId','createdAt'])
+    && request.resource.data.createdAt == request.time
+    && (!exists(/databases/$(database)/documents/users/$(uid)/account/reportLimit) || request.time >= resource.data.createdAt + duration.value(60,'s'))
+    && getAfter(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.reporterUid == uid;
+   allow delete: if own(uid);
+  }
+  match /reports/{id} {
+   function reportTarget() {
+    let parts=request.resource.data.target.split('/');
+    return (parts.size()==2 && ((parts[0]=='listings' && visible(get(/databases/$(database)/documents/listings/$(parts[1])).data)) || (parts[0]=='activities' && member())))
+      || (parts.size()==4 && parts[0]=='listings' && parts[2]=='comments' && visible(get(/databases/$(database)/documents/listings/$(parts[1])).data));
+   }
+   allow get: if own(resource.data.reporterUid) || freshAdmin();
+   allow list: if bounded() && (own(resource.data.reporterUid) || freshAdmin());
+   allow create: if registered() && own(request.resource.data.reporterUid) && request.resource.data.keys().hasOnly(['reporterUid','target','reason','status','resolution','revision','lastAudit','createdAt','updatedAt'])
+    && text(request.resource.data.target,250) && reportTarget() && text(request.resource.data.reason,1000) && request.resource.data.reason.size()>=10
+    && request.resource.data.status=='open' && request.resource.data.resolution=='' && request.resource.data.revision==1 && request.resource.data.lastAudit==''
+    && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time
+    && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)/account/reportLimit).data.reportId==id;
+   allow update: if revision() && audited('reports/'+id) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolution','revision','lastAudit','updatedAt'])
+    && request.resource.data.status in ['open','reviewing','resolved','dismissed'] && text(request.resource.data.resolution,2000);
+   allow delete: if false;
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}

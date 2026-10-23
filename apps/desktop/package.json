@@ -1,6 +1,6 @@
 {
   "name": "@dofus/desktop",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.5.0",
+    "@dofus/community": "workspace:*",
     "@dofus/core": "workspace:*",
     "@dofus/game-data": "workspace:*",
     "@fontsource/dm-sans": "^5.3.0",

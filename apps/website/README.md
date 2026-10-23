@@ -1,4 +1,12 @@
-# DOFUS Companion – geschützte Vorschau (Firebase Spark)
+# DOFUS Companion – Website-Vorschau
+
+**Aktueller Stand 23.10.2026:** Der Betreiber hat ausdrücklich eine Website-Vorschau ohne die unfertigen Rechtsseiten beauftragt. Dafür gibt es `pnpm --filter @dofus/website build:preview` (Vite-Modus `guild-preview`). Dieser Build enthält keine Community-Module, keine Registrierung und keine Links oder Entwurfsseiten für Impressum, Datenschutz und Nutzungsbedingungen. Direkte Community-URLs zeigen einen Hinweis auf die ausstehende Sicherheitsabnahme. Die Funktionen im Entwicklungsbranch bleiben erhalten. Es wird ausschließlich Hosting bereitgestellt; Firestore, Storage, IAM und Windows-Updates werden dadurch nicht veröffentlicht.
+
+Der Vorschau-Build übernimmt den **bereits öffentlich lesbaren** Passwort-Verifier ausschließlich von `https://dofus-companion.web.app/access-config.json`, validiert Format/Stärke und bricht bei Fehlern ab. Das vorhandene Passwort bleibt erhalten, ohne ein GitHub-Secret auszulesen oder ein neues Passwort zu wählen. `WEBSITE_PASSWORD` und Wiederverwendung sind absichtlich nicht kombinierbar. Der normale Community-Build und seine Veröffentlichungsprüfung bleiben davon getrennt. Nach dem Build: Vorschau mit `pnpm --filter @dofus/website exec vite preview --host 127.0.0.1 --port 4187 --strictPort`, Browserprüfung mit `pnpm --filter @dofus/website test:preview`; der gleiche Test akzeptiert die tatsächliche Hosting-URL als Argument. Berichte liegen unter `.data/` im Repository-Stamm (ignoriert).
+
+**Keine rechtliche Freigabe:** Der Browser-Passwortschutz ist umgehbar; Dateien bleiben öffentlich abrufbar. Das Weglassen eines Impressums ist eine ausdrückliche Betreiberentscheidung, kein Nachweis einer Ausnahme von § 18 MStV oder datenschutzrechtlichen Pflichten. `legalReviewed` bleibt `false`. Projekt läuft inzwischen auf Blaze; Aussagen zum Spark-Tarif und zum früheren Freigabeablauf in den folgenden historischen Einrichtungsnotizen sind überholt. Aktuell gilt [die dokumentierte Vorschau-Bereitstellung](../../docs/WEBSITE_PREVIEW_PUBLICATION.md).
+
+## Historische Einrichtungsnotizen
 
 Diese eigenständige statische React-Website liegt **nur im bestehenden DOFUS-Companion-Monorepo** unter `apps/website/`. Desktop-App, lokale SQLite-/Fastify-Daten, Discord-Bot, Windows-Installer und GitHub Releases bleiben eigenständig. Klassisches Firebase Hosting im Spark-Tarif hostet lediglich statische Website-Dateien, keine Functions, keine Datenbank, keine Installer und kein SSR.
 

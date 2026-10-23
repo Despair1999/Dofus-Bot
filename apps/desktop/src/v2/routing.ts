@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 export type View =
+  | "account" | "guild" | "members" | "marketplace" | "events" | "groups"
   | "monsters"
   | "sets"
   | "dashboard"

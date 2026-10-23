@@ -1,0 +1,33 @@
+name: Community security and integration
+on:
+  pull_request:
+    paths: ['packages/community/**', 'apps/desktop/src/community.tsx', 'apps/backend/src/community-scope.ts', 'storage.rules', 'firebase.json', 'firestore.rules', 'firestore.indexes.json', 'infrastructure/community/**', '.github/workflows/community.yml']
+  push:
+    branches: ['codex/companion-community-platform', main]
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter @dofus/community typecheck
+      - run: pnpm --filter @dofus/community test
+      - run: npx --yes firebase-tools@14.16.0 emulators:exec --only auth,firestore,storage --project demo-dofus-community 'pnpm exec tsx --test --test-concurrency=1 infrastructure/community/*.test.ts'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: community-test-evidence
+          path: test-results/
+          retention-days: 3

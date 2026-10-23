@@ -1,3 +1,4 @@
+import {communityInteraction} from "./community.js";
 import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -288,6 +289,7 @@ client.on(Events.InteractionCreate, async (i) => {
       return;
     }
     await i.deferReply({ flags: MessageFlags.Ephemeral });
+    if (await communityInteraction(i)) return;
     if (await intelligenceCommand(i, api)) return;
     if (i.commandName === "hilfe") {
       await i.editReply({

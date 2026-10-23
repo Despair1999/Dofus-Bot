@@ -76,7 +76,7 @@ export default function SideNavigation({
               ))}
           </section>
         )}
-        {["Entdecken", "Planen", "Tools", "Persönlich"].map((group) => (
+        {["Entdecken", "Planen", "Gilde", "Tools", "Persönlich"].map((group) => (
           <section className="ui-nav-group" key={group}>
             <button
               className="ui-nav-group-toggle"

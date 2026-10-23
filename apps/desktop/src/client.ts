@@ -1,9 +1,15 @@
-import { read, write } from "./storage";
+import { localAccount, read, write } from "./storage";
 export type { Character, Envelope } from "@dofus/core";
 import type { Envelope } from "@dofus/core";
 export type { ItemDetail as Item } from "@dofus/core";
 export type { Quest } from "@dofus/game-data";
 
+let backendObserver: ((config: Config) => Promise<void>) | undefined;
+export function setBackendObserver(
+  observer: ((config: Config) => Promise<void>) | undefined,
+) {
+  backendObserver = observer;
+}
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -19,6 +25,7 @@ export async function api<T>(
   body?: unknown,
   method?: string,
 ): Promise<Envelope<T>> {
+  const requestAccount = localAccount();
   const url = new URL(config.url);
   if (
     url.protocol !== "https:" &&
@@ -29,13 +36,18 @@ export async function api<T>(
     method: method ?? (body ? "POST" : "GET"),
     headers: {
       Authorization: `Bearer ${config.token}`,
+      ...(requestAccount ? { "X-Companion-Account": requestAccount } : {}),
       ...(body ? { "Content-Type": "application/json" } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(15000),
   });
-  if (response.status === 204) return { data: undefined as T };
-  const json = await response.json();
+  if (requestAccount !== localAccount())
+    throw new ApiError(409, "Account wurde während der Anfrage gewechselt.");
+  const json =
+    response.status === 204 ? { data: undefined as T } : await response.json();
+  if (requestAccount !== localAccount())
+    throw new ApiError(409, "Account wurde während der Anfrage gewechselt.");
   if (!response.ok)
     throw new ApiError(
       response.status,
@@ -43,7 +55,23 @@ export async function api<T>(
         json.message ??
         String(json.error ?? "Anfrage fehlgeschlagen"),
     );
-  if (!body) await write(`cache:${config.url}:${path}`, json);
+  if (!body && (!method || method === "GET"))
+    await write(`cache:${config.url}:${path}`, json);
+  if (body || (method && method !== "GET")) {
+    try {
+      await backendObserver?.(config);
+    } catch (error) {
+      window.dispatchEvent(
+        new CustomEvent("companion:replica-error", {
+          detail:
+            "Lokal gespeichert; Cloud-Vorbereitung fehlgeschlagen: " +
+            String(error),
+        }),
+      );
+    }
+  }
+  if (requestAccount !== localAccount())
+    throw new ApiError(409, "Account wurde während der Anfrage gewechselt.");
   return json;
 }
 export async function cached<T>(
@@ -59,7 +87,7 @@ export async function cached<T>(
     );
     if (
       saved &&
-      !(error instanceof ApiError && [401, 403].includes(error.status))
+      !(error instanceof ApiError && [401, 403, 409].includes(error.status))
     )
       return { ...saved, cached: true, stale: true };
     throw error;

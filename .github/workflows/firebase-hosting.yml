@@ -1,9 +1,11 @@
-name: Website · Firebase Hosting (Spark)
+name: Website · Firebase Hosting
 
 on:
   pull_request:
     paths:
       - 'apps/website/**'
+      - 'packages/community/**'
+      - 'packages/core/src/market.ts'
       - 'apps/desktop/public/branding/**'
       - 'apps/desktop/public/classes/**'
       - 'apps/desktop/public/game-assets/worlds/1.webp'
@@ -15,6 +17,8 @@ on:
     branches: [main]
     paths:
       - 'apps/website/**'
+      - 'packages/community/**'
+      - 'packages/core/src/market.ts'
       - 'apps/desktop/public/branding/**'
       - 'apps/desktop/public/classes/**'
       - 'apps/desktop/public/game-assets/worlds/1.webp'
@@ -23,6 +27,12 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/firebase-hosting.yml'
   workflow_dispatch:
+    inputs:
+      rotate_preview_password:
+        description: 'Explicitly rotate preview access to WEBSITE_PASSWORD (otherwise preserve live verifier)'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -64,7 +74,7 @@ jobs:
           retention-days: 3
 
   publish:
-    name: Deploy password-gated preview (Firebase Spark)
+    name: Deploy approved password-gated website
     needs: [website]
     if: >-
       github.event_name != 'pull_request' &&
@@ -77,6 +87,10 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Enforce community publication prerequisites
+        env:
+          COMMUNITY_PUBLICATION_APPROVED: ${{ vars.COMMUNITY_PUBLICATION_APPROVED }}
+        run: node infrastructure/community/publication-gate.mjs
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -84,17 +98,23 @@ jobs:
           cache: pnpm
       - name: Install website dependencies
         run: pnpm install --frozen-lockfile --filter @dofus/website...
-      - name: Rebuild with the real password from GitHub Secrets
+      - name: Build preserving current preview access unless rotation was requested
         env:
           WEBSITE_PASSWORD: ${{ secrets.WEBSITE_PASSWORD }}
+          ROTATE_PREVIEW_PASSWORD: ${{ github.event_name == 'workflow_dispatch' && inputs.rotate_preview_password }}
           VITE_SITE_URL: ${{ vars.WEBSITE_URL }}
           VITE_DISCORD_CLIENT_ID: ${{ vars.DISCORD_PUBLIC_CLIENT_ID }}
         run: |
-          if [ -z "$WEBSITE_PASSWORD" ]; then
-            echo "::error::Missing WEBSITE_PASSWORD repository secret; refusing to deploy."
-            exit 1
+          if [ "$ROTATE_PREVIEW_PASSWORD" = "true" ]; then
+            if [ -z "$WEBSITE_PASSWORD" ]; then
+              echo "::error::Missing WEBSITE_PASSWORD repository secret; refusing password rotation."
+              exit 1
+            fi
+            pnpm --filter @dofus/website build
+          else
+            unset WEBSITE_PASSWORD
+            pnpm --filter @dofus/website build:reuse-access
           fi
-          pnpm --filter @dofus/website build
       - name: Deploy only Firebase Hosting (GitHub encrypted secret)
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

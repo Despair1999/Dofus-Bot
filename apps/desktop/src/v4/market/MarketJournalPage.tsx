@@ -101,6 +101,11 @@ export default function MarketJournalPage({ config }: { config: Config }) {
     void saveQueue.current.catch((error) => setMessage("Speichern fehlgeschlagen: " + String(error)));
   }, [journal, ready]);
 
+  useEffect(()=>{
+    const receive=()=>{void read<Journal>(STORAGE_KEY,emptyJournal()).then(value=>setJournal(importJournal(JSON.stringify(value)))).catch(error=>setMessage(String(error)));};
+    window.addEventListener("companion:replica-ready",receive);
+    return()=>window.removeEventListener("companion:replica-ready",receive);
+  },[]);
   const positions = useMemo(() => portfolio(journal.trades), [journal.trades]);
   const items = useMemo(() => {
     const unique = new Map<string, ItemRef>();

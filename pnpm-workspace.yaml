@@ -1,6 +1,10 @@
-packages:
-  - apps/*
-  - packages/*
 allowBuilds:
   esbuild: true
   tesseract.js: true
+  '@firebase/util': false
+  protobufjs: false
+packages:
+  - apps/*
+  - packages/*
+overrides:
+  '@grpc/grpc-js': 1.14.6

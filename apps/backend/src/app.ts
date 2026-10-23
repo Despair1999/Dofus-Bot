@@ -6,6 +6,7 @@ import { z, ZodError } from "zod";
 import { characterInput, progressInput } from "@dofus/core";
 import { GameDataStore } from "@dofus/game-data";
 import { PersonalStore, ConflictError } from "./store.js";
+import { scopePersonal, replica, replicatedTables } from "./community-scope.js";
 import { BuilderStore, registerBuilder, parseEffects } from "./builder.js";
 import { registerWorld } from "./world.js";
 import { registerDungeons } from "./dungeons.js";
@@ -26,6 +27,7 @@ export interface AppOptions {
   token: string;
   fetcher?: typeof fetch;
   logger?: boolean;
+  allowedTestOrigins?: string[];
 }
 const idSchema = z.coerce.number().int().positive();
 const querySchema = z.object({
@@ -45,8 +47,8 @@ export async function createApp(options: AppOptions) {
     logger: options.logger ?? false,
     bodyLimit: 256 * 1024,
   });
-  const { personal, game } = options;
-  const api = new Dofusdude(personal, options.fetcher);
+  const { game } = options;
+  const api = new Dofusdude(options.personal, options.fetcher);
   let importState: {
     running: boolean;
     lastResult: unknown;
@@ -54,9 +56,14 @@ export async function createApp(options: AppOptions) {
   } = { running: false, lastResult: null, error: null };
   await app.register(cors, {
     origin: (origin, callback) =>
-      callback(null, !origin || allowedOrigins.has(origin)),
+      callback(
+        null,
+        !origin ||
+          allowedOrigins.has(origin) ||
+          (options.allowedTestOrigins?.includes(origin) ?? false),
+      ),
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Companion-Account"],
   });
   await app.register(rateLimit, {
     max: (request) =>
@@ -86,7 +93,7 @@ export async function createApp(options: AppOptions) {
       request.method !== "GET" ||
       (url === "/api/quests" &&
         !!(request.query as { characterId?: string }).characterId);
-    if (!privateRoute) return;
+    if (!privateRoute && !request.headers["x-companion-account"]) return;
     const supplied =
       request.headers.authorization?.replace(/^Bearer /, "") ?? "";
     const actual = Buffer.from(options.token),
@@ -100,6 +107,32 @@ export async function createApp(options: AppOptions) {
         .code(401)
         .send({ error: "Verbindungsschlüssel fehlt oder ist ungültig." });
     // Browser origins never grant authorization; bearer secret remains mandatory.
+  });
+  const personal = scopePersonal(app, options.personal);
+  app.addHook("onSend", async (request, reply, payload) => {
+    const path = request.url.split("?")[0] ?? "";
+    if (
+      reply.statusCode < 300 &&
+      !["GET", "OPTIONS"].includes(request.method) &&
+      !path.startsWith("/api/account/replica") &&
+      [
+        "/api/characters",
+        "/api/account",
+        "/api/builder/builds",
+        "/api/builder/targets",
+        "/api/world/personal",
+        "/api/dungeon-personal",
+        "/api/profession-personal",
+      ].some((prefix) => path.startsWith(prefix))
+    ) {
+      // Before acknowledging a local mutation, durably mark its account database as newer than the browser mirror.
+      personal.db
+        .prepare(
+          "UPDATE community_sync_state SET dirty_revision=dirty_revision+1 WHERE id=1",
+        )
+        .run();
+    }
+    return payload;
   });
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof ZodError)
@@ -481,6 +514,94 @@ export async function createApp(options: AppOptions) {
     return { data: personal.saveProgress(id, body) };
   });
   app.get("/api/account/export", () => ({ data: personal.export() }));
+  app.get("/api/account/replica", () => ({ data: replica(personal) }));
+  app.post("/api/account/replica-ack", (request) => {
+    const { revision } = z
+      .object({ revision: z.number().int().nonnegative() })
+      .parse(request.body);
+    const result = personal.db
+      .prepare(
+        "UPDATE community_sync_state SET mirrored_revision=? WHERE id=1 AND dirty_revision=?",
+      )
+      .run(revision, revision);
+    return { data: { acknowledged: result.changes === 1 } };
+  });
+  app.put("/api/account/replica", (request) => {
+    const input = z
+      .object({
+        table: z.enum(replicatedTables),
+        rows: z
+          .array(
+            z.record(z.string(), z.union([z.string(), z.number(), z.null()])),
+          )
+          .max(10000),
+      })
+      .parse(request.body);
+    const columns = (
+      personal.db.prepare(`PRAGMA table_info(${input.table})`).all() as {
+        name: string;
+      }[]
+    ).map((c) => c.name);
+    for (const row of input.rows)
+      if (Object.keys(row).some((k) => !columns.includes(k)))
+        throw Error("Unbekanntes Replikationsfeld.");
+    personal.db.exec("BEGIN IMMEDIATE");
+    try {
+      // A durable recovery copy is created before replacing the explicitly selected account table.
+      personal.db.exec(
+        "CREATE TABLE IF NOT EXISTS community_replica_backups(id INTEGER PRIMARY KEY,table_name TEXT NOT NULL,content TEXT NOT NULL,created_at TEXT NOT NULL)",
+      );
+      personal.db
+        .prepare(
+          "INSERT INTO community_replica_backups(table_name,content,created_at) VALUES(?,?,?)",
+        )
+        .run(
+          input.table,
+          JSON.stringify(
+            personal.db.prepare(`SELECT * FROM ${input.table}`).all(),
+          ),
+          new Date().toISOString(),
+        );
+      if (input.table === "builder_projects")
+        personal.db.exec("UPDATE builder_projects SET active=0");
+      // Upsert first. Deletes are applied separately to avoid cascading away referenced rows unnecessarily.
+      const pk = (
+        personal.db.prepare(`PRAGMA table_info(${input.table})`).all() as {
+          name: string;
+          pk: number;
+        }[]
+      )
+        .filter((c) => c.pk)
+        .sort((a, b) => a.pk - b.pk)
+        .map((c) => c.name);
+      for (const row of input.rows) {
+        const keys = Object.keys(row);
+        if (!pk.every((k) => keys.includes(k)))
+          throw Error("Primärschlüssel fehlt.");
+        const updates = keys.filter((k) => !pk.includes(k));
+        personal.db
+          .prepare(
+            `INSERT INTO ${input.table} (${keys.join(",")}) VALUES (${keys.map(() => "?").join(",")}) ON CONFLICT(${pk.join(",")}) DO ${updates.length ? "UPDATE SET " + updates.map((k) => `${k}=excluded.${k}`).join(",") : "NOTHING"}`,
+          )
+          .run(...keys.map((k) => row[k]));
+      }
+      for (const old of personal.db
+        .prepare(`SELECT * FROM ${input.table}`)
+        .all()) {
+        if (!input.rows.some((row) => pk.every((k) => row[k] === old[k])))
+          personal.db
+            .prepare(
+              `DELETE FROM ${input.table} WHERE ${pk.map((k) => `${k}=?`).join(" AND ")}`,
+            )
+            .run(...pk.map((k) => old[k]));
+      }
+      personal.db.exec("COMMIT");
+      return { data: { applied: input.rows.length } };
+    } catch (error) {
+      personal.db.exec("ROLLBACK");
+      throw error;
+    }
+  });
   app.delete("/api/account", (_request, reply) => {
     personal.db.exec(
       "DELETE FROM builder_shares; DELETE FROM builder_projects; DELETE FROM builder_target_profiles;",
