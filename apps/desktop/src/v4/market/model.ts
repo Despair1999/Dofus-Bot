@@ -24,6 +24,7 @@ export type Trade = {
   kind: "buy" | "sell" | "stock-in" | "stock-out";
   /** Estimated current market price per unit on manual stock entry, not acquisition cost. */
   valuationUnitPrice?: number;
+  packSize?: number;
   referenceAverage?: number;
   /** False when initial acquisition costs are unknown. */
   costBasisKnown?: boolean;
@@ -160,6 +161,7 @@ export function validateLedger(trades: Trade[]): string | null {
       return "Ungültige Buchungsdaten.";
     }
     if (trade.valuationUnitPrice !== undefined && !isMoney(trade.valuationUnitPrice)) return "Ungültiger Lager-Stückpreis.";
+    if (trade.packSize !== undefined && !isQuantity(trade.packSize)) return "Ungültige Bündelgröße.";
     if (trade.referenceAverage !== undefined && !isMoney(trade.referenceAverage)) return "Ungültiger Referenzpreis.";
     if (trade.kind === "stock-out" && (trade.total !== 0 || trade.fees !== 0)) return "Bestandskorrekturen dürfen keinen Verkauf buchen.";
     if (trade.kind === "sell" && trade.fees > trade.total) return "Gebühren übersteigen den Erlös.";
