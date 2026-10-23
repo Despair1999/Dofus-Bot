@@ -13,7 +13,7 @@ if ($version -ne '0.9.1') {
 $tag = "v$version"
 $allReleasesJson = gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100"
 if ($LASTEXITCODE -ne 0) { throw 'Cannot query releases. No publication was performed.' }
-$allReleases = @($allReleasesJson | ConvertFrom-Json)
+$allReleases = @(($allReleasesJson | Out-String | ConvertFrom-Json))
 $candidates = @($allReleases | Where-Object { $_.tag_name -eq $tag })
 if ($candidates.Count -ne 1) { throw "Expected exactly one release for $tag, found $($candidates.Count)." }
 $release = $candidates[0]
