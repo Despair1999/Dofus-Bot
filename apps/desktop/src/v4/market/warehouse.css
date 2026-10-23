@@ -1,0 +1,45 @@
+.warehouse-workspace{display:grid;gap:18px;min-width:0}
+.warehouse-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.warehouse-summary>div{padding:17px 20px;background:linear-gradient(145deg,var(--surface-1),rgba(180,151,87,.035));border:1px solid var(--border);border-radius:12px;min-width:0}
+.warehouse-summary small{font-size:11px;color:var(--muted);display:block;line-height:1.5}
+.warehouse-summary strong{display:block;font-size:21px;font-weight:750;line-height:1.25;margin-top:9px;overflow-wrap:anywhere}
+.warehouse-workspace .panel h3{display:flex;gap:9px;align-items:center}
+.warehouse-heading{display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.warehouse-heading p{margin:4px 0 12px}
+.warehouse-mode{display:flex;gap:6px;flex-wrap:wrap;border:1px solid var(--border);border-radius:10px;padding:4px}
+.warehouse-mode button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;background:transparent;color:var(--muted);font-size:11px;border:1px solid transparent;border-radius:7px;min-height:38px}
+.warehouse-mode button.is-active{color:#f2d08c;background:#393129;border-color:#9a784a}
+.warehouse-mode button:hover{color:#f2d08c}
+.warehouse-item-label{display:flex;align-items:center;gap:12px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:rgba(0,0,0,.14);margin:10px 0 18px}
+.warehouse-item-label span{display:grid;gap:4px}
+.warehouse-item-label strong{font-size:12px}
+.warehouse-item-label small{font-size:11px;color:var(--muted)}
+.warehouse-available{margin-left:auto;color:#d9bf83;font-size:11px}
+.warehouse-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
+.warehouse-form-grid label{display:flex;flex-direction:column;gap:7px;font-size:11px;color:var(--muted)}
+.warehouse-form-grid input,.warehouse-form-grid select{min-height:42px;width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface-1);color:var(--text)}
+.warehouse-derived{display:grid;gap:5px;padding:11px 14px;border:1px solid rgba(194,159,101,.25);background:rgba(171,139,85,.07);border-radius:8px}
+.warehouse-derived small{font-size:10px;color:var(--muted)}
+.warehouse-derived strong{font-size:15px;color:#f3d29a;overflow-wrap:anywhere}
+.warehouse-note{display:grid!important;gap:7px;margin-top:15px}
+.warehouse-note textarea{margin:0!important}
+.warehouse-footer{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:14px}
+.warehouse-footer button{display:flex;align-items:center;gap:8px}
+.warehouse-footer small{display:inline-flex;align-items:center;gap:6px;max-width:490px;line-height:1.5;color:var(--muted);font-size:10px}
+.warehouse-status{background:rgba(114,156,97,.08);border:1px solid rgba(114,156,97,.3);border-radius:8px;padding:10px;margin-top:12px!important}
+.warehouse-filters{display:grid;grid-template-columns:minmax(200px,1.6fr) minmax(140px,.8fr) minmax(200px,1.2fr);gap:12px;margin:7px 0 15px}
+.warehouse-filters label{display:flex!important;flex-direction:column;align-items:stretch;gap:8px;font-size:11px;color:var(--muted)}
+.warehouse-filters label svg{display:none}
+.warehouse-filters input,.warehouse-filters select{width:100%;min-height:38px;border-radius:8px;background:var(--surface-1);color:var(--text);border:1px solid var(--border);padding:7px 10px}
+.warehouse-table{min-width:920px!important}
+.warehouse-table th{position:sticky;top:0;background:var(--surface-1)}
+.warehouse-table tr:hover td{background:rgba(255,255,255,.015)}
+.warehouse-table td small{font-size:10px;line-height:1.5}
+.warehouse-table .secondary{padding:7px 9px;font-size:11px}
+.warehouse-empty{min-height:140px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;color:var(--muted);font-size:12px}
+.warehouse-empty strong{color:var(--text);font-size:14px}
+.warehouse-caution{display:flex;align-items:center;gap:9px;color:#ddbb86!important}
+.warehouse-remark{white-space:normal!important;max-width:300px;overflow-wrap:anywhere}
+.warehouse-workspace input:focus-visible,.warehouse-workspace select:focus-visible,.warehouse-workspace button:focus-visible{outline:2px solid #e9bf7f;outline-offset:2px}
+@media(max-width:1100px){.warehouse-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.warehouse-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.warehouse-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.warehouse-form-grid,.warehouse-filters{grid-template-columns:1fr}.warehouse-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.warehouse-summary strong{font-size:17px}.warehouse-heading{display:block}.warehouse-mode{margin-bottom:12px}}
