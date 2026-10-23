@@ -274,7 +274,7 @@ const faqItems = [
 
  ["Was ist DOFUS Companion?","Eine unabhängige, lokal nutzbare Windows-Spielhilfe mit Weltkarte, Items, Builder, Quests, Dungeons, Overlay und optionalem Discord-Bot."],
 
- ["Ist DOFUS Companion kostenlos?","Die Vorschau ist durch ein Zugangspasswort geschützt. Die offiziellen Windows-Installationspakete stehen im Downloadbereich bereit."],
+ ["Ist DOFUS Companion kostenlos?","Ja. DOFUS Companion ist ein privat betriebenes, nichtkommerzielles Hobbyprojekt ohne kostenpflichtige Abonnements, Werbung oder Echtgeldhandel."],
 
  ["Welche Betriebssysteme werden unterstützt?","Aktuell werden Windows-Installer veröffentlicht. Andere native Plattformen sind nicht als freigegeben ausgewiesen."],
 
@@ -284,7 +284,7 @@ const faqItems = [
 
  ["Brauche ich einen API-Key?","Für die öffentliche Website nicht. Im lokalen Entwicklungsbetrieb und für den selbst betriebenen Discord-Bot sind je nach Funktion Konfigurationswerte erforderlich."],
 
- ["Werden Spielerdaten in Firebase gespeichert?","Nein. Firebase Hosting liefert nur statische Website-Dateien aus. Die Website führt keine persönlichen Backendabfragen aus."],
+ ["Werden Spielerdaten in Firebase gespeichert?","Mit einem Companion-Account werden unterstützte persönliche Daten über Firebase zwischen deinen Geräten synchronisiert. Private Arbeitsdaten bleiben accountbezogen. Gildenbereiche erfordern eine bestätigte Mitgliedschaft; globale Angebote werden ausdrücklich veröffentlicht. Die Windows-Werkzeuge bleiben auch lokal nutzbar. Details stehen in der Datenschutzerklärung."],
 
  ["Was kostet die Übersetzung?","Die Windows-App verwendet lokale Argos-Modelle ohne verpflichtende Übersetzungs-API; für den erstmaligen Modelldownload wird eine Internetverbindung benötigt."],
 

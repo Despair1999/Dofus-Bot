@@ -1,5 +1,13 @@
 # Discord Companion
 
+## Companion Community 0.10.0
+
+Die gemeinsame Cloud-Anbindung ist in `src/community.ts` integriert. `/companion markt`, `mitglieder`, `events`, `gruppen` und `beitreten` verwenden das bestehende Firebase-Projekt und dieselben Community-Daten. Guild-Daten erfordern eine bestätigte Mitgliedschaft; Archivierung, Kontolöschmarker und beim Beitritt erneute transaktionale Berechtigungs-/Charakterprüfungen werden berücksichtigt. Antworten unterdrücken automatische Erwähnungen. Es werden keine unaufgeforderten Direktnachrichten gesendet.
+
+Produktiv erforderlich: bestehender Bot-Token und Application-/Server-ID auf einem vertrauenswürdigen dauerhaften Host, serverseitige ADC und `COMPANION_COMMUNITY_BOT=true`. Die Discord-ID muss über das vertrauenswürdige Betreiberwerkzeug der bestätigten Companion-UID zugeordnet sein. Niemals einen Admin-Schlüssel in Desktop-/Web-Bundles einfügen. Im aktuellen Workspace fehlen die Bot-Betriebsangaben; die Cloud-Befehle bleiben daher standardmäßig aus. Es wurde kein tatsächlicher Discord-Login und keine Live-Command-Registrierung behauptet.
+
+Die folgenden Notizen betreffen auch ältere rein lokale Bot-Funktionen; die Community-Anbindung verwendet zusätzlich die oben beschriebenen UID- und Mitgliedschaftsgrenzen.
+
 Node.js 22.13+; discord.js 14.27.0 (stable npm release checked 2026-10-20). Uses only the Guilds gateway intent. No message-content or member privileged intent required.
 
 1. Create an application and bot in the Discord developer portal; invite with `bot` and `applications.commands` scopes. Grant Send Messages, Embed Links, Read Message History. Organizers need Manage Events.

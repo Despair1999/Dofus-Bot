@@ -85,6 +85,7 @@ try {
   const version = JSON.parse(readFileSync("package.json", "utf8")).version;
   assert.equal((await request("/health")).version, version);
   assert.equal((await fetch(connection.url + "/api/characters")).status, 401);
+  await page.getByRole("button", { name: "Übersicht", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: /Dein nächstes/, level: 1 }),
   ).toBeVisible();
@@ -95,7 +96,7 @@ try {
   );
   const character = (
     await request("/api/characters", {
-      name: "Native QA Character",
+      name: "Native QA " + Date.now(),
       server: "QA",
       className: "Cra",
       classId: 9,

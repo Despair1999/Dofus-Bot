@@ -1,6 +1,6 @@
 # Companion Community – Architektur und Stand
 
-Stand: 23.10.2026. Branch `codex/companion-community-platform`, Basis main 0.9.2. Keine Produktionsbereitstellung.
+Stand: 23.10.2026. Branch `codex/companion-community-platform`, Basis main 0.9.2. Aktuelle Abnahme und tatsächlich produktiv bereitgestellte Firebase-Komponenten: [COMMUNITY_ACCEPTANCE_0.10.0.md](COMMUNITY_ACCEPTANCE_0.10.0.md). Die folgenden Abschnitte enthalten Architektur und frühere Zwischenstände; den aktuellen Veröffentlichungsstand separat prüfen.
 
 `packages/community` enthält gemeinsame Firebase-Konfiguration, Auth, Modelle, Sync-Engine, IndexedDB-Speicher und React-Oberflächen. Website und Desktop verwenden dasselbe Projekt `dofus-companion`. Analytics wird nicht initialisiert. Der optionale Discord-Bot verwendet das Admin SDK ausschließlich auf einem vertrauenswürdigen Host.
 

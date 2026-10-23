@@ -8,9 +8,20 @@ test("screenshot is analyzed locally by the real browser OCR worker", async ({
   test.setTimeout(120000);
   const uploads: string[] = [];
   page.on("request", (r) => {
+    const url = new URL(r.url());
+    const publicSettingsListener =
+      url.hostname === "firestore.googleapis.com" &&
+      url.pathname === "/google.firestore.v1.Firestore/Listen/channel";
+    if (publicSettingsListener) {
+      // Firebase uses POST for its read-only Listen transport. It must never carry OCR inputs/results.
+      expect(r.postData() ?? "").not.toMatch(
+        /data:image|image\/png|iVBORw0KGgo|Prüfung des Schülers|\x89PNG/,
+      );
+    }
     if (
       ["POST", "PUT"].includes(r.method()) &&
-      !r.url().startsWith(`${backend}/api/recognize`)
+      !r.url().startsWith(`${backend}/api/recognize`) &&
+      !publicSettingsListener
     )
       uploads.push(r.url());
     if (r.url().endsWith("/api/recognize")) {

@@ -41,15 +41,13 @@ try {
   }
   for (const route of ["/impressum", "/datenschutz", "/nutzungsbedingungen"]) {
     await page.goto(base + route);
-    await page.getByRole("heading", { name: "Hier endet der Weg." }).waitFor();
-    assert.equal(
-      await page
-        .locator(
-          'a[href="/impressum"],a[href="/datenschutz"],a[href="/nutzungsbedingungen"],a[href="/community"]',
-        )
-        .count(),
-      0,
+    await page.locator("address").waitFor();
+    assert.ok(
+      (await page.locator("address").innerText()).includes(
+        "Koblenzer Straße, 54411 Hermeskeil",
+      ),
     );
+    assert.equal(await page.locator("#gate-password").count(), 0);
   }
   await page.goto(base + "/");
   await page.getByRole("heading", { name: /DEIN ABENTEUER/ }).waitFor();
@@ -89,7 +87,7 @@ try {
       "wrong password rejected",
       "app lazy until unlock",
       "community unavailable on deep links",
-      "legal pages absent",
+      "exact legal contact accessible before password",
       "navigation and downloads render",
       "no cloud or analytics requests",
       "unchanged verifier",

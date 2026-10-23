@@ -20,12 +20,23 @@ test("Tools collapses, persists and keeps every navigation item reachable in a s
 }) => {
   await page.reload();
   const nav = page.getByRole("navigation", { name: "Hauptnavigation" });
-  await expect(nav.getByRole("button")).toHaveCount(18);
+  const collapsedCount = await nav.getByRole("button").count();
+  for (const name of [
+    "Übersicht",
+    "Charaktere",
+    "Favoriten",
+    "Einstellungen",
+    "Companion-Account",
+  ])
+    await expect(nav.getByRole("button", { name, exact: true })).toBeVisible();
   await expect(
     nav.getByRole("button", { name: "Übersetzer", exact: true }),
   ).toHaveCount(0);
   await nav.getByRole("button", { name: "Tools", exact: true }).click();
-  await expect(nav.getByRole("button")).toHaveCount(21);
+  await expect(
+    nav.getByRole("button", { name: "Übersetzer", exact: true }),
+  ).toBeVisible();
+  await expect(nav.getByRole("button")).toHaveCount(collapsedCount + 3);
   await page.reload();
   await expect(
     nav.getByRole("button", { name: "Tools", exact: true }),
@@ -36,7 +47,7 @@ test("Tools collapses, persists and keeps every navigation item reachable in a s
     page.getByRole("heading", { name: "Anzeige & Bedienkomfort" }),
   ).toBeVisible();
   await nav.getByRole("button", { name: "Tools", exact: true }).click();
-  await expect(nav.getByRole("button")).toHaveCount(18);
+  await expect(nav.getByRole("button")).toHaveCount(collapsedCount);
   await page.screenshot({ path: "artifacts/v5-navigation.png" });
 });
 

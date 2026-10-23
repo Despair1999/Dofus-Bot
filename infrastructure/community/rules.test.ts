@@ -62,6 +62,29 @@ const listing = (visibility = "guild") => ({
   lastAudit: "",
   updatedAt: new Date(),
 });
+test("listing icons reject unapproved tracking origins and lookalike hosts", async () => {
+  for (const iconUrl of [
+    "https://tracker.example/collect",
+    "https://api.dofusdu.de.evil.example/icon",
+    "https://api.dofusdu.de@evil.example/icon",
+  ])
+    await assertFails(
+      setDoc(doc(db(uid), "listings/icon-test"), {
+        ...listing(),
+        id: "icon-test",
+        updatedAt: serverTimestamp(),
+        iconUrl,
+      }),
+    );
+  await assertSucceeds(
+    setDoc(doc(db(uid), "listings/icon-test"), {
+      ...listing(),
+      id: "icon-test",
+      updatedAt: serverTimestamp(),
+      iconUrl: "https://api.dofusdu.de/dofus3/v1/img/item/1-64.png",
+    }),
+  );
+});
 before(async () => {
   env = await initializeTestEnvironment({
     projectId: "demo-dofus-community",

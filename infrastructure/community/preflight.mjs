@@ -57,7 +57,24 @@ await check("storage", async () => {
   const d = await google(
     `https://storage.googleapis.com/storage/v1/b/${bucket}`,
   );
-  return { name: d.name, location: d.location, storageClass: d.storageClass };
+  const acl = await google(
+    `https://storage.googleapis.com/storage/v1/b/${bucket}/defaultObjectAcl`,
+  );
+  const iam = await google(
+    `https://storage.googleapis.com/storage/v1/b/${bucket}/iam`,
+  );
+  return {
+    name: d.name,
+    location: d.location,
+    storageClass: d.storageClass,
+    publicAccessPrevention: d.iamConfiguration?.publicAccessPrevention,
+    defaultObjectsPublic: (acl.items ?? []).some((a) =>
+      ["allUsers", "allAuthenticatedUsers"].includes(a.entity),
+    ),
+    publicBucketBinding: (iam.bindings ?? []).some((b) =>
+      b.members?.some((m) => ["allUsers", "allAuthenticatedUsers"].includes(m)),
+    ),
+  };
 });
 await check("crossServiceIAM", async () => {
   const d = await google(

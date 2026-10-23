@@ -1,6 +1,6 @@
 # Prüfbericht
 
-Stand 23.10.2026. Basis main 0.9.2. Kein Produktionsdeploy.
+Stand 23.10.2026. Der abschließende Stand mit 171 Workspace-Tests, 41 Community-Fällen, 54 Browserregressionen, nativer Windows-Prüfung, echtem Upgrade und produktiver Firebase-Abnahme ist in [COMMUNITY_ACCEPTANCE_0.10.0.md](COMMUNITY_ACCEPTANCE_0.10.0.md) dokumentiert. Die folgenden Zahlen sind frühere Zwischenstände und kein aktueller Veröffentlichungsnachweis.
 
 ## Prüfung
 

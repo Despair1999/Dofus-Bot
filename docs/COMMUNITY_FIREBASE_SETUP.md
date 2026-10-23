@@ -1,5 +1,7 @@
 # Firebase – Einrichtung und Übergabe
 
+Aktueller Abnahmestand: [COMMUNITY_ACCEPTANCE_0.10.0.md](COMMUNITY_ACCEPTANCE_0.10.0.md). Owner, additive Indizes, Cross-Service-IAM, Rules und produktive Clientprüfungen sind inzwischen durchgeführt. Frühere offene Punkte weiter unten sind historische Einrichtungsnotizen. Regelbereitstellung ohne Indexlöschungen: `node infrastructure/community/deploy-rules.mjs --apply`; additive Indizes: `node infrastructure/community/deploy-indexes.mjs --apply`. Beide sichern den vorherigen Stand privat unter `.data/community-production-before/`.
+
 ## Tatsächlicher Status
 
 Projekt `dofus-companion`, Bucket `dofus-companion.firebasestorage.app`. Der Nutzer hat Storage eingerichtet. Die Implementierung ist gegen Auth-/Firestore-/Storage-Emulatoren geprüft; das bestätigt keine live ausgerollten Rules oder produktiven Uploads.

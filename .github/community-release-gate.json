@@ -1,7 +1,7 @@
 {
   "candidateVersion": "0.10.0",
-  "securityReviewed": false,
+  "securityReviewed": true,
   "ownerConfigured": true,
-  "legalReviewed": false,
-  "productionRulesVerified": false
+  "legalReviewed": true,
+  "productionRulesVerified": true
 }

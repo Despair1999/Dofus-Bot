@@ -5,7 +5,8 @@ import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import net from "node:net";
 import assert from "node:assert/strict";
-try {
+import { chromium } from "@playwright/test";
+{
   const s = net.connect({ host: "127.0.0.1", port: 1420 });
   await new Promise((done, reject) => {
     s.once("connect", () => {
@@ -18,8 +19,6 @@ try {
     });
     s.once("error", done);
   });
-} catch (error) {
-  throw error;
 }
 const dir = await mkdtemp(resolve(".data/community-regression-")),
   token = randomUUID() + randomUUID(),
@@ -76,7 +75,7 @@ async function ready(url) {
   }
   throw Error("Server readiness timeout.");
 }
-let code = 1;
+let code;
 try {
   await ready(`http://127.0.0.1:${port}/health`);
   await ready("http://127.0.0.1:1420");
@@ -84,16 +83,36 @@ try {
     await fetch(`http://127.0.0.1:${port}/api/catalog/status`)
   ).json();
   assert.ok(status.data.itemCount > 20000);
-  const tests = spawn(pnpm, ["exec", "playwright", "test"], {
-    shell: windows,
-    windowsHide: true,
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      COMPANION_E2E_BACKEND: `http://127.0.0.1:${port}`,
-      COMPANION_E2E_TOKEN_FILE: tokenPath,
+  // Compile the cold Vite dependency graph before starting per-test time budgets.
+  const warmBrowser = await chromium.launch({ headless: true });
+  try {
+    const warmPage = await warmBrowser.newPage();
+    await warmPage.goto("http://127.0.0.1:1420", {
+      waitUntil: "domcontentloaded",
+      timeout: 120000,
+    });
+  } finally {
+    await warmBrowser.close();
+  }
+  const tests = spawn(
+    pnpm,
+    [
+      "exec",
+      "playwright",
+      "test",
+      ...(process.argv.includes("--last-failed") ? ["--last-failed"] : []),
+    ],
+    {
+      shell: windows,
+      windowsHide: true,
+      stdio: "inherit",
+      env: {
+        ...process.env,
+        COMPANION_E2E_BACKEND: `http://127.0.0.1:${port}`,
+        COMPANION_E2E_TOKEN_FILE: tokenPath,
+      },
     },
-  });
+  );
   [code] = await once(tests, "exit");
 } finally {
   backend.kill();
