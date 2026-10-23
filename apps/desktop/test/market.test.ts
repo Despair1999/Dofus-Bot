@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   canSell, emptyJournal, importJournal, itemKey, latestFor,
-  marketAdvice, parseOcrPrice, portfolio, unitOffers,
+  marketAdvice, parseOcrPrice, portfolio, unitOffers, currentEstimate, validateLedger, bundleValue,
   type Observation, type Trade,
 } from "../src/v4/market/model";
 
@@ -66,4 +66,57 @@ test("Backups werden validiert", () => {
   const original = emptyJournal();
   assert.deepEqual(importJournal(JSON.stringify(original)), original);
   assert.throws(() => importJournal("{}"));
+});
+
+test("1000er Losgröße und Stückpreis werden korrekt verglichen", () => {
+  const observation: Observation = {
+    id: "1000", item, server: "Draconiros", at: "2026-10-23T09:00:00Z",
+    source: "manual", packs: { 1: 200, 10: 1800, 100: 16500, 1000: 150000 }, note: "",
+  };
+  assert.equal(unitOffers(observation)[0].size, 1000);
+  assert.equal(unitOffers(observation)[0].unit, 150);
+  assert.equal(bundleValue(150, 1000), 150000);
+});
+test("Vorhandenen Lagerbestand ohne Einkauf buchen und bewerten", () => {
+  const stock: Trade = {
+    id: "opening", at: "2026-10-23T09:00:00Z", item, server: "Draconiros",
+    kind: "stock-in", quantity: 2000, packSize: 1000, total: 0, fees: 0,
+    costBasisKnown: false, valuationUnitPrice: 35, referenceAverage: 30, note: "",
+  };
+  const j = { ...emptyJournal(), trades: [stock] };
+  assert.equal(validateLedger(j.trades), null);
+  const pos = portfolio(j.trades)[0];
+  assert.equal(pos.purchased, 0);
+  assert.equal(pos.stockAdded, 2000);
+  assert.equal(pos.quantity, 2000);
+  assert.equal(pos.cost, 0);
+  assert.equal(pos.unknownQuantity, 2000);
+  assert.equal(currentEstimate(j, pos)?.value, 70000);
+});
+test("Bestandsentnahme ohne Verkauf: keine Realisierung, kein negativer Bestand", () => {
+  const add: Trade = { ...buy("start", 100, 1000), kind: "stock-in", costBasisKnown: true };
+  const remove: Trade = { ...sell("correct", 40, 0), kind: "stock-out", fees: 0 };
+  const positions = portfolio([remove, add]);
+  assert.equal(validateLedger([remove, add]), null);
+  assert.equal(positions[0].quantity, 60);
+  assert.equal(positions[0].cost, 600);
+  assert.equal(positions[0].realized, 0);
+  assert.equal(positions[0].sold, 0);
+  assert.equal(positions[0].stockRemoved, 40);
+  assert.match(validateLedger([remove]) ?? "", /überziehen/);
+});
+test("Fehlbuchung darf nicht gelöscht werden, wenn dadurch ein späterer Verkauf ungedeckt wird", () => {
+  const first: Trade = { ...buy("opening", 50, 0), kind: "stock-in", costBasisKnown: false };
+  const sold = sell("sold", 20, 600);
+  assert.equal(validateLedger([sold, first]), null);
+  assert.ok(validateLedger([sold]));
+  assert.equal(portfolio([sold, first])[0].unknownSoldQuantity, 20);
+});
+test("Bestandsbuchungen bleiben im JSON Backup rückwärtskompatibel", () => {
+  const stock: Trade = { ...buy("old", 10, 0), kind: "stock-in",
+    costBasisKnown: false, valuationUnitPrice: 200, packSize: 10 };
+  const journal = { ...emptyJournal(), trades: [stock] };
+  assert.equal(importJournal(JSON.stringify(journal)).trades[0].kind, "stock-in");
+  const legacy = { ...emptyJournal(), trades: [buy("legacy", 5, 200)] };
+  assert.equal(importJournal(JSON.stringify(legacy)).trades[0].kind, "buy");
 });

@@ -21,7 +21,13 @@ export type Trade = {
   item: ItemRef;
   server: string;
   at: string;
-  kind: "buy" | "sell";
+  kind: "buy" | "sell" | "stock-in" | "stock-out";
+  /** Estimated current market price per unit on manual stock entry, not acquisition cost. */
+  valuationUnitPrice?: number;
+  packSize?: number;
+  referenceAverage?: number;
+  /** False when initial acquisition costs are unknown. */
+  costBasisKnown?: boolean;
   quantity: number;
   total: number;
   fees: number;
@@ -70,55 +76,101 @@ export type Position = {
   item: ItemRef;
   server: string;
   quantity: number;
+  /** Documented acquisition costs only; exclude unknown historical costs. */
   cost: number;
+  unknownQuantity: number;
   realized: number;
+  unknownSoldQuantity: number;
   sold: number;
   purchased: number;
+  stockAdded: number;
+  stockRemoved: number;
 };
-type Lot = { quantity: number; cost: number };
-/** FIFO; purchase fees are cost, sale fees reduce revenue. */
+type Lot = { quantity: number; cost: number; known: boolean };
+const isInbound = (trade: Trade) => trade.kind === "buy" || trade.kind === "stock-in";
+const isOutbound = (trade: Trade) => trade.kind === "sell" || trade.kind === "stock-out";
+const orderedTrades = (trades: Trade[]) => trades.map((trade, index) => ({ trade, index }))
+  .sort((a, b) => a.trade.at.localeCompare(b.trade.at) || b.index - a.index)
+  .map(({ trade }) => trade);
+
+/** FIFO: adds existing stock without inventing a purchase, removes stock without booking a sale. */
 export function portfolio(trades: Trade[]): Position[] {
   const positions = new Map<string, Position>();
   const lots = new Map<string, Lot[]>();
-  const ordered = [...trades].sort((a, b) =>
-    a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
-  for (const trade of ordered) {
+  for (const trade of orderedTrades(trades)) {
     if (!isQuantity(trade.quantity) || !isMoney(trade.total) || !isMoney(trade.fees)) continue;
     const key = itemKey(trade.item, trade.server);
     const pos = positions.get(key) ?? {
-      key, item: trade.item, server: trade.server, quantity: 0,
-      cost: 0, realized: 0, sold: 0, purchased: 0,
+      key, item: trade.item, server: trade.server, quantity: 0, cost: 0,
+      unknownQuantity: 0, realized: 0, unknownSoldQuantity: 0,
+      sold: 0, purchased: 0, stockAdded: 0, stockRemoved: 0,
     };
     const stock = lots.get(key) ?? [];
-    if (trade.kind === "buy") {
-      stock.push({ quantity: trade.quantity, cost: trade.total + trade.fees });
+    if (isInbound(trade)) {
+      const known = trade.kind === "buy" || trade.costBasisKnown === true;
+      const basis = known ? trade.total + (trade.kind === "buy" ? trade.fees : 0) : 0;
+      stock.push({ quantity: trade.quantity, cost: basis, known });
       pos.quantity += trade.quantity;
-      pos.purchased += trade.quantity;
-      pos.cost += trade.total + trade.fees;
-    } else {
-      // Invalid historical oversells are not booked as profits.
+      if (known) pos.cost += basis;
+      else pos.unknownQuantity += trade.quantity;
+      if (trade.kind === "buy") pos.purchased += trade.quantity;
+      else pos.stockAdded += trade.quantity;
+    } else if (isOutbound(trade)) {
       if (trade.quantity > pos.quantity) continue;
-      let remaining = trade.quantity, cost = 0;
+      let remaining = trade.quantity, consumedCost = 0, consumedUnknown = 0;
       while (remaining > 0 && stock.length) {
         const lot = stock[0];
         const take = Math.min(lot.quantity, remaining);
-        const takenCost = take === lot.quantity
+        const share = take === lot.quantity
           ? lot.cost : Math.round(lot.cost * take / lot.quantity);
         lot.quantity -= take;
-        lot.cost -= takenCost;
-        cost += takenCost;
+        lot.cost -= share;
+        consumedCost += share;
+        if (!lot.known) consumedUnknown += take;
         remaining -= take;
-        if (!lot.quantity) stock.shift();
+        if (lot.quantity === 0) stock.shift();
       }
       pos.quantity -= trade.quantity;
-      pos.cost -= cost;
-      pos.sold += trade.quantity;
-      pos.realized += trade.total - trade.fees - cost;
+      pos.cost -= consumedCost;
+      pos.unknownQuantity -= consumedUnknown;
+      if (trade.kind === "sell") {
+        pos.sold += trade.quantity;
+        pos.unknownSoldQuantity += consumedUnknown;
+        // Unknown basis is never claimed as a fully realized profit.
+        pos.realized += trade.total - trade.fees - consumedCost;
+      } else {
+        pos.stockRemoved += trade.quantity;
+      }
     }
     positions.set(key, pos);
     lots.set(key, stock);
   }
   return [...positions.values()].sort((a, b) => a.item.name.localeCompare(b.item.name));
+}
+/** Prevent deleting an entry when subsequent movements would oversell the stock. */
+export function validateLedger(trades: Trade[]): string | null {
+  const balances = new Map<string, number>();
+  const ids = new Set<string>();
+  for (const trade of orderedTrades(trades)) {
+    if (!trade.id || ids.has(trade.id)) return "Doppelte oder leere Buchungs-ID.";
+    ids.add(trade.id);
+    if (!trade.item?.name || !trade.server.trim() ||
+      !Number.isFinite(Date.parse(trade.at)) ||
+      !isQuantity(trade.quantity) || !isMoney(trade.total) || !isMoney(trade.fees) ||
+      !["buy", "sell", "stock-in", "stock-out"].includes(trade.kind)) {
+      return "Ungültige Buchungsdaten.";
+    }
+    if (trade.valuationUnitPrice !== undefined && !isMoney(trade.valuationUnitPrice)) return "Ungültiger Lager-Stückpreis.";
+    if (trade.packSize !== undefined && !isQuantity(trade.packSize)) return "Ungültige Bündelgröße.";
+    if (trade.referenceAverage !== undefined && !isMoney(trade.referenceAverage)) return "Ungültiger Referenzpreis.";
+    if (trade.kind === "stock-out" && (trade.total !== 0 || trade.fees !== 0)) return "Bestandskorrekturen dürfen keinen Verkauf buchen.";
+    if (trade.kind === "sell" && trade.fees > trade.total) return "Gebühren übersteigen den Erlös.";
+    const key = itemKey(trade.item, trade.server);
+    const next = (balances.get(key) ?? 0) + (isInbound(trade) ? trade.quantity : -trade.quantity);
+    if (next < 0) return "Eine spätere Entnahme oder ein Verkauf würde den Bestand überziehen.";
+    balances.set(key, next);
+  }
+  return null;
 }
 export function canSell(journal: Journal, item: ItemRef, server: string, quantity: number) {
   const position = portfolio(journal.trades).find((p) => p.key === itemKey(item, server));
@@ -126,13 +178,24 @@ export function canSell(journal: Journal, item: ItemRef, server: string, quantit
 }
 export function currentEstimate(journal: Journal, position: Position) {
   const observation = latestFor(journal, position.item, position.server);
-  const best = observation ? unitOffers(observation)[0] : undefined;
-  return best ? {
-    unit: best.unit,
-    value: Math.round(best.unit * position.quantity),
-    observedAt: observation!.at,
-  } : null;
+  const offer = observation ? unitOffers(observation)[0] : undefined;
+  const saved = orderedTrades(journal.trades).filter((trade) =>
+    trade.kind === "stock-in" && (trade.valuationUnitPrice !== undefined || trade.referenceAverage !== undefined) &&
+    itemKey(trade.item, trade.server) === position.key).at(-1);
+  // Most recent explicitly recorded price (offer or manual warehouse valuation).
+  const latestPrice = offer && observation && (!saved || observation.at >= saved.at)
+    ? { unit: offer.unit, observedAt: observation.at, source: "Marktbeobachtung" }
+    : saved && (saved.valuationUnitPrice !== undefined || saved.referenceAverage !== undefined)
+      ? { unit: saved.valuationUnitPrice ?? saved.referenceAverage!, observedAt: saved.at,
+          source: saved.valuationUnitPrice !== undefined ? "Lagerbewertung" : "Ø-Marktpreis (manuell)" }
+      : offer && observation
+        ? { unit: offer.unit, observedAt: observation.at, source: "Marktbeobachtung" }
+        : null;
+  if (!latestPrice) return null;
+  return { ...latestPrice, value: Math.round(latestPrice.unit * position.quantity) };
 }
+export const bundleValue = (unit: number, size: number) => unit * size;
+
 export type Advice = { tone: "info" | "warning" | "positive"; title: string; text: string };
 export function marketAdvice(journal: Journal, item: ItemRef, server: string, now = Date.now()): Advice[] {
   const matching = journal.observations
@@ -215,10 +278,12 @@ export function importJournal(text: string): Journal {
   }
   for (const t of p.trades) {
     if (!t.id || !t.item?.name || !t.at || !isQuantity(t.quantity) ||
-        !isMoney(t.total) || !isMoney(t.fees) || !["buy", "sell"].includes(t.kind)) {
+        !isMoney(t.total) || !isMoney(t.fees) || !["buy", "sell", "stock-in", "stock-out"].includes(t.kind)) {
       throw Error("Ungültige Buchung im Backup.");
     }
   }
+  // Keep existing v0.9.0 journals readable even if old transactions have inconsistent ordering.
+  // Validate new edits separately, so user data is never discarded on startup.
   for (const note of p.notes) {
     if (!note.id || !note.at || typeof note.text !== "string") throw Error("Ungültige Notiz.");
   }

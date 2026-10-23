@@ -10,10 +10,11 @@ import ItemSearchBar from "../../v2/items/ItemSearchBar";
 import ItemImage from "../../v2/shared/ItemImage";
 import type { CatalogItem } from "../../v2/items/types";
 import { navigatePath } from "../../v2/routing";
+import WarehousePanel from "./WarehousePanel";
 import {
   canSell, currentEstimate, emptyJournal, importJournal, isMoney,
   isQuantity, itemKey, kama, latestFor, marketAdvice, parseOcrPrice,
-  portfolio, unitOffers,
+  portfolio, unitOffers, validateLedger,
   type ItemRef, type Journal, type Observation, type Trade,
 } from "./model";
 import "./market.css";
@@ -54,6 +55,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   const [pack1, setPack1] = useState("");
   const [pack10, setPack10] = useState("");
   const [pack100, setPack100] = useState("");
+  const [pack1000, setPack1000] = useState("");
   const [average, setAverage] = useState("");
   const [volume, setVolume] = useState("");
   const [observationNote, setObservationNote] = useState("");
@@ -139,6 +141,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
     setPack1(entry.packs["1"] === undefined ? "" : String(entry.packs["1"]));
     setPack10(entry.packs["10"] === undefined ? "" : String(entry.packs["10"]));
     setPack100(entry.packs["100"] === undefined ? "" : String(entry.packs["100"]));
+    setPack1000(entry.packs["1000"] === undefined ? "" : String(entry.packs["1000"]));
     setAverage(entry.average === undefined ? "" : String(entry.average));
     setVolume(entry.volume === undefined ? "" : String(entry.volume));
     setObservationNote(entry.note);
@@ -152,7 +155,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   function saveObservation() {
     if (!item || !server.trim()) { setMessage("Gegenstand und Server wählen."); return; }
     const packs: Record<string, number> = {};
-    for (const [size, input] of [["1", pack1], ["10", pack10], ["100", pack100]]) {
+    for (const [size, input] of [["1", pack1], ["10", pack10], ["100", pack100], ["1000", pack1000]]) {
       const value = numeric(input);
       if (value === undefined) continue;
       if (!isMoney(value)) { setMessage("Paketpreise müssen ganze, nichtnegative Kamas sein."); return; }
@@ -175,7 +178,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
       ? prev.observations.map((old) => old.id === editingObservationId ? entry : old)
       : [entry, ...prev.observations],
     }));
-    setPack1(""); setPack10(""); setPack100(""); setAverage("");
+    setPack1(""); setPack10(""); setPack100(""); setPack1000(""); setAverage("");
     setVolume(""); setObservationNote(""); setFromOcr(false); setObservationAt("");
     setMessage(editingObservationId ? "Marktbeobachtung aktualisiert." : "Marktbeobachtung gespeichert.");
     setEditingObservationId(null);
@@ -194,6 +197,8 @@ export default function MarketJournalPage({ config }: { config: Config }) {
       id: newId(), item, server: server.trim(), at: now(), kind,
       quantity: qty, total: gross, fees: fee, note: tradeNote.trim(),
     };
+    const ledgerError = validateLedger([entry, ...journal.trades]);
+    if (ledgerError) { setMessage(ledgerError); return; }
     setJournal((prev) => ({ ...prev, trades: [entry, ...prev.trades] }));
     setTotal(""); setFees("0"); setQuantity("1"); setTradeNote("");
     setMessage(kind === "buy" ? "Einkauf gebucht." : "Verkauf und FIFO-Gewinn gebucht.");
@@ -217,10 +222,19 @@ export default function MarketJournalPage({ config }: { config: Config }) {
     setNote(""); setMessage("Notiz gespeichert.");
   }
   function remove(type: "observations" | "trades" | "notes", id: string) {
-    if (!window.confirm("Diesen Eintrag wirklich löschen?")) return;
+    if (type === "trades") {
+      const next = journal.trades.filter((entry) => entry.id !== id);
+      const error = validateLedger(next);
+      if (error) {
+        setMessage("Löschen nicht möglich: " + error + " Nutze bei verbrauchtem Bestand eine Bestandskorrektur.");
+        return;
+      }
+    }
+    if (!window.confirm("Diesen Eintrag endgültig löschen? Zur Sicherheit vorher ein JSON-Backup erstellen.")) return;
     setJournal((prev) => ({
       ...prev, [type]: prev[type].filter((entry) => entry.id !== id),
     }));
+    setMessage("Eintrag entfernt.");
   }
   async function recognizeFile(file: File) {
     if (!file.type.startsWith("image/") || file.size > 20_000_000) {
@@ -274,10 +288,10 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   }
   function exportCsv() {
     const lines = [
-      ["Datum", "Server", "Gegenstand", "Item-ID", "1er", "10er", "100er", "Durchschnitt", "Volumen", "Quelle", "Notiz"].join(";"),
+      ["Datum", "Server", "Gegenstand", "Item-ID", "1er", "10er", "100er", "1000er", "Durchschnitt", "Volumen", "Quelle", "Notiz"].join(";"),
       ...journal.observations.map((o) => [
         o.at, o.server, o.item.name, o.item.id, o.packs["1"], o.packs["10"],
-        o.packs["100"], o.average, o.volume, o.source, o.note,
+        o.packs["100"], o.packs["1000"], o.average, o.volume, o.source, o.note,
       ].map(quote).join(";")),
     ];
     download("dofus-marktbeobachtungen.csv", "\uFEFF" + lines.join("\r\n"), "text/csv;charset=utf-8");
@@ -286,6 +300,9 @@ export default function MarketJournalPage({ config }: { config: Config }) {
   const totalProfit = positions.reduce((sum, p) => sum + p.realized, 0);
   const estimates = positions.map((p) => currentEstimate(journal, p));
   const totalEstimate = estimates.reduce((sum, e) => sum + (e?.value ?? 0), 0);
+  const withoutValue = positions.filter((p, index) => p.quantity > 0 && !estimates[index]).length;
+  const unknownCosts = positions.reduce((sum, p) => sum + p.unknownQuantity, 0);
+  const unknownProfit = positions.some((p) => p.unknownSoldQuantity > 0);
   const latestPoints = [...relevant].reverse()
     .map((o) => ({ date: o.at, unit: unitOffers(o)[0]?.unit }))
     .filter((p): p is { date: string; unit: number } => p.unit !== undefined);
@@ -351,10 +368,10 @@ export default function MarketJournalPage({ config }: { config: Config }) {
 
       {tab === "overview" && <>
         <div className="market-metrics">
-          <Metric label="Gebundenes Kapital" value={kama(totalCost)} icon={<Wallet size={18}/>}/>
-          <Metric label="Realisierter Gewinn (FIFO)" value={kama(totalProfit)} icon={<ChartLine size={18}/>}/>
+          <Metric label="Bekannte Einstandskosten" value={kama(totalCost)} detail={unknownCosts ? fmt(unknownCosts) + " Stück ohne belegte Kosten" : "Nur bekannte Anschaffungskosten"} icon={<Wallet size={18}/>}/>
+          <Metric label="Realisierter Gewinn (FIFO)" value={unknownProfit ? "Teilweise unbekannt" : kama(totalProfit)} detail={unknownProfit ? "Einstand einiger verkaufter Stücke unbekannt" : undefined} icon={<ChartLine size={18}/>}/>
           <Metric label="Beobachteter Lagerwert" value={kama(totalEstimate)}
-            detail="Nur Bestände mit aktuellen eigenen Preisdaten" icon={<Package size={18}/>}/>
+            detail={withoutValue ? fmt(withoutValue) + " Position(en) ohne Bewertung" : "Basierend auf deinen eigenen Preisen"} icon={<Package size={18}/>}/>
           <Metric label="Preisbeobachtungen" value={fmt(journal.observations.length)} icon={<BookOpen size={18}/>}/>
         </div>
         <div className="market-grid">
@@ -383,6 +400,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
             <Field label="Preis für ×1 (Kamas)" value={pack1} onChange={setPack1}/>
             <Field label="Preis für ×10 (Kamas)" value={pack10} onChange={setPack10}/>
             <Field label="Preis für ×100 (Kamas)" value={pack100} onChange={setPack100}/>
+            <Field label="Preis für ×1000 (Kamas)" value={pack1000} onChange={setPack1000}/>
             <Field label="Angezeigter Ø-Preis (Kamas)" value={average} onChange={setAverage}/>
             <Field label="Angezeigtes Handelsvolumen" value={volume} onChange={setVolume}/>
           </div>
@@ -466,7 +484,7 @@ export default function MarketJournalPage({ config }: { config: Config }) {
           <div className="market-scroll"><table><thead><tr>
             <th>Datum</th><th>Gegenstand</th><th>Typ</th><th>Menge</th><th>Gesamt</th><th>Gebühren</th><th/>
           </tr></thead><tbody>
-            {journal.trades.filter((t) => !item || itemKey(t.item, t.server) === selectedKey).map((t) =>
+            {journal.trades.filter((t) => (t.kind === "buy" || t.kind === "sell") && (!item || itemKey(t.item, t.server) === selectedKey)).map((t) =>
               <tr key={t.id}><td>{new Date(t.at).toLocaleString("de-DE")}</td>
                 <td>{t.item.name}<small>{t.server}</small></td>
                 <td>{t.kind === "buy" ? "Kauf" : "Verkauf"}</td>
@@ -474,28 +492,20 @@ export default function MarketJournalPage({ config }: { config: Config }) {
                 <td><button className="icon-button" aria-label="Buchung löschen" onClick={() => remove("trades", t.id)}><Trash2 size={15}/></button></td>
               </tr>)}
           </tbody></table></div>
-          {!journal.trades.length && <p>Noch keine Transaktionen dokumentiert.</p>}
+          {!journal.trades.some((t) => t.kind === "buy" || t.kind === "sell") && <p>Noch keine Transaktionen dokumentiert.</p>}
         </section>
       </>}
 
-      {tab === "stock" && <section className="panel"><h3>Dein Warenlager</h3>
-        <p>Bestand und Anschaffungskosten aus echten, manuell erfassten Transaktionen.</p>
-        <div className="market-scroll"><table><thead><tr>
-          <th>Item</th><th>Server</th><th>Menge</th><th>Einstand</th><th>Beobachteter Wert</th><th>Realisierter Gewinn</th>
-        </tr></thead><tbody>
-          {positions.filter((p) => p.quantity || p.sold).map((p) => {
-            const estimate = currentEstimate(journal, p);
-            return <tr key={p.key}><td><button className="market-item-button" onClick={() => { pick(p.item); setServer(p.server); setTab("assistant"); }}>
-              <ItemImage item={p.item} size={32}/>{p.item.name}</button></td>
-              <td>{p.server}</td><td>{fmt(p.quantity)}</td>
-              <td>{kama(p.cost)}</td>
-              <td>{estimate ? kama(estimate.value) : "Keine Beobachtung"}</td>
-              <td>{kama(p.realized)}</td></tr>;
-          })}
-        </tbody></table></div>
-        {!positions.length && <p>Dein Warenlager ist leer. Erfasse zunächst einen Einkauf.</p>}
-        <small>Marktwert ist eine Schätzung aus dem letzten selbst beobachteten günstigsten Paketpreis, keine Verkaufsgarantie.</small>
-      </section>}
+      {tab === "stock" && <WarehousePanel journal={journal} positions={positions} item={item} server={server}
+        onPick={(picked, selectedServer) => { pick(picked); setServer(selectedServer); }}
+        onAdd={(entry) => {
+          const error = validateLedger([entry, ...journal.trades]);
+          if (error) { setMessage(error); return; }
+          setJournal((prev) => ({ ...prev, trades: [entry, ...prev.trades] }));
+          setMessage(entry.kind === "stock-in" ? "Bestand ohne Einkauf übernommen." : "Bestand ohne Verkauf korrigiert.");
+        }}
+        onDelete={(id) => remove("trades", id)}
+      />}
 
       {tab === "assistant" && <>
         <section className="panel"><h3><ShieldAlert size={19}/> Persönlicher Strategie-Assistent</h3>
@@ -528,15 +538,15 @@ export default function MarketJournalPage({ config }: { config: Config }) {
             if (!valid) return <p>Wähle einen Gegenstand mit ausreichendem Lagerbestand und gib gültige Mengen, Preise und Gebühren (0 bis unter 100 %) ein.</p>;
             const gross = q * price;
             const estimatedFees = Math.round(gross * fee / 100);
-            const estimatedCost = Math.round(position!.cost / position!.quantity * q);
+            const estimatedCost = position!.unknownQuantity === 0 ? Math.round(position!.cost / position!.quantity * q) : null;
             const net = gross - estimatedFees;
-            const profit = net - estimatedCost;
-            const breakEven = Math.ceil(estimatedCost / q / (1 - fee / 100));
+            const profit = estimatedCost === null ? null : net - estimatedCost;
+            const breakEven = estimatedCost === null ? null : Math.ceil(estimatedCost / q / (1 - fee / 100));
             return <div className="market-plan-results" aria-live="polite">
               <div><small>Bruttoerlös</small><strong>{kama(gross)}</strong></div>
               <div><small>Geschätzte Gebühren</small><strong>{kama(estimatedFees)}</strong></div>
-              <div><small>Geplantes Nettoergebnis</small><strong>{kama(profit)}</strong></div>
-              <div><small>Break-even je Stück</small><strong>{kama(breakEven)}</strong></div>
+              <div><small>Geplantes Nettoergebnis</small><strong>{profit === null ? "Unbekannt" : kama(profit)}</strong></div>
+              <div><small>Break-even je Stück</small><strong>{breakEven === null ? "Unbekannt" : kama(breakEven)}</strong></div>
               <p>Basierend auf dem durchschnittlichen Einstandswert des aktuellen Bestands. Der tatsächlich gebuchte Gewinn wird beim Verkauf nach FIFO ermittelt. Absatz und Verkaufspreis sind nicht garantiert.</p>
             </div>;
           })()}
