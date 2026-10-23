@@ -32,6 +32,9 @@ export type Listing = {
   itemId: number;
   itemName: string;
   iconUrl: string;
+  itemLevel?: number;
+  category?: string;
+  createdAt?: unknown;
   quantity: number;
   available: number;
   price: number;
@@ -83,8 +86,15 @@ export type Activity = {
   revision: number;
   lastAudit: string;
   lastParticipantUid?: string;
+  activityType?: string;
+  wantedClasses?: number[];
+  wantedRoles?: string[];
+  resourceName?: string;
+  targetQuantity?: number;
 };
 export const listingInput = z.object({
+  itemLevel: z.number().int().min(0).max(200).default(0),
+  category: z.string().max(80).default(""),
   itemId: z.number().int().positive(),
   itemName: z.string().min(1).max(160),
   iconUrl: z

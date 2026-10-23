@@ -384,3 +384,103 @@ test(
   },
   { timeout: 45000 },
 );
+
+test(
+  "calendar renders real month cells and preserves the chosen event timezone",
+  async () => {
+    await website.goto("http://127.0.0.1:4175/community/events");
+    await website.getByText("Event organisieren", { exact: true }).click();
+    await website
+      .getByLabel("Titel", { exact: true })
+      .fill("UI Kalendertermin");
+    const now = new Date(),
+      day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    await website
+      .getByLabel("Datum & Uhrzeit (lokale Eingabe)", { exact: true })
+      .fill(day + "T20:00");
+    await website
+      .getByLabel("Anzeige-Zeitzone", { exact: true })
+      .fill("Europe/Berlin");
+    await website
+      .getByRole("button", { name: "Veröffentlichen", exact: true })
+      .click();
+    await website
+      .getByRole("heading", { name: "UI Kalendertermin", exact: true })
+      .waitFor();
+    await website
+      .getByLabel("Kalenderansicht", { exact: true })
+      .selectOption("month");
+    await website.getByRole("grid").waitFor();
+    assert.equal(await website.getByRole("gridcell").count(), 42);
+    await website.getByRole("button", { name: /UI Kalendertermin/ }).click();
+    await website
+      .getByRole("heading", { name: "UI Kalendertermin", exact: true })
+      .waitFor();
+    const saved = await getFirestore(admin)
+      .collection("activities")
+      .where("title", "==", "UI Kalendertermin")
+      .get();
+    assert.equal(saved.docs[0].data().timezone, "Europe/Berlin");
+    assert.equal(
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Berlin",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      }).format(new Date(saved.docs[0].data().startsAt)),
+      "20:00",
+    );
+    await website.screenshot({
+      path: "test-results/community-ui/calendar.png",
+      fullPage: true,
+    });
+  },
+  { timeout: 45000 },
+);
+
+test(
+  "shared web builder saves a real equipment build to the desktop",
+  async () => {
+    await website.goto("http://127.0.0.1:4175/community/account");
+    await website
+      .getByRole("button", { name: "Neuen Build planen", exact: true })
+      .click();
+    await website
+      .getByLabel("Buildname", { exact: true })
+      .fill("UI geteilter Build");
+    await website
+      .getByLabel("Passenden Gegenstand suchen", { exact: true })
+      .fill("Spitzhut");
+    await website
+      .getByRole("button", { name: /Spitzhut.*Stufe/ })
+      .first()
+      .click();
+    await website
+      .getByRole("button", {
+        name: "Build speichern & synchronisieren",
+        exact: true,
+      })
+      .click();
+    await website
+      .getByRole("heading", { name: "UI geteilter Build", exact: true })
+      .waitFor();
+    const start = Date.now();
+    let builds: any[] = [];
+    while (Date.now() - start < 20000) {
+      const r = await backend.inject({
+        url: "/api/builder/builds",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "x-companion-account": "ui-player",
+        },
+      });
+      builds = r.json().data ?? [];
+      if (builds.some((b) => b.name === "UI geteilter Build")) break;
+      await sleep(150);
+    }
+    const saved = builds.find((b) => b.name === "UI geteilter Build");
+    assert.ok(saved, "Web build must reach existing desktop builder table");
+    assert.ok(Object.keys(saved.equipment).length > 0);
+  },
+  { timeout: 45000 },
+);

@@ -36,6 +36,9 @@ export class SyncEngine {
   private serial: Promise<unknown> = Promise.resolve();
   private stopped = false;
   private flushing = false;
+  get isSyncing() {
+    return this.flushing;
+  }
   private inFlight = new Map<string, string>();
   private listeners = new Set<() => void>();
   constructor(
@@ -186,6 +189,7 @@ export class SyncEngine {
   async flush() {
     if (this.flushing || this.stopped) return;
     this.flushing = true;
+    this.listeners.forEach((fn) => fn());
     try {
       for (const original of [...this.state.queue]) {
         const mutation = structuredClone(
@@ -246,6 +250,7 @@ export class SyncEngine {
       }
     } finally {
       this.flushing = false;
+      this.listeners.forEach((fn) => fn());
     }
   }
 }

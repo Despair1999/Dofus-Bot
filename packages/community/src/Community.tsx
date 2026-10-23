@@ -1,5 +1,7 @@
 import {
   createContext,
+  lazy,
+  Suspense,
   Fragment,
   useCallback,
   useContext,
@@ -20,7 +22,6 @@ import {
   LogOut,
   RefreshCw,
   X,
-  ChevronDown,
   Copy,
   Upload,
   Download,
@@ -47,6 +48,8 @@ import {
   type RecordClock,
 } from "./firebase";
 import classes from "./classes.json";
+import type { Build } from "@dofus/core";
+const BuildEditor = lazy(() => import("./BuildEditor"));
 import { firebaseConfig } from "./config";
 import {
   characterSchema,
@@ -62,6 +65,9 @@ import { SyncEngine, type LocalStore } from "./sync";
 import { applyFragment, changedFragments, fragments } from "./fragments";
 import "./community.css";
 import AdminParticipants from "./AdminParticipants";
+import ActivityCalendar from "./ActivityCalendar";
+import MemberDirectory from "./MemberDirectory";
+import { calendarDays, zonedInstant, type CalendarView } from "./calendar";
 import {
   portfolio,
   currentEstimate,
@@ -931,11 +937,13 @@ function AccountPanel() {
                 ? "Fehler"
                 : engine?.state.conflicts.length
                   ? "Konflikte"
-                  : engine?.state.queue.length
-                    ? "Änderungen ausstehend"
-                    : engine
-                      ? "Synchronisiert"
-                      : "Noch nicht verbunden"}
+                  : engine?.isSyncing
+                    ? "Synchronisierung läuft"
+                    : engine?.state.queue.length
+                      ? "Änderungen ausstehend"
+                      : engine
+                        ? "Synchronisiert"
+                        : "Noch nicht verbunden"}
           </p>
           {c.migration && (
             <>
@@ -1254,6 +1262,7 @@ function PersonalLibrary() {
     a = useAction();
   const [tab, setTab] = useState("Builds"),
     [builds, setBuilds] = useState<Record<string, any>[]>([]),
+    [editedBuild, setEditedBuild] = useState<Build | null>(),
     [journal, setJournal] = useState<Journal>(emptyJournal()),
     [progress, setProgress] = useState<Record<string, unknown>>({}),
     [routes, setRoutes] = useState<Record<string, unknown>[]>([]);
@@ -1327,27 +1336,92 @@ function PersonalLibrary() {
         ))}
       </div>
       {tab === "Builds" ? (
-        <div className="cc-cards">
-          {builds.map((b) => (
-            <article className="cc-card" key={b.id}>
-              <h3>{b.name || "Unbenannter Build"}</h3>
-              <p>
-                {b.active ? "Aktives Set" : "Gespeichertes Set"} · Revision{" "}
-                {b.revision ?? 0}
-              </p>
-              <details>
-                <summary>Ausrüstung & gespeicherte Werte ansehen</summary>
-                <pre>{JSON.stringify(b, null, 2)}</pre>
-              </details>
-              <button onClick={() => download(`build-${b.id}.json`, b)}>
-                Build exportieren
-              </button>
-            </article>
-          ))}
-          {!builds.length && (
-            <Empty>Noch keine synchronisierten Builds vorhanden.</Empty>
+        <>
+          <button onClick={() => setEditedBuild(null)}>
+            Neuen Build planen
+          </button>
+          {editedBuild !== undefined && (
+            <Suspense fallback={<p>Builder wird geladen …</p>}>
+              <BuildEditor
+                store={c.store}
+                initial={editedBuild ?? undefined}
+                onClose={() => setEditedBuild(undefined)}
+              />
+            </Suspense>
           )}
-        </div>
+          <div className="cc-cards">
+            {builds.map((b) => (
+              <article className="cc-card" key={b.id}>
+                <h3>{b.name || "Unbenannter Build"}</h3>
+                <p>
+                  {b.active ? "Aktives Set" : "Gespeichertes Set"} · Revision{" "}
+                  {b.revision ?? 0}
+                </p>
+                <details>
+                  <summary>Ausrüstung & gespeicherte Werte ansehen</summary>
+                  <pre>{JSON.stringify(b, null, 2)}</pre>
+                </details>
+                <button onClick={() => setEditedBuild(b as Build)}>
+                  Build bearbeiten
+                </button>
+                <button
+                  onClick={() =>
+                    void a.run(async () => {
+                      const now = new Date().toISOString(),
+                        current = await c.store.read<Build[]>(
+                          "builder:saved",
+                          [],
+                        );
+                      await c.store.write("builder:saved", [
+                        ...current,
+                        {
+                          ...b,
+                          id: crypto.randomUUID(),
+                          name: (b.name + " · Variante").slice(0, 100),
+                          active: false,
+                          revision: 1,
+                          createdAt: now,
+                          updatedAt: now,
+                        },
+                      ]);
+                      window.dispatchEvent(
+                        new Event("companion:cloud-applied"),
+                      );
+                    })
+                  }
+                >
+                  Als Variante duplizieren
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm("Diesen gespeicherten Build entfernen?"))
+                      void a.run(async () => {
+                        const current = await c.store.read<Build[]>(
+                          "builder:saved",
+                          [],
+                        );
+                        await c.store.write(
+                          "builder:saved",
+                          current.filter((x) => x.id !== b.id),
+                        );
+                        window.dispatchEvent(
+                          new Event("companion:cloud-applied"),
+                        );
+                      });
+                  }}
+                >
+                  Build entfernen
+                </button>
+                <button onClick={() => download(`build-${b.id}.json`, b)}>
+                  Build exportieren
+                </button>
+              </article>
+            ))}
+            {!builds.length && (
+              <Empty>Noch keine synchronisierten Builds vorhanden.</Empty>
+            )}
+          </div>
+        </>
       ) : tab === "Warenlager" ? (
         <div className="cc-table-scroll">
           <table>
@@ -1662,6 +1736,7 @@ function usePage<T>(
   filterField?: string,
   filterValue?: string,
   filterOp: WhereFilterOp = "==",
+  enabled = true,
 ) {
   const { service, user } = useCommunity();
   const recent =
@@ -1702,7 +1777,7 @@ function usePage<T>(
     [service, path, filterField, filterValue, filterOp, recent, cursor],
   );
   useEffect(() => {
-    if (!live) return;
+    if (!live || !enabled) return;
     setLoading(true);
     setError("");
     const stop = onSnapshot(
@@ -1738,123 +1813,37 @@ function usePage<T>(
     recent,
     user?.uid,
     live,
+    enabled,
   ]);
   return { data, loading, error, more, load };
 }
 function Members() {
-  const c = useCommunity(),
-    page = usePage<Membership>("memberships"),
-    [search, setSearch] = useState("");
+  const page = usePage<Membership>("memberships");
   return (
     <div className="cc-panel">
       <div className="cc-toolbar">
         <h2>
-          <Users size={22} /> Gildenmitglieder
+          <Users size={22} />
+          Gildenmitglieder
         </h2>
-        <button onClick={() => void page.load()}>
-          <RefreshCw size={16} />
-          Aktualisieren
-        </button>
-        <Field
-          label="Name, Klasse oder Server filtern · geladene Seite"
-          value={search}
-          onChange={setSearch}
-          required={false}
-        />
+        <button onClick={() => void page.load()}>Aktualisieren</button>
       </div>
       <p>
-        Eine Zeile pro Account. Aufklappen zeigt ausdrücklich geteilte
-        Charaktere. Kein Ingame-Onlinestatus.
+        Ein Account pro Zeile. Ausdrücklich geteilte Charaktere und echte
+        Profilaktivität; kein erfundener Ingame-Onlinestatus.
       </p>
-      <div className="cc-member-list">
-        {page.data
-          .filter((m) => m.status === "approved")
-          .map((m) => (
-            <MemberRow key={m.uid} member={m} search={search} />
-          ))}
-      </div>
-      <Status message={page.error} />
-      {!page.loading && !page.data.length && (
-        <Empty>Noch keine Mitglieder vorhanden.</Empty>
-      )}
+      <MemberDirectory
+        service={useCommunity().service}
+        members={page.data}
+        contact={(uid) => <Contact uid={uid} />}
+      />
       {page.more && (
         <button onClick={() => void page.load(true)}>
           Weitere Mitglieder laden
         </button>
       )}
-      <small>{c.settings?.guildName}</small>
+      <Status message={page.error} />
     </div>
-  );
-}
-function MemberRow({ member, search }: { member: Membership; search: string }) {
-  const c = useCommunity();
-  const [p, setP] = useState<Profile | null>(null),
-    [chars, setChars] = useState<CommunityCharacter[]>([]);
-  useEffect(() => {
-    let active = true;
-    void c.service
-      .get<Profile>(`profiles/${member.uid}`)
-      .then((p) => {
-        if (active) setP(p);
-      })
-      .catch(() => {});
-    const stop = c.service.watch<{ characters: CommunityCharacter[] }>(
-      `guildCharacters/${member.uid}`,
-      (data) => setChars(data?.characters ?? []),
-      () => {},
-    );
-    return () => {
-      active = false;
-      stop();
-    };
-  }, [c.service, member.uid]);
-  const main = chars.find((ch) => ch.id === p?.mainCharacterId) ?? chars[0];
-  if (
-    search &&
-    !JSON.stringify([
-      p?.dofusName,
-      p?.server,
-      member.displayName,
-      chars.map((ch) => [ch.name, ch.className]),
-    ])
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  )
-    return null;
-  return (
-    <details className="cc-member">
-      <summary>
-        {main && (
-          <img
-            className="cc-class"
-            src={`/classes/${main.classId}.webp`}
-            alt=""
-            onError={(e) => {
-              e.currentTarget.hidden = true;
-            }}
-          />
-        )}
-        <b>{member.displayName || p?.dofusName || "Profil wird geladen …"}</b>
-        <span>{main?.className ?? "Keine geteilten Charaktere"}</span>
-        <span>{main ? `Stufe ${main.level} · Ω ${main.omegaLevel}` : ""}</span>
-        <span>{member.rank || "Mitglied"}</span>
-        <span>{chars.length} Charaktere</span>
-        <ChevronDown size={16} />
-      </summary>
-      <div className="cc-member-details">
-        {chars.map((ch) => (
-          <p key={ch.id}>
-            <b>{ch.name}</b> · {ch.className} · {ch.level} · Ω {ch.omegaLevel} ·{" "}
-            {ch.server}
-          </p>
-        ))}
-        <small>
-          Selbst gepflegte oder administrativ korrigierte Angaben · nicht durch
-          DOFUS verifiziert.
-        </small>
-        <Contact uid={member.uid} />
-      </div>
-    </details>
   );
 }
 function Marketplace({ visibility }: { visibility: "guild" | "global" }) {
@@ -1871,6 +1860,12 @@ function Marketplace({ visibility }: { visibility: "guild" | "global" }) {
     [type, setType] = useState<"sell" | "buy" | "swap">("sell"),
     [description, setDescription] = useState(""),
     [mine, setMine] = useState(false),
+    [offerType, setOfferType] = useState(""),
+    [offerServer, setOfferServer] = useState(""),
+    [offerPrice, setOfferPrice] = useState(""),
+    [offerLevel, setOfferLevel] = useState("200"),
+    [offerCategory, setOfferCategory] = useState(""),
+    [onlyAvailable, setOnlyAvailable] = useState(true),
     [tab, setTab] = useState("offers");
   return (
     <div className="cc-panel">
@@ -1914,6 +1909,8 @@ function Marketplace({ visibility }: { visibility: "guild" | "global" }) {
                     );
                   await c.service.createListing({
                     itemId: item.id,
+                    itemLevel: item.level ?? 0,
+                    category: item.category ?? "",
                     itemName: item.name,
                     iconUrl: item.iconUrl,
                     quantity: Number(quantity),
@@ -2020,11 +2017,71 @@ function Marketplace({ visibility }: { visibility: "guild" | "global" }) {
               Meine Angebote
             </label>
           </div>
+          <div className="cc-form-grid">
+            <label className="cc-field">
+              Angebotstyp
+              <select
+                value={offerType}
+                onChange={(e) => setOfferType(e.target.value)}
+              >
+                <option value="">Alle</option>
+                <option value="sell">Verkaufen</option>
+                <option value="buy">Gesucht</option>
+                <option value="swap">Tauschen</option>
+              </select>
+            </label>
+            <Field
+              label="Angebotsserver"
+              value={offerServer}
+              onChange={setOfferServer}
+              required={false}
+            />
+            <Field
+              label="Maximaler Stückpreis"
+              type="number"
+              value={offerPrice}
+              onChange={setOfferPrice}
+              required={false}
+            />
+            <Field
+              label="Bis Gegenstandslevel"
+              type="number"
+              value={offerLevel}
+              onChange={setOfferLevel}
+              min={0}
+              max={200}
+            />
+            <Field
+              label="Kategorie / Typ-ID"
+              value={offerCategory}
+              onChange={setOfferCategory}
+              required={false}
+            />
+            <label className="cc-check">
+              <input
+                type="checkbox"
+                checked={onlyAvailable}
+                onChange={(e) => setOnlyAvailable(e.target.checked)}
+              />
+              Nur offene, verfügbare Angebote
+            </label>
+          </div>
           <div className="cc-cards">
             {page.data
               .filter(
                 (l) =>
                   (!mine || l.ownerUid === c.user!.uid) &&
+                  (!offerType || l.type === offerType) &&
+                  (!offerServer ||
+                    l.server
+                      .toLowerCase()
+                      .includes(offerServer.toLowerCase())) &&
+                  (!offerPrice || l.price <= Number(offerPrice)) &&
+                  (l.itemLevel ?? 0) <= Number(offerLevel) &&
+                  (!offerCategory ||
+                    (l.category ?? "").includes(offerCategory)) &&
+                  (!onlyAvailable ||
+                    (l.status === "open" && l.available > 0)) &&
                   JSON.stringify([l.itemName, l.server, l.type, l.description])
                     .toLowerCase()
                     .includes(search.toLowerCase()),
@@ -2101,6 +2158,7 @@ function ListingCard({
       </p>
       <p>{l.description}</p>
       <Contact uid={l.ownerUid} />
+      <ReportAction target={`listings/${l.id}`} />
       {l.ownerUid !== c.user!.uid && l.status === "open" && (
         <div className="cc-toolbar">
           <Field
@@ -2128,6 +2186,16 @@ function ListingCard({
       )}
       {l.ownerUid === c.user!.uid && (
         <>
+          <OwnedEditor
+            path={`listings/${l.id}`}
+            record={l}
+            fields={[
+              ["price", "Kama pro Stück"],
+              ["quantity", "Gesamtmenge"],
+              ["server", "Server"],
+              ["description", "Beschreibung"],
+            ]}
+          />
           <button
             disabled={a.busy}
             onClick={() =>
@@ -2167,6 +2235,118 @@ function ListingCard({
       </details>
       <Status message={a.message} />
     </article>
+  );
+}
+function OwnedEditor({
+  path,
+  record,
+  fields,
+}: {
+  path: string;
+  record: { revision: number };
+  fields: [string, string][];
+}) {
+  const c = useCommunity(),
+    a = useAction(),
+    [snapshot, setSnapshot] = useState<
+      (Record<string, unknown> & { revision: number }) | null
+    >(null),
+    [changes, setChanges] = useState<Record<string, unknown>>({});
+  return (
+    <>
+      <button
+        onClick={() => {
+          setSnapshot({ ...record } as Record<string, unknown> & {
+            revision: number;
+          });
+          setChanges({});
+        }}
+      >
+        Eigene Angaben bearbeiten
+      </button>
+      {snapshot && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void a.run(async () => {
+              const patch = { ...changes };
+              if (typeof patch.startsAt === "string")
+                patch.startsAt = new Date(patch.startsAt).toISOString();
+              await c.service.edit(path, patch, snapshot.revision);
+              setSnapshot(null);
+            });
+          }}
+        >
+          <div className="cc-form-grid">
+            {fields.map(([field, label]) => (
+              <Field
+                key={field}
+                label={label}
+                type={typeof snapshot[field] === "number" ? "number" : "text"}
+                value={String(changes[field] ?? snapshot[field] ?? "")}
+                onChange={(value) =>
+                  setChanges((old) => ({
+                    ...old,
+                    [field]:
+                      typeof snapshot[field] === "number"
+                        ? Number(value)
+                        : value,
+                  }))
+                }
+                required={false}
+              />
+            ))}
+          </div>
+          <dl>
+            {Object.entries(changes).map(([key, value]) => (
+              <div key={key}>
+                <dt>{fields.find(([f]) => f === key)?.[1]}</dt>
+                <dd>
+                  {String(snapshot[key])} → {String(value)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <button disabled={a.busy || !Object.keys(changes).length}>
+            Änderungen speichern
+          </button>
+          <button type="button" onClick={() => setSnapshot(null)}>
+            Verwerfen
+          </button>
+          <Status message={a.message} />
+        </form>
+      )}
+    </>
+  );
+}
+function ReportAction({ target }: { target: string }) {
+  const c = useCommunity(),
+    a = useAction(),
+    [reason, setReason] = useState("");
+  return (
+    <details>
+      <summary>Inhalt melden</summary>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void a.run(async () => {
+            await c.service.report(target, reason);
+            setReason("");
+            a.setMessage("Meldung zur Prüfung übermittelt.");
+          });
+        }}
+      >
+        <Field
+          label="Grund der Meldung · mindestens 10 Zeichen"
+          value={reason}
+          onChange={setReason}
+        />
+        <button disabled={a.busy || reason.trim().length < 10}>
+          Meldung absenden
+        </button>
+        <Status message={a.message} />
+      </form>
+    </details>
   );
 }
 function Comments({ listingId }: { listingId: string }) {
@@ -2295,7 +2475,6 @@ function Reservations() {
 function Activities({ kind }: { kind: "event" | "group" }) {
   const c = useCommunity(),
     a = useAction(),
-    page = usePage<Activity>("activities", "kind", kind),
     [title, setTitle] = useState(""),
     [description, setDescription] = useState(""),
     [date, setDate] = useState(""),
@@ -2306,9 +2485,65 @@ function Activities({ kind }: { kind: "event" | "group" }) {
     [minLevel, setMinLevel] = useState("1"),
     [meeting, setMeeting] = useState(""),
     [dungeon, setDungeon] = useState("0"),
+    [activityType, setActivityType] = useState("Dungeon-Run"),
+    [wantedClasses, setWantedClasses] = useState<number[]>([]),
+    [wantedRoles, setWantedRoles] = useState<string[]>([]),
+    [resourceName, setResourceName] = useState(""),
+    [targetQuantity, setTargetQuantity] = useState("0"),
     [filter, setFilter] = useState(""),
-    [calendar, setCalendar] = useState("list"),
+    [calendar, setCalendar] = useState<CalendarView>("list"),
+    [anchor, setAnchor] = useState(new Date()),
+    [selected, setSelected] = useState<string | null>(null),
+    [calendarRows, setCalendarRows] = useState<Activity[]>([]),
+    [calendarError, setCalendarError] = useState(""),
+    [calendarLimit, setCalendarLimit] = useState(25),
     [mine, setMine] = useState(false);
+  const page = usePage<Activity>(
+    "activities",
+    "kind",
+    kind,
+    "==",
+    calendar === "list",
+  );
+  const days = calendarDays(anchor, calendar),
+    firstDay = new Date(days[0]),
+    lastDay = new Date(days.at(-1)!);
+  firstDay.setHours(0, 0, 0, 0);
+  lastDay.setHours(24, 0, 0, 0);
+  const rangeStart = firstDay.toISOString(),
+    rangeEnd = lastDay.toISOString();
+  useEffect(() => {
+    if (calendar === "list") return;
+    setCalendarError("");
+    const constraints = [
+      where("kind", "==", kind),
+      where("startsAt", ">=", rangeStart),
+      where("startsAt", "<", rangeEnd),
+      orderBy("startsAt"),
+      orderBy(documentId()),
+    ];
+    return onSnapshot(
+      query(
+        collection(c.service.db, "activities"),
+        ...constraints,
+        limit(calendarLimit),
+      ),
+      (snapshot) =>
+        setCalendarRows(snapshot.docs.map((d) => d.data() as Activity)),
+      (error) => setCalendarError(error.message),
+    );
+  }, [calendar, kind, rangeStart, rangeEnd, c.service, calendarLimit]);
+  const visible = (calendar === "list" ? page.data : calendarRows)
+    .filter(
+      (event) =>
+        JSON.stringify([event.title, event.server, event.description])
+          .toLowerCase()
+          .includes(filter.toLowerCase()) &&
+        (!mine ||
+          event.ownerUid === c.user!.uid ||
+          !!event.participants[c.user!.uid]),
+    )
+    .sort((x, y) => x.startsAt.localeCompare(y.startsAt));
   return (
     <div className="cc-panel">
       <div className="cc-toolbar">
@@ -2331,12 +2566,17 @@ function Activities({ kind }: { kind: "event" | "group" }) {
                 title,
                 description,
                 server: c.profile!.server,
-                startsAt: new Date(date).toISOString(),
+                startsAt: zonedInstant(date, timezone),
                 timezone,
                 meeting,
                 dungeonId: Number(dungeon),
                 minLevel: Number(minLevel),
                 capacity: Number(capacity),
+                activityType,
+                wantedClasses,
+                wantedRoles,
+                resourceName,
+                targetQuantity: Number(targetQuantity),
               });
               await page.load();
               setTitle("");
@@ -2344,6 +2584,24 @@ function Activities({ kind }: { kind: "event" | "group" }) {
           }}
         >
           <div className="cc-form-grid">
+            <label className="cc-field">
+              Aktivitätstyp
+              <select
+                value={activityType}
+                onChange={(e) => setActivityType(e.target.value)}
+              >
+                {[
+                  "Dungeon-Run",
+                  "Farmaktion",
+                  "Questaktion",
+                  "Gildentreffen",
+                  "PvM",
+                  "Freies Event",
+                ].map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+            </label>
             <Field label="Titel" value={title} onChange={setTitle} />
             <Field
               label="Datum & Uhrzeit (lokale Eingabe)"
@@ -2400,6 +2658,68 @@ function Activities({ kind }: { kind: "event" | "group" }) {
             onChange={setDescription}
             required={false}
           />
+          <div className="cc-form-grid">
+            <Field
+              label="Ressource / Farmziel (optional)"
+              value={resourceName}
+              onChange={setResourceName}
+              required={false}
+            />
+            <Field
+              label="Zielmenge"
+              type="number"
+              value={targetQuantity}
+              onChange={setTargetQuantity}
+              min={0}
+              max={1000000}
+            />
+          </div>
+          <details>
+            <summary>Gesuchte Klassen und Rollen</summary>
+            <div className="cc-form-grid">
+              {classes.map((ch) => (
+                <label className="cc-check" key={ch.id}>
+                  <input
+                    type="checkbox"
+                    checked={wantedClasses.includes(ch.id)}
+                    onChange={(e) =>
+                      setWantedClasses((old) =>
+                        e.target.checked
+                          ? [...old, ch.id]
+                          : old.filter((id) => id !== ch.id),
+                      )
+                    }
+                  />
+                  {ch.name}
+                </label>
+              ))}
+            </div>
+            <div className="cc-toolbar">
+              {[
+                "Schaden",
+                "Tank",
+                "Heilung",
+                "Unterstützung",
+                "Positionierung",
+                "Flexibel",
+              ].map((role) => (
+                <label className="cc-check" key={role}>
+                  <input
+                    type="checkbox"
+                    checked={wantedRoles.includes(role)}
+                    onChange={(e) =>
+                      setWantedRoles((old) =>
+                        e.target.checked
+                          ? [...old, role]
+                          : old.filter((r) => r !== role),
+                      )
+                    }
+                  />
+                  {role}
+                </label>
+              ))}
+            </div>
+          </details>
           <button disabled={a.busy} className="cc-primary">
             Veröffentlichen
           </button>
@@ -2423,29 +2743,91 @@ function Activities({ kind }: { kind: "event" | "group" }) {
         <select
           aria-label="Kalenderansicht"
           value={calendar}
-          onChange={(e) => setCalendar(e.target.value)}
+          onChange={(e) => {
+            setCalendar(e.target.value as CalendarView);
+            setCalendarLimit(25);
+            setSelected(null);
+          }}
         >
           <option value="list">Liste</option>
-          <option value="week">Nächste 7 Tage</option>
-          <option value="month">Nächste 31 Tage</option>
+          <option value="week">Woche</option>
+          <option value="month">Monat</option>
         </select>
       </div>
+      {calendar !== "list" && (
+        <>
+          <div className="cc-toolbar">
+            <button
+              onClick={() => {
+                const d = new Date(anchor);
+                if (calendar === "month") {
+                  d.setDate(1);
+                  d.setMonth(d.getMonth() - 1);
+                } else d.setDate(d.getDate() - 7);
+                setAnchor(d);
+                setCalendarLimit(25);
+                setSelected(null);
+              }}
+            >
+              Zurück
+            </button>
+            <b>
+              {anchor.toLocaleDateString("de-DE", {
+                month: "long",
+                year: "numeric",
+              })}
+            </b>
+            <button
+              onClick={() => {
+                setAnchor(new Date());
+                setCalendarLimit(25);
+              }}
+            >
+              Heute
+            </button>
+            <button
+              onClick={() => {
+                const d = new Date(anchor);
+                if (calendar === "month") {
+                  d.setDate(1);
+                  d.setMonth(d.getMonth() + 1);
+                } else d.setDate(d.getDate() + 7);
+                setAnchor(d);
+                setCalendarLimit(25);
+                setSelected(null);
+              }}
+            >
+              Weiter
+            </button>
+          </div>
+          <p>
+            Kalenderanzeige: {Intl.DateTimeFormat().resolvedOptions().timeZone}.
+            Einen Termin für Details und Teilnahme auswählen.
+          </p>
+          <ActivityCalendar
+            activities={visible}
+            anchor={anchor}
+            view={calendar}
+            onSelect={setSelected}
+          />
+          {calendarRows.length === calendarLimit && calendarLimit < 100 && (
+            <button
+              onClick={() => setCalendarLimit((n) => Math.min(100, n + 25))}
+            >
+              Weitere Termine im Zeitraum laden
+            </button>
+          )}
+          {calendarRows.length === 100 && (
+            <p>
+              100 Termine geladen. Für weitere Einträge die Listenansicht
+              verwenden.
+            </p>
+          )}
+        </>
+      )}
       <div className="cc-cards">
-        {page.data
-          .filter(
-            (event) =>
-              JSON.stringify([event.title, event.server, event.description])
-                .toLowerCase()
-                .includes(filter.toLowerCase()) &&
-              (!mine ||
-                event.ownerUid === c.user!.uid ||
-                !!event.participants[c.user!.uid]) &&
-              (calendar === "list" ||
-                (Date.parse(event.startsAt) >= Date.now() &&
-                  Date.parse(event.startsAt) <
-                    Date.now() + (calendar === "week" ? 7 : 31) * 86400000)),
-          )
-          .sort((x, y) => x.startsAt.localeCompare(y.startsAt))
+        {visible
+          .filter((event) => calendar === "list" || event.id === selected)
           .map((event) => (
             <ActivityCard key={event.id} activity={event} />
           ))}
@@ -2453,12 +2835,12 @@ function Activities({ kind }: { kind: "event" | "group" }) {
       {!page.loading && !page.data.length && (
         <Empty>Hier ist noch nichts geplant.</Empty>
       )}
-      {page.more && (
+      {calendar === "list" && page.more && (
         <button onClick={() => void page.load(true)}>
           Weitere Aktivitäten
         </button>
       )}
-      <Status message={page.error || a.message} />
+      <Status message={calendarError || page.error || a.message} />
     </div>
   );
 }
@@ -2498,6 +2880,23 @@ function ActivityCard({ activity }: { activity: Activity }) {
         · {event.timezone}
       </p>
       <p>{event.description}</p>
+      <p>
+        {event.activityType || "Gildenaktivität"}
+        {event.resourceName
+          ? ` · Farmziel: ${event.resourceName} × ${event.targetQuantity ?? 0}`
+          : ""}
+      </p>
+      {!!event.wantedClasses?.length && (
+        <p>
+          Gesuchte Klassen:{" "}
+          {event.wantedClasses
+            .map((id) => classes.find((c) => c.id === id)?.name ?? id)
+            .join(", ")}
+        </p>
+      )}
+      {!!event.wantedRoles?.length && (
+        <p>Gesuchte Rollen: {event.wantedRoles.join(", ")}</p>
+      )}
       <p>Treffpunkt: {event.meeting || "Nach Absprache"}</p>
       <b>
         {event.joined}/{event.capacity} Plätze · ab Stufe {event.minLevel}
@@ -2511,6 +2910,22 @@ function ActivityCard({ activity }: { activity: Activity }) {
         ))}
       </ul>
       <Contact uid={event.ownerUid} />
+      <ReportAction target={`activities/${event.id}`} />
+      {event.ownerUid === c.user!.uid && (
+        <OwnedEditor
+          path={`activities/${event.id}`}
+          record={event}
+          fields={[
+            ["title", "Titel"],
+            ["description", "Beschreibung"],
+            ["startsAt", "Termin (ISO 8601 mit Zeitzone)"],
+            ["timezone", "Anzeige-Zeitzone"],
+            ["meeting", "Treffpunkt"],
+            ["minLevel", "Mindestlevel"],
+            ["capacity", "Teilnehmerlimit"],
+          ]}
+        />
+      )}
       {event.status === "open" && (
         <>
           <label className="cc-field">
@@ -2859,7 +3274,13 @@ function AdminPanel() {
             ]}
           />
         ) : tab === "Moderation" ? (
-          <CommentModeration />
+          <>
+            <AdminTable
+              path="reports"
+              fields={["target", "reason", "status", "resolution"]}
+            />
+            <CommentModeration />
+          </>
         ) : tab === "Teilnehmer & Wartelisten" ? (
           <AdminParticipants service={c.service} />
         ) : (
@@ -2918,6 +3339,18 @@ async function emblemData(file: File) {
   )
     throw Error("Bitte PNG, JPEG oder WebP bis 5 MB wählen.");
   const bitmap = await createImageBitmap(file);
+  if (
+    bitmap.width < 1 ||
+    bitmap.height < 1 ||
+    bitmap.width > 8192 ||
+    bitmap.height > 8192 ||
+    bitmap.width * bitmap.height > 16000000
+  ) {
+    bitmap.close();
+    throw Error(
+      "Bild ist zu groß: maximal 16 Megapixel und 8192 Pixel pro Seite.",
+    );
+  }
   const canvas = document.createElement("canvas");
   canvas.width = 192;
   canvas.height = 192;
@@ -3066,6 +3499,8 @@ function AdminTable({
     [selected, setSelected] = useState<AdminRow | null>(null),
     [changes, setChanges] = useState<Record<string, unknown>>({}),
     [reason, setReason] = useState(""),
+    [checked, setChecked] = useState<string[]>([]),
+    [bulkStatus, setBulkStatus] = useState("approved"),
     [search, setSearch] = useState("");
   return (
     <div className="cc-panel">
@@ -3079,10 +3514,68 @@ function AdminTable({
         onChange={setSearch}
         required={false}
       />
+      {path === "memberships" && (
+        <div className="cc-panel">
+          <h4>Ausgewählte Mitgliedschaften verwalten · maximal 20</h4>
+          <select
+            aria-label="Status für Auswahl"
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value)}
+          >
+            {["approved", "rejected", "removed"].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+          <Field
+            label="Grund für Sammelaktion"
+            value={reason}
+            onChange={setReason}
+          />
+          <button
+            disabled={a.busy || !checked.length || reason.trim().length < 5}
+            onClick={() => {
+              if (
+                !confirm(
+                  `${checked.length} Mitgliedschaften auf ${bulkStatus} setzen? Jeder Eintrag wird einzeln geprüft und protokolliert.`,
+                )
+              )
+                return;
+              void a.run(async () => {
+                const failures: string[] = [];
+                let done = 0;
+                for (const id of checked) {
+                  const row = page.data.find((r) => r.id === id);
+                  if (!row) continue;
+                  try {
+                    await c.service.edit(
+                      `memberships/${id}`,
+                      { status: bulkStatus },
+                      row.revision,
+                      reason,
+                      true,
+                    );
+                    done++;
+                  } catch {
+                    failures.push(id);
+                  }
+                }
+                setChecked(failures);
+                await page.load();
+                a.setMessage(
+                  `${done} Änderungen gespeichert.${failures.length ? ` ${failures.length} fehlgeschlagen; Auswahl bleibt zur Prüfung erhalten.` : ""}`,
+                );
+              });
+            }}
+          >
+            Auswahl bestätigen ({checked.length})
+          </button>
+        </div>
+      )}
       <div className="cc-table-scroll">
         <table>
           <thead>
             <tr>
+              {path === "memberships" && <th>Auswahl</th>}
               <th>Datensatz</th>
               {fields.slice(0, 4).map((f) => (
                 <th key={f}>{f}</th>
@@ -3099,6 +3592,25 @@ function AdminTable({
               )
               .map((row) => (
                 <tr key={row.id}>
+                  {path === "memberships" && (
+                    <td>
+                      <input
+                        aria-label={`Mitglied ${row.id} auswählen`}
+                        type="checkbox"
+                        checked={checked.includes(row.id)}
+                        disabled={
+                          !checked.includes(row.id) && checked.length >= 20
+                        }
+                        onChange={(e) =>
+                          setChecked((old) =>
+                            e.target.checked
+                              ? [...old, row.id]
+                              : old.filter((id) => id !== row.id),
+                          )
+                        }
+                      />
+                    </td>
+                  )}
                   <td>{row.id}</td>
                   {fields.slice(0, 4).map((f) => (
                     <td key={f}>{String(row[f] ?? "")}</td>
@@ -3282,40 +3794,145 @@ function AdminReservations() {
     [state, setState] = useState<ReservationState>("withdrawn"),
     [reason, setReason] = useState("");
   return (
-    <form
-      className="cc-panel"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (
-          confirm(
-            "Gildenreservierung einschließlich atomarer Bestandskorrektur ändern?",
+    <>
+      <GuildReservationList select={setId} />
+      <form
+        className="cc-panel"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (
+            confirm(
+              "Gildenreservierung einschließlich atomarer Bestandskorrektur ändern?",
+            )
           )
-        )
-          void a.run(() => c.service.reservation(id, state, reason));
-      }}
-    >
-      <h3>Gildenreservierung moderieren</h3>
-      <p>
-        Die Regeln prüfen Gildensichtbarkeit, Rollen, Zustandsübergang und
-        atomare Angebotsmenge.
-      </p>
-      <Field label="Reservierungs-ID" value={id} onChange={setId} />
-      <select
-        aria-label="Neuer Reservierungsstatus"
-        value={state}
-        onChange={(e) => setState(e.target.value as ReservationState)}
+            void a.run(() => c.service.reservation(id, state, reason));
+        }}
       >
-        {["withdrawn", "accepted", "rejected", "completed"].map((s) => (
-          <option key={s}>{s}</option>
-        ))}
-      </select>
-      <Field label="Änderungsgrund" value={reason} onChange={setReason} />
-      <button disabled={a.busy}>Korrektur bestätigen</button>
-      <Status message={a.message} />
-    </form>
+        <h3>Gildenreservierung moderieren</h3>
+        <p>
+          Die Regeln prüfen Gildensichtbarkeit, Rollen, Zustandsübergang und
+          atomare Angebotsmenge.
+        </p>
+        <Field label="Reservierungs-ID" value={id} onChange={setId} />
+        <select
+          aria-label="Neuer Reservierungsstatus"
+          value={state}
+          onChange={(e) => setState(e.target.value as ReservationState)}
+        >
+          {["withdrawn", "accepted", "rejected", "completed"].map((s) => (
+            <option key={s}>{s}</option>
+          ))}
+        </select>
+        <Field label="Änderungsgrund" value={reason} onChange={setReason} />
+        <button disabled={a.busy}>Korrektur bestätigen</button>
+        <Status message={a.message} />
+      </form>
+    </>
+  );
+}
+function GuildReservationList({ select }: { select: (id: string) => void }) {
+  const c = useCommunity(),
+    offers = usePage<Listing>("listings", "visibility", "guild"),
+    [rows, setRows] = useState<Reservation[]>([]),
+    [error, setError] = useState(""),
+    [state, setState] = useState("requested"),
+    [offer, setOffer] = useState("");
+  useEffect(() => {
+    setRows([]);
+    setError("");
+    if (!offer) return;
+    return onSnapshot(
+      query(
+        collection(c.service.db, "reservations"),
+        where("listingId", "==", offer),
+        limit(100),
+      ),
+      (snap) => setRows(snap.docs.map((d) => d.data() as Reservation)),
+      (e) => setError(e.message),
+    );
+  }, [c.service, offer]);
+  return (
+    <div className="cc-panel">
+      <h3>Reservierungsübersicht</h3>
+      <p>
+        Ein Gildenangebot auswählen. Private globale Reservierungen anderer
+        Mitglieder bleiben geschützt.
+      </p>
+      <label className="cc-field">
+        Angebot
+        <select value={offer} onChange={(e) => setOffer(e.target.value)}>
+          <option value="">Angebot wählen</option>
+          {offers.data.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.itemName} · {l.server} · {l.available}/{l.quantity}
+            </option>
+          ))}
+        </select>
+      </label>
+      {offers.more && (
+        <button onClick={() => void offers.load(true)}>
+          Weitere Gildenangebote
+        </button>
+      )}
+      <label className="cc-field">
+        Status
+        <select value={state} onChange={(e) => setState(e.target.value)}>
+          {[
+            "all",
+            "requested",
+            "accepted",
+            "completed",
+            "withdrawn",
+            "rejected",
+          ].map((s) => (
+            <option key={s}>{s}</option>
+          ))}
+        </select>
+      </label>
+      <div className="cc-table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Anfrage</th>
+              <th>Käufer</th>
+              <th>Menge</th>
+              <th>Status</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows
+              .filter((r) => state === "all" || r.state === state)
+              .map((r) => (
+                <tr key={r.id}>
+                  <td>{r.id}</td>
+                  <td>
+                    <Contact uid={r.buyerUid} />
+                  </td>
+                  <td>{r.quantity}</td>
+                  <td>{r.state}</td>
+                  <td>
+                    <button onClick={() => select(r.id)}>
+                      Reservierung korrigieren
+                    </button>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+      {rows.length === 100 && (
+        <p>
+          100 Anfragen geladen. Einzelne weitere Anfragen über ihre ID prüfen.
+        </p>
+      )}
+      <Status message={error || offers.error} />
+    </div>
   );
 }
 function AuditLog() {
+  const c = useCommunity(),
+    a = useAction();
   const page = usePage<{
     id: string;
     actorUid: string;
@@ -3337,12 +3954,27 @@ function AuditLog() {
             <pre>{JSON.stringify(log.before, null, 2)}</pre>
             <pre>{JSON.stringify(log.after, null, 2)}</pre>
           </div>
+          <button
+            disabled={a.busy}
+            onClick={() => {
+              const reason = prompt(
+                "Grund für die Rücknahme (mindestens fünf Zeichen). Nur unveränderte, fachlich sichere Werte werden zurückgenommen.",
+              );
+              if (reason && reason.trim().length >= 5)
+                void a.run(async () => {
+                  await c.service.undoAudit(log.id, reason);
+                  await page.load();
+                });
+            }}
+          >
+            Fachwerte dieser Änderung zurücknehmen
+          </button>
         </details>
       ))}
       {page.more && (
         <button onClick={() => void page.load(true)}>Weitere Änderungen</button>
       )}
-      <Status message={page.error} />
+      <Status message={a.message || page.error} />
     </div>
   );
 }

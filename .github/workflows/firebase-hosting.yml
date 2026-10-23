@@ -1,4 +1,4 @@
-name: Website · Firebase Hosting (Spark)
+name: Website · Firebase Hosting
 
 on:
   pull_request:
@@ -68,7 +68,7 @@ jobs:
           retention-days: 3
 
   publish:
-    name: Deploy password-gated preview (Firebase Spark)
+    name: Deploy approved password-gated website
     needs: [website]
     if: >-
       github.event_name != 'pull_request' &&
@@ -81,6 +81,10 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Enforce community publication prerequisites
+        env:
+          COMMUNITY_PUBLICATION_APPROVED: ${{ vars.COMMUNITY_PUBLICATION_APPROVED }}
+        run: node infrastructure/community/publication-gate.mjs
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:

@@ -98,6 +98,56 @@ after(async () => {
   await env?.cleanup();
   await deleteAdmin(admin);
 });
+
+test("reports are rate limited, private and require audited administrative resolution", async () => {
+  const c = client("reporter");
+  await c.register(
+    "reporter@example.test",
+    password,
+    password,
+    { ...profile, dofusName: "Reporter" },
+    true,
+  );
+  await adminAuth(admin).updateUser(c.uid, { emailVerified: true });
+  await c.refreshVerification();
+  const listingId = "report-global";
+  await adminFirestore(admin)
+    .doc(`listings/${listingId}`)
+    .set({ id: listingId, ownerUid: "other", visibility: "global" });
+  await c.report(
+    `listings/${listingId}`,
+    "Bitte diesen Inhalt sorgfältig prüfen.",
+  );
+  const reports = await c.page<any>("reports", [
+    where("reporterUid", "==", c.uid),
+  ]);
+  assert.equal(reports.items.length, 1);
+  await assert.rejects(() =>
+    c.report(`listings/${listingId}`, "Zweite Meldung unmittelbar danach."),
+  );
+  await assert.rejects(() =>
+    c.edit(
+      `reports/${reports.items[0].id}`,
+      { status: "resolved" },
+      1,
+      "Unberechtigter Eingriff",
+      true,
+    ),
+  );
+  await adminFirestore(admin).doc(`roles/${c.uid}`).set({ role: "admin" });
+  await c.reauthenticate(password);
+  await c.edit(
+    `reports/${reports.items[0].id}`,
+    { status: "resolved", resolution: "Inhalt geprüft" },
+    1,
+    "Meldung administrativ geprüft",
+    true,
+  );
+  assert.equal(
+    (await c.get<any>(`reports/${reports.items[0].id}`)).status,
+    "resolved",
+  );
+});
 let first: CommunityService, second: CommunityService, owner: CommunityService;
 const email = "player@example.test",
   password = "emulator-only-password-123",
@@ -235,10 +285,58 @@ test("trusted owner role, personal reauthentication, membership approval and pri
   assert.ok(notices.items.length > 0);
 });
 test("Storage upload, authorized read, audited exchange and deletion of unused emblem", async () => {
-  const blob = new Blob([new Uint8Array([0x52, 0x49, 0x46, 0x46])], {
-    type: "image/webp",
-  });
+  const blob = new Blob(
+    [
+      new Uint8Array([
+        0x52, 0x49, 0x46, 0x46, 4, 0, 0, 0, 0x57, 0x45, 0x42, 0x50,
+      ]),
+    ],
+    {
+      type: "image/webp",
+    },
+  );
   await assert.rejects(() => first.uploadEmblem(blob));
+  const { uploadBytes, ref, listAll } = await import("firebase/storage");
+  for (const [data, metadata] of [
+    [
+      new Uint8Array(200001),
+      { contentType: "image/webp", customMetadata: { uploadedBy: owner.uid } },
+    ],
+    [
+      new Uint8Array(12),
+      {
+        contentType: "image/svg+xml",
+        customMetadata: { uploadedBy: owner.uid },
+      },
+    ],
+    [
+      new Uint8Array(12),
+      { contentType: "image/webp", customMetadata: { uploadedBy: "forged" } },
+    ],
+    [
+      new Uint8Array(12),
+      {
+        contentType: "image/webp",
+        customMetadata: {
+          uploadedBy: owner.uid,
+          unexpected: "unapproved-metadata",
+        },
+      },
+    ],
+  ] as const)
+    await assert.rejects(() =>
+      uploadBytes(
+        ref(owner.storage, `guild-emblems/default/${crypto.randomUUID()}.webp`),
+        data,
+        metadata,
+      ),
+    );
+  await assert.rejects(() =>
+    listAll(ref(owner.storage, "guild-emblems/default")),
+  );
+  await assert.rejects(() =>
+    owner.uploadEmblem(new Blob([new Uint8Array(12)], { type: "image/webp" })),
+  );
   const path = await owner.uploadEmblem(blob);
   assert.ok((await first.readEmblem(path)).size > 0);
   const guild = await owner.get<any>("platform/config"),
@@ -360,6 +458,20 @@ test("guild comment moderation is authorized and its nested target is audited", 
   assert.equal(
     (await first.get<any>(`listings/${id}/comments/${comment.id}`)).moderated,
     true,
+  );
+  const moderated = await owner.get<any>(
+    `listings/${id}/comments/${comment.id}`,
+  );
+  await owner.undoAudit(
+    moderated.lastAudit,
+    "Kommentar nach Prüfung wiederhergestellt",
+  );
+  assert.equal(
+    (await first.get<any>(`listings/${id}/comments/${comment.id}`)).moderated,
+    false,
+  );
+  await assert.rejects(() =>
+    owner.undoAudit(moderated.lastAudit, "Veraltete Rücknahme erneut versucht"),
   );
 });
 test("administrative participant changes preserve capacity and require an exact audit", async () => {

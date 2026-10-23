@@ -90,6 +90,7 @@ export class CommunityService {
   readonly db;
   readonly storage;
   private persistence: Promise<void>;
+  private emblemRequests = new Map<string, Promise<Blob>>();
   constructor(
     config: FirebaseOptions,
     options: { name?: string; emulator?: boolean } = {},
@@ -283,6 +284,7 @@ export class CommunityService {
       ? new Timestamp(since.seconds, since.nanoseconds)
       : null;
     let serial = Promise.resolve();
+    let queued = false;
     let stopped = false;
     const unsubscribe = onSnapshot(
       query(
@@ -291,8 +293,11 @@ export class CommunityService {
         limit(1),
       ),
       () => {
+        if (queued || stopped) return;
+        queued = true;
         serial = serial
           .then(async () => {
+            queued = false;
             let cursor: DocumentSnapshot | undefined;
             let nextWatermark = watermark;
             do {
@@ -312,7 +317,9 @@ export class CommunityService {
                 const time = row.data().updatedAt as Timestamp;
                 if (
                   !nextWatermark ||
-                  time.toMillis() > nextWatermark.toMillis()
+                  time.seconds > nextWatermark.seconds ||
+                  (time.seconds === nextWatermark.seconds &&
+                    time.nanoseconds > nextWatermark.nanoseconds)
                 )
                   nextWatermark = time;
               }
@@ -425,21 +432,41 @@ export class CommunityService {
     });
   }
   async uploadEmblem(blob: Blob) {
-    if (blob.type !== "image/webp" || blob.size > 200000)
+    const uid = this.uid;
+    if (blob.type !== "image/webp" || blob.size < 12 || blob.size > 200000)
       throw Error("Das Wappen muss als WebP bis 200 KB vorliegen.");
+    const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+    if (
+      String.fromCharCode(...header.slice(0, 4)) !== "RIFF" ||
+      String.fromCharCode(...header.slice(8, 12)) !== "WEBP"
+    )
+      throw Error("Ungültige WebP-Datei.");
+    this.assertSession(uid);
     const path = `guild-emblems/default/${crypto.randomUUID()}.webp`;
     await uploadBytes(storageRef(this.storage, path), blob, {
       contentType: "image/webp",
-      customMetadata: { uploadedBy: this.uid },
+      cacheControl: "private,max-age=86400",
+      customMetadata: { uploadedBy: uid },
     });
     return path;
   }
   async readEmblem(path: string) {
     if (!/^guild-emblems\/default\/[a-f0-9-]+\.webp$/.test(path))
       throw Error("Ungültiger Wappenpfad.");
-    return new Blob([await getBytes(storageRef(this.storage, path), 200000)], {
-      type: "image/webp",
-    });
+    const uid = this.uid,
+      key = uid + ":" + path;
+    // Coalesce simultaneous renders without keeping an authorization-bypassing persistent cache.
+    let request = this.emblemRequests.get(key);
+    if (!request) {
+      request = getBytes(storageRef(this.storage, path), 200000)
+        .then((bytes) => {
+          this.assertSession(uid);
+          return new Blob([bytes], { type: "image/webp" });
+        })
+        .finally(() => this.emblemRequests.delete(key));
+      this.emblemRequests.set(key, request);
+    }
+    return request;
   }
   async removeUnusedEmblem(path: string) {
     if (path.startsWith("guild-emblems/default/"))
@@ -528,9 +555,43 @@ export class CommunityService {
       lastReservation: "",
       lastAudit: "",
       status: "open",
+      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
     return id;
+  }
+  async report(target: string, reason: string) {
+    if (
+      !/^(listings|activities)\/[a-zA-Z0-9-]+(\/comments\/[a-zA-Z0-9-]+)?$/.test(
+        target,
+      ) ||
+      reason.trim().length < 10 ||
+      reason.length > 1000
+    )
+      throw Error(
+        "Bitte einen gültigen Inhalt und einen Grund mit 10 bis 1000 Zeichen angeben.",
+      );
+    const uid = this.uid,
+      id = crypto.randomUUID();
+    await runTransaction(this.db, async (tx) => {
+      const throttle = this.ref(`users/${uid}/account/reportLimit`),
+        snapshot = await tx.get(throttle);
+      const last = snapshot.data()?.createdAt?.toMillis?.() ?? 0;
+      if (Date.now() - last < 60000)
+        throw Error("Bitte mindestens eine Minute zwischen Meldungen warten.");
+      tx.set(throttle, { reportId: id, createdAt: serverTimestamp() });
+      tx.set(this.ref(`reports/${id}`), {
+        reporterUid: uid,
+        target,
+        reason: reason.trim(),
+        status: "open",
+        resolution: "",
+        revision: 1,
+        lastAudit: "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    });
   }
   async reserve(listingId: string, quantity: number) {
     const uid = this.uid;
@@ -825,6 +886,23 @@ export class CommunityService {
         lastAudit: admin ? id : s.data().lastAudit,
         updatedAt: serverTimestamp(),
       };
+      if (path.startsWith("activities/")) {
+        if (
+          typeof after.title !== "string" ||
+          !after.title.trim() ||
+          after.title.length > 160 ||
+          !Number.isInteger(after.capacity) ||
+          after.capacity < after.joined ||
+          after.capacity < 1 ||
+          after.capacity > 100 ||
+          !Number.isInteger(after.minLevel) ||
+          after.minLevel < 1 ||
+          after.minLevel > 200 ||
+          !Number.isFinite(Date.parse(after.startsAt))
+        )
+          throw Error("Titel, Datum, Level oder Teilnehmerlimit ist ungültig.");
+        Intl.DateTimeFormat("de", { timeZone: after.timezone });
+      }
       if (path.startsWith("listings/") && typeof changes.quantity === "number")
         after.available =
           Number(s.data().available) +
@@ -881,6 +959,81 @@ export class CommunityService {
       consent = await this.get(`users/${uid}/account/consent`);
     this.assertSession(uid);
     return { profile, records, consent, exportedAt: new Date().toISOString() };
+  }
+  async undoAudit(id: string, reason: string) {
+    if (reason.trim().length < 5 || reason.length > 500)
+      throw Error("Bitte einen Änderungsgrund mit 5 bis 500 Zeichen angeben.");
+    const log = await this.get<{
+      target: string;
+      before: Record<string, unknown>;
+      after: Record<string, unknown>;
+    }>(`audit/${id}`);
+    if (!log) throw Error("Änderung nicht gefunden.");
+    const kind = log.target.split("/")[0],
+      allowed: Record<string, string[]> = {
+        memberships: ["displayName", "rank", "status"],
+        guildCharacters: ["characters"],
+        listings: [
+          "itemName",
+          "itemId",
+          "quantity",
+          "price",
+          "server",
+          "description",
+          "type",
+          "status",
+        ],
+        activities: [
+          "title",
+          "description",
+          "startsAt",
+          "timezone",
+          "meeting",
+          "minLevel",
+          "capacity",
+          "status",
+        ],
+        reports: ["status", "resolution"],
+      };
+    const fields =
+      log.target.split("/").length === 4 && log.target.includes("/comments/")
+        ? ["text", "moderated"]
+        : allowed[kind];
+    if (!fields)
+      throw Error(
+        "Diese gekoppelte Änderung muss über ihren Fachdialog korrigiert werden.",
+      );
+    const current = await this.get<{ revision: number; lastAudit: string }>(
+      log.target,
+    );
+    if (
+      !current ||
+      current.lastAudit !== id ||
+      current.revision !== log.after.revision
+    )
+      throw Error(
+        "Inzwischen bestehen weitere Änderungen. Bitte im Fachdialog vergleichen.",
+      );
+    const patch = Object.fromEntries(
+      fields
+        .filter(
+          (f) =>
+            f in log.before &&
+            JSON.stringify(log.before[f]) !== JSON.stringify(log.after[f]),
+        )
+        .map((f) => [f, log.before[f]]),
+    );
+    if (!Object.keys(patch).length)
+      throw Error(
+        "Keine unmittelbar rücknehmbaren Fachwerte. Teilnehmer oder Reservierungen separat korrigieren.",
+      );
+    await this.edit(
+      log.target,
+      patch,
+      current.revision,
+      `Rücknahme ${id}: ${reason}`,
+      true,
+    );
   }
   async deleteAccount(password: string) {
     const uid = this.uid,
@@ -944,6 +1097,7 @@ export class CommunityService {
     batch.delete(this.ref(`memberships/${uid}`));
     batch.delete(this.ref(`guildCharacters/${uid}`));
     batch.delete(this.ref(`users/${uid}/account/consent`));
+    batch.delete(this.ref(`users/${uid}/account/reportLimit`));
     await batch.commit();
     while (true) {
       const notifications = await getDocs(

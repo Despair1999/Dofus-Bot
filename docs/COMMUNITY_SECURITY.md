@@ -15,3 +15,7 @@ Kontolöschung verlangt persönliche Reauth, blockiert privilegierte Konten und 
 Lokaler Backend-Bearer erlaubt Zugriff auf die lokalen UID-Bereiche am eigenen Gerät. Kein Mehrbenutzerserver. SQLite/IndexedDB werden durch diese Änderung nicht verschlüsselt. Gastbestand wird vor Migration gesichert.
 
 Nicht live geprüft: IAM, App Check, E-Mail-Zustellung, native WebView-Sitzung, echter Discord-Bot und produktive Rules. [Testbericht](COMMUNITY_TEST_REPORT.md).
+
+Folgestand: neue Inline-Wappen sind nicht erlaubt, vorhandene Werte nur unverändert kompatibel. Storage-Listenzugriff ist vollständig gesperrt. Metadaten erlauben nur uploadedBy; UI/SDK prüfen zusätzlich Größe und WebP-Header, Browser begrenzt Pixelzahl. Firebase-reservierte Downloadtoken sind keine durch eigene Metadaten-Whitelist verlässlich kontrollierbare Sicherheitsgrenze; die App verwendet keine öffentlichen Download-URLs. Bereits berechtigt geladene Bilder lassen sich technisch weitergeben. Meldungen sind privat bzw. frisch administrativ lesbar, schreiben ihre Drosselung atomar und benötigen bei Entscheidungen Audit.
+
+Owner-Liveprüfung und Einrichtung sind erfolgt. Produktive Rules sowie Cross-Service-IAM sind noch nicht bereitgestellt; rechtliche Freigabe fehlt. Veröffentlichung wird zusätzlich im Website-/Releaseworkflow blockiert, unabhängig vom Registrierungsschalter.

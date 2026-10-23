@@ -20,8 +20,11 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMUNITY_PUBLICATION_APPROVED: ${{ vars.COMMUNITY_PUBLICATION_APPROVED }}
         run: |
           $ErrorActionPreference = 'Stop'
+          node infrastructure/community/publication-gate.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Community publication prerequisites are incomplete.' }
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           $tag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { 'v' + $version }
           $raw = gh api "repos/$env:GITHUB_REPOSITORY/releases?per_page=100" | Out-String

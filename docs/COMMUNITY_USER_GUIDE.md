@@ -11,3 +11,9 @@ Lokale Anwendung funktioniert weiter ohne Konto. Für Website/Desktop dasselbe v
 7. Accountexport herunterladen. Vor Kontolöschung offene Angebote/Reservierungen schließen und persönliche Reauth wiederholen. Privilegierte Accounts benötigen Betreiberprüfung. Gemeinsame Historie und lokale Exporte können bestehen bleiben.
 
 Website behält den vorhandenen Vorschauschutz. Der bestehende App-Updater bleibt erhalten; diese Entwicklung veröffentlicht noch keinen Installer.
+
+Neue Ansichten: Kalender zwischen Liste, Woche und Monat umschalten, Zeitraum vor/zurück oder Heute wählen und einen Termin für Teilnahme öffnen. Eingabe wird in der gewählten Zeitzone gespeichert; bei doppelt vorkommender Sommerzeit-Uhrzeit wird die frühere Instanz verwendet, nicht vorhandene Uhrzeiten werden abgelehnt.
+
+Mitglieder nach Name, Klasse, Level, Rang, Server und Charakterzahl filtern und Spalten sortieren. Mehr Seiten bewusst nachladen. Eigene Angebote und organisierte Aktivitäten können im jeweiligen Detail bearbeitet werden. Inhalte über den Meldedialog begründet melden; mindestens eine Minute zwischen Meldungen warten.
+
+Unter Builds lassen sich neue Ausrüstungsvorhaben planen oder gespeicherte Builds bearbeiten, als Variante duplizieren und entfernen. Der Katalog wird beim ersten Öffnen geladen. Slots, individuelle Werte/Exomagie, Eigenschaften und Schriftrollen nutzen die gleiche Berechnung wie der Desktop. Nicht unterstützte Spezialeffekte werden angezeigt. Aktuelle signierte App-Version bleibt unverändert, bis der neue Kandidat und die Veröffentlichung freigegeben sind.

@@ -26,7 +26,7 @@ service cloud.firestore {
     && text(request.resource.data.server, 60) && text(request.resource.data.discordUrl, 200)
     && (request.resource.data.discordUrl == '' || request.resource.data.discordUrl.matches('https://(discord.gg/|discord.com/invite/).*'))
     && text(request.resource.data.emblem, 60000)
-    && (request.resource.data.emblem == '' || request.resource.data.emblem.matches('data:image/(png|webp);base64,[A-Za-z0-9+/=]+') || request.resource.data.emblem.matches('guild-emblems/default/[a-f0-9-]+[.]webp'))
+    && (request.resource.data.emblem == '' || request.resource.data.emblem == resource.data.emblem || request.resource.data.emblem.matches('guild-emblems/default/[a-f0-9-]+[.]webp'))
 ;
   }
   match /platform/legal {
@@ -109,12 +109,13 @@ service cloud.firestore {
   match /listings/{id} {
    function valid() {
     let d = request.resource.data;
-    return d.keys().hasOnly(['id','ownerUid','itemId','itemName','iconUrl','quantity','available','price','server','type','visibility','description','status','revision','lastReservation','lastAudit','updatedAt'])
+    return d.keys().hasOnly(['id','ownerUid','itemId','itemName','iconUrl','quantity','available','price','server','type','visibility','description','status','revision','lastReservation','lastAudit','updatedAt','itemLevel','category','createdAt'])
      && d.id == id && d.itemId is int && d.itemId > 0 && text(d.itemName,160) && d.itemName.size() > 0
      && text(d.iconUrl,300) && (d.iconUrl == '' || d.iconUrl.matches('https://.*') || d.iconUrl.matches('/game-assets/.*'))
      && d.quantity is int && d.quantity > 0 && d.quantity <= 1000000 && d.available is int && d.available >= 0 && d.available <= d.quantity
      && d.price is int && d.price >= 0 && d.price <= 2000000000 && text(d.server,60) && text(d.description,2000)
-     && d.type in ['sell','buy','swap'] && d.visibility in ['guild','global'] && d.status in ['open','paused','withdrawn'];
+     && d.type in ['sell','buy','swap'] && d.visibility in ['guild','global'] && d.status in ['open','paused','withdrawn']
+     && d.get('itemLevel',0) is int && d.get('itemLevel',0)>=0 && d.get('itemLevel',0)<=200 && text(d.get('category',''),80);
    }
    function reservationUpdate() {
     let rid = request.resource.data.lastReservation;
@@ -132,18 +133,24 @@ service cloud.firestore {
    allow create: if verified() && !exists(/databases/$(database)/documents/accountDeletions/$(request.auth.uid)) && valid() && request.resource.data.ownerUid == request.auth.uid
     && (request.resource.data.visibility == 'global' || member()) && request.resource.data.available == request.resource.data.quantity
     && request.resource.data.revision == 1 && request.resource.data.status == 'open' && request.resource.data.lastAudit == '' && request.resource.data.lastReservation == '' && request.resource.data.updatedAt == request.time;
-   allow update: if visible(resource.data) && valid() && revision() && request.resource.data.ownerUid == resource.data.ownerUid
+   allow update: if (visible(resource.data) || (registered() && own(resource.data.ownerUid))) && valid() && revision() && request.resource.data.ownerUid == resource.data.ownerUid
     && (reservationUpdate() || (request.resource.data.available == resource.data.available + request.resource.data.quantity - resource.data.quantity
      && request.resource.data.visibility == resource.data.visibility && request.resource.data.lastReservation == resource.data.lastReservation
      && ((own(resource.data.ownerUid) && request.resource.data.lastAudit == resource.data.lastAudit) || (resource.data.visibility == 'guild' && audited('listings/' + id)))));
    allow delete: if false;
    match /comments/{commentId} {
     function parent() { return get(/databases/$(database)/documents/listings/$(id)).data; }
+    function restoresPrevious() {
+     let prior=get(/databases/$(database)/documents/audit/$(resource.data.lastAudit)).data;
+     return resource.data.moderated && prior.target=='listings/'+id+'/comments/'+commentId && prior.after==resource.data
+      && request.resource.data.text==prior.before.text && request.resource.data.moderated==prior.before.moderated;
+    }
     allow get: if visible(parent());
     allow list: if visible(parent()) && bounded();
     allow create: if visible(parent()) && request.resource.data.keys().hasOnly(['ownerUid','text','createdAt','updatedAt','revision','lastAudit','moderated']) && own(request.resource.data.ownerUid)
      && text(request.resource.data.text,2000) && request.resource.data.text.size() > 0 && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && !request.resource.data.moderated;
-    allow update: if parent().visibility == 'guild' && revision() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','moderated','revision','lastAudit','updatedAt']) && request.resource.data.moderated == true && request.resource.data.text == '[Kommentar moderiert]' && audited('listings/' + id + '/comments/' + commentId);
+    allow update: if parent().visibility == 'guild' && revision() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text','moderated','revision','lastAudit','updatedAt'])
+     && audited('listings/' + id + '/comments/' + commentId) && ((request.resource.data.moderated == true && request.resource.data.text == '[Kommentar moderiert]') || restoresPrevious());
     allow delete: if own(resource.data.ownerUid);
    }
   }
@@ -172,12 +179,16 @@ service cloud.firestore {
   match /activities/{id} {
    function valid() {
     let d = request.resource.data;
-    return d.keys().hasOnly(['id','kind','ownerUid','title','description','server','startsAt','timezone','meeting','dungeonId','minLevel','capacity','joined','participants','status','revision','lastAudit','lastParticipantUid','lastNotice','updatedAt'])
+    return d.keys().hasOnly(['id','kind','ownerUid','title','description','server','startsAt','timezone','meeting','dungeonId','minLevel','capacity','joined','participants','status','revision','lastAudit','lastParticipantUid','lastNotice','updatedAt','activityType','wantedClasses','wantedRoles','resourceName','targetQuantity'])
      && d.id == id && d.kind in ['event','group'] && text(d.title,160) && d.title.size() > 0 && text(d.description,2000)
      && text(d.server,60) && text(d.startsAt,40) && text(d.timezone,80) && text(d.meeting,200) && d.dungeonId is int
      && d.minLevel is int && d.minLevel >= 1 && d.minLevel <= 200 && d.capacity is int && d.capacity >= 1 && d.capacity <= 100
      && d.participants is map && d.participants.size() <= 100 && d.joined is int && d.joined >= 0 && d.joined <= d.capacity
-     && d.status in ['open','cancelled','completed'];
+     && d.status in ['open','cancelled','completed']
+     && text(d.get('activityType',''),60) && text(d.get('resourceName',''),160)
+     && d.get('wantedClasses',[]) is list && d.get('wantedClasses',[]).size()<=19 && d.get('wantedClasses',[]).hasOnly([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,20])
+     && d.get('wantedRoles',[]) is list && d.get('wantedRoles',[]).size()<=6 && d.get('wantedRoles',[]).hasOnly(['Schaden','Tank','Heilung','Unterstützung','Positionierung','Flexibel'])
+     && d.get('targetQuantity',0) is int && d.get('targetQuantity',0)>=0 && d.get('targetQuantity',0)<=1000000;
    }
    function participation(uid) {
     let old = resource.data.participants.get(uid, {'status':'none'});
@@ -195,9 +206,10 @@ service cloud.firestore {
    allow create: if member() && valid() && own(request.resource.data.ownerUid) && request.resource.data.participants.size() == 0 && request.resource.data.joined == 0
     && request.resource.data.revision == 1 && request.resource.data.lastAudit == '' && request.resource.data.status == 'open' && request.resource.data.updatedAt == request.time;
    allow update: if (member() || admin()) && valid() && revision() && request.resource.data.ownerUid == resource.data.ownerUid && request.resource.data.kind == resource.data.kind
-    && ((participation(request.auth.uid) && request.resource.data.get('lastParticipantUid',request.auth.uid) == request.auth.uid && request.resource.data.lastAudit == resource.data.lastAudit) || ((own(resource.data.ownerUid) && request.resource.data.lastAudit == resource.data.lastAudit)
+    && ((request.resource.data.lastAudit == resource.data.lastAudit && ((own(resource.data.ownerUid)
        && request.resource.data.participants == resource.data.participants && request.resource.data.joined == resource.data.joined)
-      || (audited('activities/' + id) && ((request.resource.data.participants == resource.data.participants && request.resource.data.joined == resource.data.joined) || participation(request.resource.data.get('lastParticipantUid','')))));
+       || (request.resource.data.get('lastParticipantUid',request.auth.uid) == request.auth.uid && participation(request.auth.uid))))
+      || (request.resource.data.lastAudit != resource.data.lastAudit && audited('activities/' + id) && ((request.resource.data.participants == resource.data.participants && request.resource.data.joined == resource.data.joined) || participation(request.resource.data.get('lastParticipantUid','')))));
    allow delete: if false;
   }
   match /audit/{id} {
@@ -206,7 +218,7 @@ service cloud.firestore {
    allow create: if freshAdmin() && request.resource.data.keys().hasOnly(['actorUid','target','before','after','reason','createdAt'])
     && request.resource.data.actorUid == request.auth.uid && text(request.resource.data.reason,1000) && request.resource.data.reason.size() >= 5
     && request.resource.data.createdAt == request.time
-    && request.resource.data.target.matches('(platform/(config|legal)|memberships/[^/]+|guildCharacters/[^/]+|listings/[^/]+|reservations/[^/]+|activities/[^/]+|listings/[^/]+/comments/[^/]+)')
+    && request.resource.data.target.matches('(platform/(config|legal)|memberships/[^/]+|guildCharacters/[^/]+|listings/[^/]+|reservations/[^/]+|activities/[^/]+|reports/[^/]+|listings/[^/]+/comments/[^/]+)')
     && ((request.resource.data.target.split('/').size() == 2
      && get(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])).data == request.resource.data.before
      && getAfter(/databases/$(database)/documents/$(request.resource.data.target.split('/')[0])/$(request.resource.data.target.split('/')[1])).data == request.resource.data.after)
@@ -230,7 +242,7 @@ service cloud.firestore {
    allow create: if (member() || freshAdmin()) && request.resource.data.keys().hasOnly(['actorUid','activityId','recipientUids','text','createdAt'])
     && request.resource.data.actorUid==request.auth.uid && text(request.resource.data.text,200) && request.resource.data.createdAt==request.time
     && request.resource.data.recipientUids is list && request.resource.data.recipientUids.size()<=100
-    && request.resource.data.recipientUids.toSet()==get(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.participants.keys()
+    && request.resource.data.recipientUids.toSet()==get(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.participants.keys().toSet()
     && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.lastNotice==id
     && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.updatedAt==request.time
     && (get(/databases/$(database)/documents/activities/$(request.resource.data.activityId)).data.ownerUid==request.auth.uid || freshAdmin());
@@ -259,6 +271,31 @@ service cloud.firestore {
       && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.updatedAt==request.time
       && get(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.participants.get(uid,{'status':'none'}).status=='waiting'
       && getAfter(/databases/$(database)/documents/activities/$(request.resource.data.subjectId)).data.participants[uid].status=='joined'));
+  }
+  match /users/{uid}/account/reportLimit {
+   allow get: if own(uid) && registered();
+   allow create, update: if own(uid) && registered() && request.resource.data.keys().hasOnly(['reportId','createdAt'])
+    && request.resource.data.createdAt == request.time
+    && (!exists(/databases/$(database)/documents/users/$(uid)/account/reportLimit) || request.time >= resource.data.createdAt + duration.value(60,'s'))
+    && getAfter(/databases/$(database)/documents/reports/$(request.resource.data.reportId)).data.reporterUid == uid;
+   allow delete: if own(uid);
+  }
+  match /reports/{id} {
+   function reportTarget() {
+    let parts=request.resource.data.target.split('/');
+    return (parts.size()==2 && ((parts[0]=='listings' && visible(get(/databases/$(database)/documents/listings/$(parts[1])).data)) || (parts[0]=='activities' && member())))
+      || (parts.size()==4 && parts[0]=='listings' && parts[2]=='comments' && visible(get(/databases/$(database)/documents/listings/$(parts[1])).data));
+   }
+   allow get: if own(resource.data.reporterUid) || freshAdmin();
+   allow list: if bounded() && (own(resource.data.reporterUid) || freshAdmin());
+   allow create: if registered() && own(request.resource.data.reporterUid) && request.resource.data.keys().hasOnly(['reporterUid','target','reason','status','resolution','revision','lastAudit','createdAt','updatedAt'])
+    && text(request.resource.data.target,250) && reportTarget() && text(request.resource.data.reason,1000) && request.resource.data.reason.size()>=10
+    && request.resource.data.status=='open' && request.resource.data.resolution=='' && request.resource.data.revision==1 && request.resource.data.lastAudit==''
+    && request.resource.data.createdAt==request.time && request.resource.data.updatedAt==request.time
+    && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)/account/reportLimit).data.reportId==id;
+   allow update: if revision() && audited('reports/'+id) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolution','revision','lastAudit','updatedAt'])
+    && request.resource.data.status in ['open','reviewing','resolved','dismissed'] && text(request.resource.data.resolution,2000);
+   allow delete: if false;
   }
   match /{document=**} { allow read, write: if false; }
  }
