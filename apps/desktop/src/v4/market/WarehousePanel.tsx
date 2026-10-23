@@ -70,7 +70,6 @@ export default function WarehousePanel({ journal, positions, item, server, onPic
         case "value-desc": difference = compare("totalValue", true); break;
         case "quantity-asc": difference = a.position.quantity - b.position.quantity; break;
         case "quantity-desc": difference = b.position.quantity - a.position.quantity; break;
-        case "value-desc": difference = (b.estimate?.value ?? -1) - (a.estimate?.value ?? -1); break;
       }
       return difference || a.position.item.name.localeCompare(b.position.item.name, "de");
     }), [positions, journal, sortBy, filterServer, query]);
